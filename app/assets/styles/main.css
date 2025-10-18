@@ -179,7 +179,7 @@ a:hover {
 }
 
 /* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   body {
     background: #0f172a;
     color: #f1f5f9;
@@ -209,4 +209,4 @@ a:hover {
   ::-webkit-scrollbar-thumb:hover {
     background: #64748b;
   }
-}
+} */
