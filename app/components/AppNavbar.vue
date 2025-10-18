@@ -10,9 +10,38 @@
                 <v-spacer></v-spacer>
 
                 <nav class="desktop-nav hidden-md-and-down">
-                    <NuxtLink v-for="item in navItems" :key="item.to" :to="item.to" class="nav-link">
-                        {{ item.label }}
-                    </NuxtLink>
+                    <template v-if="navItems?.length">
+                        <template v-for="item in navItems" :key="item.id">
+                            <!-- Item with children - show as dropdown -->
+                            <v-menu v-if="item.children && item.children.length > 0" offset-y>
+                                <template v-slot:activator="{ props }">
+                                    <v-btn v-bind="props" variant="text" class="nav-link-btn" :title="item.title">
+                                        {{ item.label }}
+                                        <v-icon end size="18">mdi-chevron-down</v-icon>
+                                    </v-btn>
+                                </template>
+                                <v-list class="nav-dropdown">
+                                    <v-list-item v-for="child in item.children" :key="child.id"
+                                        :href="child.url.startsWith('http') ? child.url : undefined"
+                                        :to="child.url.startsWith('http') ? undefined : localePath(child.url)"
+                                        :target="child.url.startsWith('http') ? '_blank' : undefined"
+                                        :title="child.label" class="dropdown-item">
+                                        <template v-slot:append v-if="child.url.startsWith('http')">
+                                            <v-icon size="16">mdi-open-in-new</v-icon>
+                                        </template>
+                                    </v-list-item>
+                                </v-list>
+                            </v-menu>
+
+                            <!-- Item without children - show as regular link -->
+                            <NuxtLink v-else :to="item.url.startsWith('http') ? undefined : localePath(item.url)"
+                                :href="item.url.startsWith('http') ? item.url : undefined"
+                                :target="item.url.startsWith('http') ? '_blank' : undefined" class="nav-link"
+                                :title="item.title">
+                                {{ item.label }}
+                            </NuxtLink>
+                        </template>
+                    </template>
 
                     <v-menu offset-y>
                         <template v-slot:activator="{ props }">
@@ -45,13 +74,47 @@
             </div>
 
             <v-list nav class="drawer-list">
-                <v-list-item v-for="item in navItems" :key="item.to" :to="item.to" @click="drawer = false"
-                    class="drawer-item">
-                    <template v-slot:prepend>
-                        <v-icon :icon="item.icon"></v-icon>
+                <template v-if="navItems?.length">
+                    <template v-for="item in navItems" :key="item.id">
+                        <!-- Item with children - show as expandable group -->
+                        <v-list-group v-if="item.children && item.children.length > 0" :value="item.id">
+                            <template v-slot:activator="{ props }">
+                                <v-list-item v-bind="props" class="drawer-item" :title="item.title">
+                                    <template v-slot:prepend v-if="getIconForUrl(item.url)">
+                                        <v-icon :icon="getIconForUrl(item.url)"></v-icon>
+                                    </template>
+                                    <v-list-item-title>{{ item.label }}</v-list-item-title>
+                                </v-list-item>
+                            </template>
+
+                            <v-list-item v-for="child in item.children" :key="child.id"
+                                :href="child.url.startsWith('http') ? child.url : undefined"
+                                :to="child.url.startsWith('http') ? undefined : localePath(child.url)"
+                                :target="child.url.startsWith('http') ? '_blank' : undefined"
+                                @click="child.url.startsWith('http') ? null : drawer = false"
+                                class="drawer-item drawer-subitem" :title="child.label">
+                                <template v-slot:append v-if="child.url.startsWith('http')">
+                                    <v-icon size="16">mdi-open-in-new</v-icon>
+                                </template>
+                            </v-list-item>
+                        </v-list-group>
+
+                        <!-- Item without children - show as regular link -->
+                        <v-list-item v-else :href="item.url.startsWith('http') ? item.url : undefined"
+                            :to="item.url.startsWith('http') ? undefined : localePath(item.url)"
+                            :target="item.url.startsWith('http') ? '_blank' : undefined"
+                            @click="item.url.startsWith('http') ? null : drawer = false" class="drawer-item"
+                            :title="item.title">
+                            <template v-slot:prepend v-if="getIconForUrl(item.url)">
+                                <v-icon :icon="getIconForUrl(item.url)"></v-icon>
+                            </template>
+                            <v-list-item-title>{{ item.label }}</v-list-item-title>
+                            <template v-slot:append v-if="item.url.startsWith('http')">
+                                <v-icon size="16">mdi-open-in-new</v-icon>
+                            </template>
+                        </v-list-item>
                     </template>
-                    <v-list-item-title>{{ item.label }}</v-list-item-title>
-                </v-list-item>
+                </template>
 
                 <v-list-item class="drawer-item mt-4">
                     <template v-slot:prepend>
@@ -67,19 +130,32 @@
 </template>
 
 <script setup lang="ts">
+import type { DjangoListResponse, NavigationItem } from '~/types/api';
+
 const { locale, locales, setLocale } = useI18n();
-const router = useRouter();
-const switchLocalePath = useSwitchLocalePath();
+const localePath = useLocalePath();
 const drawer = ref(false);
 const scrolled = ref(false);
 
-const localePath = useLocalePath();
-const navItems = computed(() => [
-    { label: 'Início', to: localePath('/'), icon: 'mdi-home' },
-    { label: 'Sobre', to: localePath('/about'), icon: 'mdi-information' },
-    { label: 'Projetos', to: localePath('/projects'), icon: 'mdi-folder-multiple' },
-    { label: 'Contato', to: localePath('/#contact'), icon: 'mdi-email' },
-]);
+// Fetch navigation items from API
+const { data: navigationData } = await useApi<DjangoListResponse<NavigationItem>>('/api/navigation-items/', {
+    params: {
+        menu_key: 'header',
+        is_active: true,
+        ordering: 'order'
+    }
+});
+
+// Organize items by parent/children structure
+const navItems = computed(() => {
+    const items = navigationData.value?.results || [];
+    const parents = items.filter(item => !item.parent);
+
+    return parents.map(parent => ({
+        ...parent,
+        children: items.filter(item => item.parent === parent.id)
+    }));
+});
 
 const availableLocales = computed(() =>
     (locales.value as Array<{ code: string; name: string }>)
@@ -88,6 +164,16 @@ const availableLocales = computed(() =>
 const currentLocale = computed(() => {
     return locale.value === 'pt-br' ? 'pt' : locale.value.split('-')[0];
 });
+
+// Helper function to get icons based on URL patterns
+const getIconForUrl = (url: string): string => {
+    if (!url) return 'mdi-link';
+    if (url === '/' || url.includes('home')) return 'mdi-home';
+    if (url.includes('about')) return 'mdi-information';
+    if (url.includes('project')) return 'mdi-folder-multiple';
+    if (url.includes('contact')) return 'mdi-email';
+    return 'mdi-link';
+};
 
 const changeLocale = async (newLocale: string) => {
     const i18nCookie = useCookie('i18n_redirected');
@@ -192,6 +278,39 @@ const handleScroll = () => {
     font-weight: 600;
 }
 
+/* Navigation Button (for dropdowns) */
+.nav-link-btn {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #4b5563;
+    text-transform: none;
+    letter-spacing: 0;
+    height: auto;
+    padding: 0.5rem 0.75rem;
+    min-width: auto;
+}
+
+.nav-link-btn:hover {
+    background: transparent;
+    color: #1a1a1a;
+}
+
+/* Dropdown Menu */
+.nav-dropdown {
+    min-width: 200px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.dropdown-item {
+    padding: 12px 16px;
+    transition: background 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background: #f9fafb;
+}
+
 /* Language Button */
 .language-btn {
     font-size: 0.875rem;
@@ -235,6 +354,10 @@ const handleScroll = () => {
 .drawer-item.router-link-active {
     background: #eff6ff;
     color: #2563eb;
+}
+
+.drawer-subitem {
+    padding-left: 48px;
 }
 
 /* Responsive */
