@@ -55,7 +55,7 @@ const navItems = [
     { label: 'Início', to: '/', icon: 'mdi-home' },
     { label: 'Sobre', to: '/about', icon: 'mdi-information' },
     { label: 'Projetos', to: '/projects', icon: 'mdi-folder-multiple' },
-    { label: 'Contato', to: '/contact', icon: 'mdi-email' },
+    { label: 'Contato', to: '/#contact', icon: 'mdi-email' },
 ];
 
 onMounted(() => {
