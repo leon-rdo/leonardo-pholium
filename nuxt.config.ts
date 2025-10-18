@@ -51,13 +51,13 @@ export default defineNuxtConfig({
     ],
     langDir: "locales",
     defaultLocale: "pt-br",
-    strategy: "prefix_except_default",
+    strategy: "prefix",
     detectBrowserLanguage: {
       useCookie: true,
       cookieKey: "i18n_redirected",
       redirectOn: "root",
       alwaysRedirect: false,
-      fallbackLocale: "pt-br",
+      fallbackLocale: "en-us",
     },
   },
 });
