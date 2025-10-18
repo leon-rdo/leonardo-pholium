@@ -3,7 +3,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { ContentBlock, DjangoListResponse, Education, Experience, Project, Skill } from '~/types/api';
 
-if (process.client) {
+if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
 }
 
@@ -14,52 +14,48 @@ useSeoMeta({
 
 const config = useRuntimeConfig();
 
-const contentBlocks = ref<DjangoListResponse<ContentBlock>>({ count: 0, results: [], next: null, previous: null });
-
-// Fetch all paginated content blocks
-const fetchAllContentBlocks = async () => {
+// Fetch all paginated content blocks using $fetch instead of useFetch
+const { data: contentBlocks } = await useAsyncData('content-blocks', async () => {
   let url: string | null = '/api/content-blocks/';
   const allResults: ContentBlock[] = [];
 
   while (url) {
-    const { data } = await useFetch<DjangoListResponse<ContentBlock>>(url, {
+    const response: DjangoListResponse<ContentBlock> = await $fetch<DjangoListResponse<ContentBlock>>(url, {
       baseURL: url.startsWith('http') ? undefined : config.public.apiBase,
       params: url.startsWith('http') ? undefined : { page_name: 'home' },
       headers: { 'Accept-Language': 'en-us' }
     });
 
-    if (data.value) {
-      allResults.push(...(data.value.results || []));
-      url = data.value.next;
+    if (response) {
+      allResults.push(...(response.results || []));
+      url = response.next;
     } else {
       url = null;
     }
   }
 
-  contentBlocks.value = {
+  return {
     count: allResults.length,
     results: allResults,
     next: null,
     previous: null
-  };
-};
-
-await fetchAllContentBlocks();
-
-console.log(contentBlocks.value);
+  } as DjangoListResponse<ContentBlock>;
+}, {
+  default: () => ({ count: 0, results: [], next: null, previous: null })
+});
 
 const getContentBlock = (key: string) => {
   return contentBlocks.value?.results?.find(block => block.key === key);
 };
 
-const { data: skills } = await useFetch<DjangoListResponse<Skill>>('/api/skills/', {
-  baseURL: config.public.apiBase,
-  params: { limit: 6 }
-});
-
 const { data: projects } = await useFetch<DjangoListResponse<Project>>('/api/projects/', {
   baseURL: config.public.apiBase,
   params: { featured: true, limit: 3, status: 'published' }
+});
+
+const { data: skills } = await useFetch<DjangoListResponse<Skill>>('/api/skills/', {
+  baseURL: config.public.apiBase,
+  params: { limit: 6, ordering: '-level' }
 });
 
 const { data: experiences } = await useFetch<DjangoListResponse<Experience>>('/api/experiences/', {
@@ -204,9 +200,9 @@ const formatDate = (date: string | null) => {
               {{ skill.icon || 'mdi-code-tags' }}
             </v-icon>
             <h3 class="skill-name">{{ skill.name }}</h3>
-            <div v-if="skill.level" class="skill-level">
-              <div class="skill-level-bar" :style="{ width: `${skill.level * 20}%` }">
-              </div>
+            <div v-if="skill.level" class="skill-stars">
+              <v-icon v-for="star in 5" :key="star" size="16" :color="star <= skill.level ? '#fbbf24' : '#e5e7eb'">
+                {{ star <= skill.level ? 'mdi-star' : 'mdi-star-outline' }} </v-icon>
             </div>
           </div>
         </v-col>
@@ -517,6 +513,7 @@ const formatDate = (date: string | null) => {
   cursor: pointer;
   border: 1px solid #f3f4f6;
   height: 100%;
+  aspect-ratio: 1 / 1;
 }
 
 .skill-card:hover {
