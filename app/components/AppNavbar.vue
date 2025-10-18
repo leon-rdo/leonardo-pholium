@@ -75,20 +75,22 @@
 
 <script setup lang="ts">
 const { locale, locales, setLocale } = useI18n();
+const router = useRouter();
+const switchLocalePath = useSwitchLocalePath();
 const drawer = ref(false);
 const scrolled = ref(false);
 
-const navItems = [
-    { label: 'Início', to: '/', icon: 'mdi-home' },
-    { label: 'Sobre', to: '/about', icon: 'mdi-information' },
-    { label: 'Projetos', to: '/projects', icon: 'mdi-folder-multiple' },
-    { label: 'Contato', to: '/#contact', icon: 'mdi-email' },
-];
+// Computed para gerar os links com o locale correto
+const localePath = useLocalePath();
+const navItems = computed(() => [
+    { label: 'Início', to: localePath('/'), icon: 'mdi-home' },
+    { label: 'Sobre', to: localePath('/about'), icon: 'mdi-information' },
+    { label: 'Projetos', to: localePath('/projects'), icon: 'mdi-folder-multiple' },
+    { label: 'Contato', to: localePath('/#contact'), icon: 'mdi-email' },
+]);
 
 const availableLocales = computed(() =>
-    (locales.value as Array<{ code: string; name: string }>).filter(
-        (i) => i.code !== locale.value
-    ).concat({ code: locale.value, name: locales.value.find((l: any) => l.code === locale.value)?.name || '' })
+    (locales.value as Array<{ code: string; name: string }>)
 );
 
 const currentLocale = computed(() => {
@@ -96,9 +98,31 @@ const currentLocale = computed(() => {
 });
 
 const changeLocale = async (newLocale: string) => {
+    // Limpar o cookie do i18n primeiro
+    const i18nCookie = useCookie('i18n_redirected');
+    i18nCookie.value = null;
+
+    // Atualizar o locale
     await setLocale(newLocale);
-    // Recarregar a página para atualizar os dados com o novo idioma
-    window.location.reload();
+
+    // Construir a URL manualmente para garantir o caminho correto
+    let newPath: string;
+    const currentPath = window.location.pathname;
+
+    if (newLocale === 'pt-br') {
+        // Para português (padrão), remover qualquer prefixo de locale
+        newPath = currentPath.replace(/^\/[a-z]{2}-[a-z]{2}/, '') || '/';
+    } else {
+        // Para outros idiomas, adicionar ou substituir o prefixo
+        if (currentPath.startsWith('/en-us') || currentPath.startsWith('/pt-br')) {
+            newPath = currentPath.replace(/^\/[a-z]{2}-[a-z]{2}/, `/${newLocale}`);
+        } else {
+            newPath = `/${newLocale}${currentPath}`;
+        }
+    }
+
+    // Navegar para a nova URL com reload completo
+    window.location.href = newPath;
 };
 
 onMounted(() => {
