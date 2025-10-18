@@ -261,17 +261,6 @@ const scrollToSection = (sectionId: string) => {
         </v-col>
       </v-row>
     </v-container>
-
-    <!-- Footer -->
-    <v-container class="footer-container">
-      <v-row>
-        <v-col cols="12" class="text-center">
-          <p class="footer-text">
-            © {{ new Date().getFullYear() }} Leonardo. Todos os direitos reservados.
-          </p>
-        </v-col>
-      </v-row>
-    </v-container>
   </div>
 </template>
 
@@ -433,17 +422,6 @@ const scrollToSection = (sectionId: string) => {
   transform: translateY(-4px);
   box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
   border-color: #2563eb;
-}
-
-/* Footer */
-.footer-container {
-  padding: 40px 24px;
-  border-top: 1px solid #f3f4f6;
-}
-
-.footer-text {
-  font-size: 0.875rem;
-  color: #9ca3af;
 }
 
 /* Responsive */
