@@ -79,11 +79,10 @@
                         <!-- Item with children - show as expandable group -->
                         <v-list-group v-if="item.children && item.children.length > 0" :value="item.id">
                             <template v-slot:activator="{ props }">
-                                <v-list-item v-bind="props" class="drawer-item" :title="item.title">
+                                <v-list-item v-bind="props" class="drawer-item" :title="item.label">
                                     <template v-slot:prepend v-if="getIconForUrl(item.url)">
                                         <v-icon :icon="getIconForUrl(item.url)"></v-icon>
                                     </template>
-                                    <v-list-item-title>{{ item.label }}</v-list-item-title>
                                 </v-list-item>
                             </template>
 
@@ -104,11 +103,10 @@
                             :to="item.url.startsWith('http') ? undefined : localePath(item.url)"
                             :target="item.url.startsWith('http') ? '_blank' : undefined"
                             @click="item.url.startsWith('http') ? null : drawer = false" class="drawer-item"
-                            :title="item.title">
+                            :title="item.label">
                             <template v-slot:prepend v-if="getIconForUrl(item.url)">
                                 <v-icon :icon="getIconForUrl(item.url)"></v-icon>
                             </template>
-                            <v-list-item-title>{{ item.label }}</v-list-item-title>
                             <template v-slot:append v-if="item.url.startsWith('http')">
                                 <v-icon size="16">mdi-open-in-new</v-icon>
                             </template>
