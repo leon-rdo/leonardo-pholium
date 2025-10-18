@@ -4,7 +4,7 @@
 <template>
   <v-app>
     <div class="app-layout">
-      <!-- <AppNavbar /> -->
+      <AppNavbar />
       <main class="main-content">
         <slot />
       </main>
