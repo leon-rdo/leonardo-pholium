@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import type { ContentBlock, DjangoListResponse, Education, Experience, Project, Skill } from '~/types/api';
+import type { ContentBlock, DjangoListResponse } from '~/types/api';
+import SkillList from '~/components/skills/SkillList.vue';
+import ProjectList from '~/components/projects/ProjectList.vue';
+import ExperienceList from '~/components/experiences/ExperienceList.vue';
+import EducationList from '~/components/educations/EducationList.vue';
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
@@ -14,7 +18,7 @@ useSeoMeta({
 
 const config = useRuntimeConfig();
 
-// Fetch all paginated content blocks using $fetch instead of useFetch
+// Fetch all paginated content blocks
 const { data: contentBlocks } = await useAsyncData('content-blocks', async () => {
   let url: string | null = '/api/content-blocks/';
   const allResults: ContentBlock[] = [];
@@ -48,26 +52,6 @@ const getContentBlock = (key: string) => {
   return contentBlocks.value?.results?.find(block => block.key === key);
 };
 
-const { data: projects } = await useFetch<DjangoListResponse<Project>>('/api/projects/', {
-  baseURL: config.public.apiBase,
-  params: { featured: true, limit: 3, status: 'published' }
-});
-
-const { data: skills } = await useFetch<DjangoListResponse<Skill>>('/api/skills/', {
-  baseURL: config.public.apiBase,
-  params: { limit: 6, ordering: '-level' }
-});
-
-const { data: experiences } = await useFetch<DjangoListResponse<Experience>>('/api/experiences/', {
-  baseURL: config.public.apiBase,
-  params: { limit: 3, ordering: '-start_date' }
-});
-
-const { data: educations } = await useFetch<DjangoListResponse<Education>>('/api/educations/', {
-  baseURL: config.public.apiBase,
-  params: { limit: 3, ordering: '-start_date' }
-});
-
 onMounted(() => {
   gsap.from('.hero-title', {
     y: 30,
@@ -92,7 +76,6 @@ onMounted(() => {
     ease: 'power2.out'
   });
 
-  // Scroll-triggered animations
   gsap.utils.toArray('.fade-up').forEach((element: any) => {
     gsap.from(element, {
       y: 40,
@@ -107,21 +90,11 @@ onMounted(() => {
   });
 });
 
-const currentSkillHover = ref<number | null>(null);
-
 const scrollToSection = (sectionId: string) => {
   const element = document.getElementById(sectionId);
   if (element) {
     element.scrollIntoView({ behavior: 'smooth' });
   }
-};
-
-const formatDate = (date: string | null) => {
-  if (!date) return 'Presente';
-  return new Date(date).toLocaleDateString('pt-BR', {
-    year: 'numeric',
-    month: 'short'
-  });
 };
 </script>
 
@@ -193,20 +166,7 @@ const formatDate = (date: string | null) => {
         </v-col>
       </v-row>
 
-      <v-row>
-        <v-col v-for="(skill, index) in skills?.results" :key="skill.id" cols="6" sm="4" md="3" lg="2" class="fade-up">
-          <div class="skill-card" @mouseenter="currentSkillHover = index" @mouseleave="currentSkillHover = null">
-            <v-icon size="40" :color="currentSkillHover === index ? 'primary' : 'grey-lighten-1'" class="skill-icon">
-              {{ skill.icon || 'mdi-code-tags' }}
-            </v-icon>
-            <h3 class="skill-name">{{ skill.name }}</h3>
-            <div v-if="skill.level" class="skill-stars">
-              <v-icon v-for="star in 5" :key="star" size="16" :color="star <= skill.level ? '#fbbf24' : '#e5e7eb'">
-                {{ star <= skill.level ? 'mdi-star' : 'mdi-star-outline' }} </v-icon>
-            </div>
-          </div>
-        </v-col>
-      </v-row>
+      <SkillList />
     </v-container>
 
     <!-- Projects Section -->
@@ -224,46 +184,7 @@ const formatDate = (date: string | null) => {
         </v-col>
       </v-row>
 
-      <v-row>
-        <v-col v-for="project in projects?.results" :key="project.id" cols="12" md="4" class="fade-up">
-          <div class="project-card">
-            <div class="project-image-wrapper">
-              <v-img :src="project.cover || 'https://via.placeholder.com/600x400'" :aspect-ratio="16 / 10" cover
-                class="project-image">
-                <template v-slot:placeholder>
-                  <v-skeleton-loader type="image" />
-                </template>
-              </v-img>
-            </div>
-
-            <div class="project-content">
-              <h3 class="project-title">
-                {{ project.title }}
-              </h3>
-              <p class="project-description">
-                {{ project.summary }}
-              </p>
-
-              <div class="project-tags">
-                <span v-for="skill in project.skills?.slice(0, 3)" :key="skill" class="project-tag">
-                  {{ skill }}
-                </span>
-              </div>
-
-              <div class="project-links">
-                <a v-if="project.website_url" :href="project.website_url" target="_blank" class="project-link">
-                  <v-icon size="20">mdi-web</v-icon>
-                  <span>Site</span>
-                </a>
-                <a v-if="project.repo_url" :href="project.repo_url" target="_blank" class="project-link">
-                  <v-icon size="20">mdi-github</v-icon>
-                  <span>Código</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </v-col>
-      </v-row>
+      <ProjectList />
 
       <v-row class="mt-8">
         <v-col cols="12" class="text-center fade-up">
@@ -290,32 +211,11 @@ const formatDate = (date: string | null) => {
         </v-col>
       </v-row>
 
-      <v-row justify="center">
-        <v-col cols="12" md="10" lg="8">
-          <div class="timeline">
-            <div v-for="exp in experiences?.results" :key="exp.id" class="timeline-item fade-up">
-              <div class="timeline-dot"></div>
-              <div class="timeline-content">
-                <div class="timeline-date">
-                  {{ formatDate(exp.start_date) }} -
-                  {{ exp.current ? 'Presente' : formatDate(exp.end_date) }}
-                </div>
-                <h3 class="timeline-title">{{ exp.role }}</h3>
-                <p class="timeline-company">{{ exp.company }}</p>
-                <p v-if="exp.location" class="timeline-location">
-                  <v-icon size="14">mdi-map-marker</v-icon>
-                  {{ exp.location }}
-                </p>
-                <p class="timeline-description">{{ exp.description }}</p>
-              </div>
-            </div>
-          </div>
-        </v-col>
-      </v-row>
+      <ExperienceList />
     </v-container>
 
     <!-- Education Section -->
-    <v-container v-if="educations?.results?.length" class="section-container" id="education">
+    <v-container class="section-container" id="education">
       <v-row>
         <v-col cols="12">
           <div class="section-header fade-up mb-16">
@@ -329,23 +229,7 @@ const formatDate = (date: string | null) => {
         </v-col>
       </v-row>
 
-      <v-row>
-        <v-col v-for="edu in educations?.results" :key="edu.id" cols="12" md="4" class="fade-up">
-          <div class="education-card">
-            <v-icon size="32" color="primary" class="education-icon">
-              mdi-school
-            </v-icon>
-            <h3 class="education-degree">{{ edu.degree }}</h3>
-            <p class="education-institution">{{ edu.institution }}</p>
-            <p class="education-date">
-              {{ formatDate(edu.start_date) }} - {{ formatDate(edu.end_date) }}
-            </p>
-            <p v-if="edu.description" class="education-description">
-              {{ edu.description }}
-            </p>
-          </div>
-        </v-col>
-      </v-row>
+      <EducationList />
     </v-container>
 
     <!-- Contact Section -->
@@ -503,273 +387,6 @@ const formatDate = (date: string | null) => {
   color: #4b5563;
 }
 
-/* Skills Section */
-.skill-card {
-  text-align: center;
-  padding: 32px 16px;
-  background: white;
-  border-radius: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-  border: 1px solid #f3f4f6;
-  height: 100%;
-  aspect-ratio: 1 / 1;
-}
-
-.skill-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
-  border-color: #e5e7eb;
-}
-
-.skill-icon {
-  transition: all 0.3s ease;
-  margin-bottom: 16px;
-}
-
-.skill-name {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin-bottom: 12px;
-}
-
-.skill-level {
-  width: 100%;
-  height: 3px;
-  background: #f3f4f6;
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: 12px;
-}
-
-.skill-level-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
-  transition: width 0.6s ease;
-}
-
-/* Projects Section */
-.project-card {
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid #f3f4f6;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.project-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-  border-color: #e5e7eb;
-}
-
-.project-image-wrapper {
-  overflow: hidden;
-  background: #f9fafb;
-}
-
-.project-image {
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.project-card:hover .project-image {
-  transform: scale(1.05);
-}
-
-.project-content {
-  padding: 32px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.project-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin-bottom: 12px;
-}
-
-.project-description {
-  font-size: 0.9375rem;
-  color: #6b7280;
-  line-height: 1.6;
-  margin-bottom: 20px;
-  flex: 1;
-}
-
-.project-tags {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-}
-
-.project-tag {
-  font-size: 0.75rem;
-  padding: 6px 12px;
-  background: #f3f4f6;
-  color: #4b5563;
-  border-radius: 6px;
-  font-weight: 500;
-}
-
-.project-links {
-  display: flex;
-  gap: 16px;
-}
-
-.project-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.875rem;
-  color: #6b7280;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.project-link:hover {
-  color: #2563eb;
-}
-
-/* Timeline */
-.timeline {
-  position: relative;
-  padding-left: 40px;
-}
-
-.timeline::before {
-  content: '';
-  position: absolute;
-  left: 7px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: #e5e7eb;
-}
-
-.timeline-item {
-  position: relative;
-  padding-bottom: 48px;
-}
-
-.timeline-item:last-child {
-  padding-bottom: 0;
-}
-
-.timeline-dot {
-  position: absolute;
-  left: -36px;
-  top: 6px;
-  width: 16px;
-  height: 16px;
-  background: #2563eb;
-  border-radius: 50%;
-  border: 3px solid #fafafa;
-  z-index: 1;
-}
-
-.timeline-content {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  border: 1px solid #f3f4f6;
-  transition: all 0.3s ease;
-}
-
-.timeline-content:hover {
-  border-color: #e5e7eb;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-}
-
-.timeline-date {
-  font-size: 0.875rem;
-  color: #2563eb;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.timeline-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin-bottom: 4px;
-}
-
-.timeline-company {
-  font-size: 1rem;
-  color: #6b7280;
-  font-weight: 500;
-  margin-bottom: 8px;
-}
-
-.timeline-location {
-  font-size: 0.875rem;
-  color: #9ca3af;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.timeline-description {
-  font-size: 0.9375rem;
-  color: #6b7280;
-  line-height: 1.6;
-}
-
-/* Education Section */
-.education-card {
-  background: white;
-  padding: 32px;
-  border-radius: 12px;
-  border: 1px solid #f3f4f6;
-  transition: all 0.3s ease;
-  height: 100%;
-}
-
-.education-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
-  border-color: #e5e7eb;
-}
-
-.education-icon {
-  margin-bottom: 20px;
-}
-
-.education-degree {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin-bottom: 8px;
-}
-
-.education-institution {
-  font-size: 1rem;
-  color: #2563eb;
-  font-weight: 500;
-  margin-bottom: 8px;
-}
-
-.education-date {
-  font-size: 0.875rem;
-  color: #9ca3af;
-  margin-bottom: 16px;
-}
-
-.education-description {
-  font-size: 0.9375rem;
-  color: #6b7280;
-  line-height: 1.6;
-}
-
 /* Contact Section */
 .contact-wrapper {
   padding: 80px 0;
@@ -838,23 +455,11 @@ const formatDate = (date: string | null) => {
   .hero-section {
     padding: 60px 24px;
   }
-
-  .timeline {
-    padding-left: 32px;
-  }
-
-  .timeline-dot {
-    left: -30px;
-  }
 }
 
 @media (max-width: 600px) {
   .section-container {
     padding: 60px 20px;
-  }
-
-  .project-content {
-    padding: 24px;
   }
 
   .contact-wrapper {
