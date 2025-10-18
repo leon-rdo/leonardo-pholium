@@ -1,28 +1,24 @@
 <template>
     <div>
-        <!-- App Bar -->
         <v-app-bar :elevation="scrolled ? 2 : 0" :color="scrolled ? 'white' : 'rgba(255, 255, 255, 0.95)'" app flat
             class="navbar">
             <v-container class="d-flex align-center px-4">
-                <!-- Logo/Brand -->
                 <NuxtLink to="/" class="brand-logo">
                     <span class="brand-name">Leonardo Costa</span>
                 </NuxtLink>
 
                 <v-spacer></v-spacer>
 
-                <!-- Desktop Navigation -->
                 <nav class="desktop-nav hidden-md-and-down">
                     <NuxtLink v-for="item in navItems" :key="item.to" :to="item.to" class="nav-link">
                         {{ item.label }}
                     </NuxtLink>
 
-                    <!-- Language Selector -->
                     <v-menu offset-y>
                         <template v-slot:activator="{ props }">
                             <v-btn v-bind="props" variant="text" class="language-btn">
                                 <v-icon start>mdi-translate</v-icon>
-                                {{ currentLocale.toUpperCase() }}
+                                {{ currentLocale?.toUpperCase() ?? '' }}
                             </v-btn>
                         </template>
                         <v-list>
@@ -34,14 +30,12 @@
                     </v-menu>
                 </nav>
 
-                <!-- Mobile Menu Button -->
                 <v-btn icon variant="text" class="hidden-lg-and-up" @click="drawer = !drawer">
                     <v-icon>mdi-menu</v-icon>
                 </v-btn>
             </v-container>
         </v-app-bar>
 
-        <!-- Mobile Navigation Drawer -->
         <v-navigation-drawer v-model="drawer" temporary location="right" class="mobile-drawer">
             <div class="drawer-header">
                 <span class="brand-name">Leonardo Costa</span>
@@ -59,7 +53,6 @@
                     <v-list-item-title>{{ item.label }}</v-list-item-title>
                 </v-list-item>
 
-                <!-- Language Selector Mobile -->
                 <v-list-item class="drawer-item mt-4">
                     <template v-slot:prepend>
                         <v-icon>mdi-translate</v-icon>
@@ -80,7 +73,6 @@ const switchLocalePath = useSwitchLocalePath();
 const drawer = ref(false);
 const scrolled = ref(false);
 
-// Computed para gerar os links com o locale correto
 const localePath = useLocalePath();
 const navItems = computed(() => [
     { label: 'Início', to: localePath('/'), icon: 'mdi-home' },
@@ -98,22 +90,17 @@ const currentLocale = computed(() => {
 });
 
 const changeLocale = async (newLocale: string) => {
-    // Limpar o cookie do i18n primeiro
     const i18nCookie = useCookie('i18n_redirected');
     i18nCookie.value = null;
 
-    // Atualizar o locale
-    await setLocale(newLocale);
+    await setLocale(newLocale as "pt-br" | "en-us");
 
-    // Construir a URL manualmente para garantir o caminho correto
     let newPath: string;
     const currentPath = window.location.pathname;
 
     if (newLocale === 'pt-br') {
-        // Para português (padrão), remover qualquer prefixo de locale
         newPath = currentPath.replace(/^\/[a-z]{2}-[a-z]{2}/, '') || '/';
     } else {
-        // Para outros idiomas, adicionar ou substituir o prefixo
         if (currentPath.startsWith('/en-us') || currentPath.startsWith('/pt-br')) {
             newPath = currentPath.replace(/^\/[a-z]{2}-[a-z]{2}/, `/${newLocale}`);
         } else {
@@ -121,7 +108,6 @@ const changeLocale = async (newLocale: string) => {
         }
     }
 
-    // Navegar para a nova URL com reload completo
     window.location.href = newPath;
 };
 
