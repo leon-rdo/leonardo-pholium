@@ -5,7 +5,8 @@ const config = useRuntimeConfig();
 
 const { data: projects } = await useFetch<DjangoListResponse<Project>>('/api/projects/', {
     baseURL: config.public.apiBase,
-    params: { featured: true, limit: 3, status: 'published' }
+    params: { expand: 'skills', featured: true, limit: 3, status: 'published' },
+    headers: { 'Accept-Language': 'en-us' }
 });
 </script>
 
@@ -27,8 +28,9 @@ const { data: projects } = await useFetch<DjangoListResponse<Project>>('/api/pro
                     <p class="project-description">{{ project.summary }}</p>
 
                     <div class="project-tags">
-                        <span v-for="skill in project.skills?.slice(0, 3)" :key="skill" class="project-tag">
-                            {{ skill }}
+                        <span v-for="skill in project.skills?.slice(0, 3)"
+                            :key="typeof skill === 'object' ? skill.id : skill" class="project-tag">
+                            <template v-if="typeof skill === 'object'">{{ skill.name }}</template>
                         </span>
                     </div>
 
