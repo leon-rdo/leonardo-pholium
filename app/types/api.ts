@@ -38,7 +38,7 @@ export interface Project {
   cover: string | null;
   status: string;
   tags: number[];
-  skills: number[];
+  skills: (number | Skill)[];
   author: number;
   featured: boolean;
   sort_order: number;
