@@ -1,18 +1,43 @@
 <script setup lang="ts">
-import type { DjangoListResponse, Project } from '~/types/api';
+import type { DjangoListResponse, Project, Skill } from '~/types/api';
 
-const config = useRuntimeConfig();
+const props = defineProps<{
+    featuredOnly?: boolean;
+    projects?: Project[];
+    cols?: string;
+    mdCols?: string;
+    lgCols?: string;
+}>();
 
-const { data: projects } = await useFetch<DjangoListResponse<Project>>('/api/projects/', {
-    baseURL: config.public.apiBase,
-    params: { expand: 'skills', featured: true, limit: 3, status: 'published' },
-    headers: { 'Accept-Language': 'en-us' }
+// Fetch projects only if not provided as prop
+const { data: fetchedProjects } = props.projects ? { data: ref(null) } : await useApi<DjangoListResponse<Project>>('/api/projects/', {
+    params: {
+        expand: 'skills',
+        ...(props.featuredOnly !== false && { featured: true }),
+        limit: 3,
+        status: 'published'
+    }
 });
+
+const projects = computed(() => {
+    if (props.projects) {
+        return { results: props.projects };
+    }
+    return fetchedProjects.value;
+});
+
+// Helper function to get skills as objects
+const getSkillsAsObjects = (skills: (number | Skill)[] | undefined) => {
+    return skills?.filter((skill): skill is Skill => typeof skill === 'object') || [];
+};
+
+console.log("Projects in ProjectList:", projects.value?.results);
 </script>
 
 <template>
     <v-row>
-        <v-col v-for="project in projects?.results" :key="project.id" cols="12" md="4" class="fade-up">
+        <v-col v-for="project in projects?.results" :key="project.id" :cols="props.cols || '12'"
+            :md="props.mdCols || '4'" :lg="props.lgCols || '4'" class="fade-up">
             <div class="project-card">
                 <div class="project-image-wrapper">
                     <v-img :src="project.cover || 'https://via.placeholder.com/600x400'" :aspect-ratio="16 / 10" cover
@@ -21,6 +46,10 @@ const { data: projects } = await useFetch<DjangoListResponse<Project>>('/api/pro
                             <v-skeleton-loader type="image" />
                         </template>
                     </v-img>
+                    <div v-if="project.featured" class="featured-badge">
+                        <v-icon size="16">mdi-star</v-icon>
+                        Destaque
+                    </div>
                 </div>
 
                 <div class="project-content">
@@ -28,9 +57,9 @@ const { data: projects } = await useFetch<DjangoListResponse<Project>>('/api/pro
                     <p class="project-description">{{ project.summary }}</p>
 
                     <div class="project-tags">
-                        <span v-for="skill in project.skills?.slice(0, 3)"
-                            :key="typeof skill === 'object' ? skill.id : skill" class="project-tag">
-                            <template v-if="typeof skill === 'object'">{{ skill.name }}</template>
+                        <span v-for="skill in getSkillsAsObjects(project.skills).slice(0, 4)" :key="skill.id"
+                            class="project-tag">
+                            {{ skill.name }}
                         </span>
                     </div>
 
@@ -69,6 +98,7 @@ const { data: projects } = await useFetch<DjangoListResponse<Project>>('/api/pro
 }
 
 .project-image-wrapper {
+    position: relative;
     overflow: hidden;
     background: #f9fafb;
 }
@@ -79,6 +109,22 @@ const { data: projects } = await useFetch<DjangoListResponse<Project>>('/api/pro
 
 .project-card:hover .project-image {
     transform: scale(1.05);
+}
+
+.featured-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(37, 99, 235, 0.95);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    backdrop-filter: blur(8px);
 }
 
 .project-content {

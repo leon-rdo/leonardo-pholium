@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import type { DjangoListResponse, Experience } from '~/types/api';
 
-const config = useRuntimeConfig();
-
-const { data: experiences } = await useFetch<DjangoListResponse<Experience>>('/api/experiences/', {
-    baseURL: config.public.apiBase,
+const { data: experiences } = await useApi<DjangoListResponse<Experience>>('/api/experiences/', {
     params: { limit: 3, ordering: '-start_date' }
 });
 

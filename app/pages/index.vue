@@ -16,41 +16,18 @@ useSeoMeta({
   description: 'Desenvolvedor Full Stack - Criando experiências digitais excepcionais',
 });
 
-const config = useRuntimeConfig();
-
 // Fetch all paginated content blocks
-const { data: contentBlocks } = await useAsyncData('content-blocks', async () => {
-  let url: string | null = '/api/content-blocks/';
-  const allResults: ContentBlock[] = [];
-
-  while (url) {
-    const response: DjangoListResponse<ContentBlock> = await $fetch<DjangoListResponse<ContentBlock>>(url, {
-      baseURL: url.startsWith('http') ? undefined : config.public.apiBase,
-      params: url.startsWith('http') ? undefined : { page_name: 'home' },
-      headers: { 'Accept-Language': 'en-us' }
-    });
-
-    if (response) {
-      allResults.push(...(response.results || []));
-      url = response.next;
-    } else {
-      url = null;
-    }
-  }
-
-  return {
-    count: allResults.length,
-    results: allResults,
-    next: null,
-    previous: null
-  } as DjangoListResponse<ContentBlock>;
-}, {
-  default: () => ({ count: 0, results: [], next: null, previous: null })
-});
+const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
+  'home-content-blocks',
+  '/api/content-blocks/',
+  { page_name: 'home' }
+);
 
 const getContentBlock = (key: string) => {
   return contentBlocks.value?.results?.find(block => block.key === key);
 };
+
+console.log("contentBlocks:", contentBlocks.value);
 
 onMounted(() => {
   gsap.from('.hero-title', {
@@ -105,7 +82,8 @@ const scrollToSection = (sectionId: string) => {
       <v-row align="center" justify="center" class="min-h-screen">
         <v-col cols="12" md="10" lg="8" class="text-center">
           <div class="hero-badge mb-6 fade-up">
-            <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'ERRO' }}</span>
+            <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'Disponível para novos projetos'
+            }}</span>
           </div>
 
           <h1 class="hero-title mb-6">
@@ -184,7 +162,7 @@ const scrollToSection = (sectionId: string) => {
         </v-col>
       </v-row>
 
-      <ProjectList />
+      <ProjectList :featuredOnly="true" />
 
       <v-row class="mt-8">
         <v-col cols="12" class="text-center fade-up">

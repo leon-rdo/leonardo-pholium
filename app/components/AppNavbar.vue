@@ -16,6 +16,22 @@
                     <NuxtLink v-for="item in navItems" :key="item.to" :to="item.to" class="nav-link">
                         {{ item.label }}
                     </NuxtLink>
+
+                    <!-- Language Selector -->
+                    <v-menu offset-y>
+                        <template v-slot:activator="{ props }">
+                            <v-btn v-bind="props" variant="text" class="language-btn">
+                                <v-icon start>mdi-translate</v-icon>
+                                {{ currentLocale.toUpperCase() }}
+                            </v-btn>
+                        </template>
+                        <v-list>
+                            <v-list-item v-for="lang in availableLocales" :key="lang.code"
+                                @click="changeLocale(lang.code)" :active="locale === lang.code">
+                                <v-list-item-title>{{ lang.name }}</v-list-item-title>
+                            </v-list-item>
+                        </v-list>
+                    </v-menu>
                 </nav>
 
                 <!-- Mobile Menu Button -->
@@ -42,12 +58,23 @@
                     </template>
                     <v-list-item-title>{{ item.label }}</v-list-item-title>
                 </v-list-item>
+
+                <!-- Language Selector Mobile -->
+                <v-list-item class="drawer-item mt-4">
+                    <template v-slot:prepend>
+                        <v-icon>mdi-translate</v-icon>
+                    </template>
+                    <v-select v-model="locale" :items="availableLocales" item-title="name" item-value="code"
+                        variant="outlined" density="compact" hide-details @update:model-value="changeLocale">
+                    </v-select>
+                </v-list-item>
             </v-list>
         </v-navigation-drawer>
     </div>
 </template>
 
 <script setup lang="ts">
+const { locale, locales, setLocale } = useI18n();
 const drawer = ref(false);
 const scrolled = ref(false);
 
@@ -57,6 +84,22 @@ const navItems = [
     { label: 'Projetos', to: '/projects', icon: 'mdi-folder-multiple' },
     { label: 'Contato', to: '/#contact', icon: 'mdi-email' },
 ];
+
+const availableLocales = computed(() =>
+    (locales.value as Array<{ code: string; name: string }>).filter(
+        (i) => i.code !== locale.value
+    ).concat({ code: locale.value, name: locales.value.find((l: any) => l.code === locale.value)?.name || '' })
+);
+
+const currentLocale = computed(() => {
+    return locale.value === 'pt-br' ? 'pt' : locale.value.split('-')[0];
+});
+
+const changeLocale = async (newLocale: string) => {
+    await setLocale(newLocale);
+    // Recarregar a página para atualizar os dados com o novo idioma
+    window.location.reload();
+};
 
 onMounted(() => {
     window.addEventListener('scroll', handleScroll);
@@ -139,6 +182,19 @@ const handleScroll = () => {
     font-weight: 600;
 }
 
+/* Language Button */
+.language-btn {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #4b5563;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.language-btn:hover {
+    background: #f9fafb;
+}
+
 /* Mobile Drawer */
 .mobile-drawer {
     background: #ffffff;
@@ -170,50 +226,6 @@ const handleScroll = () => {
     background: #eff6ff;
     color: #2563eb;
 }
-
-/* Dark Mode Support */
-/* @media (prefers-color-scheme: dark) {
-    .navbar {
-        border-bottom-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .brand-name {
-        color: #f1f5f9;
-    }
-
-    .brand-logo:hover .brand-name {
-        color: #3b82f6;
-    }
-
-    .nav-link {
-        color: #94a3b8;
-    }
-
-    .nav-link:hover {
-        color: #f1f5f9;
-    }
-
-    .nav-link.router-link-active {
-        color: #3b82f6;
-    }
-
-    .mobile-drawer {
-        background: #0f172a;
-    }
-
-    .drawer-header {
-        border-bottom-color: #1e293b;
-    }
-
-    .drawer-item:hover {
-        background: #1e293b;
-    }
-
-    .drawer-item.router-link-active {
-        background: #1e3a8a;
-        color: #3b82f6;
-    }
-} */
 
 /* Responsive */
 @media (max-width: 960px) {

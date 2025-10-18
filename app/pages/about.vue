@@ -12,42 +12,18 @@ useSeoMeta({
   description: 'Conheça mais sobre mim, minha história e minha jornada no desenvolvimento',
 });
 
-const config = useRuntimeConfig();
+const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
+  'about-content-blocks',
+  '/api/content-blocks/',
+  { page_name: 'about' }
+);
 
-// Fetch all paginated content blocks
-const { data: contentBlocks } = await useAsyncData('about-content-blocks', async () => {
-  let url: string | null = '/api/content-blocks/';
-  const allResults: ContentBlock[] = [];
-
-  while (url) {
-    const response: DjangoListResponse<ContentBlock> = await $fetch<DjangoListResponse<ContentBlock>>(url, {
-      baseURL: url.startsWith('http') ? undefined : config.public.apiBase,
-      params: url.startsWith('http') ? undefined : { page_name: 'about' },
-      headers: { 'Accept-Language': 'en-us' }
-    });
-
-    console.log('Fetched content blocks from:', url, response);
-
-    if (response) {
-      allResults.push(...(response.results || []));
-      url = response.next;
-    } else {
-      url = null;
-    }
-  }
-
-  return {
-    count: allResults.length,
-    results: allResults,
-    next: null,
-    previous: null
-  } as DjangoListResponse<ContentBlock>;
-}, {
-  default: () => ({ count: 0, results: [], next: null, previous: null })
+const allContentBlocks = computed<DjangoListResponse<ContentBlock> | null>(() => {
+  return contentBlocks.value || null;
 });
 
 const getContentBlock = (key: string) => {
-  return contentBlocks.value?.results?.find(block => block.key === key);
+  return allContentBlocks.value?.results?.find(block => block.key === key);
 };
 
 onMounted(() => {
@@ -151,7 +127,7 @@ onMounted(() => {
             <p class="cta-text">
               {{ getContentBlock('cta_text')?.text || 'Vamos trabalhar juntos?' }}
             </p>
-            <v-btn size="large" color="primary" class="text-none cta-btn" to="/contact">
+            <v-btn size="large" color="primary" class="text-none cta-btn" to="/#contact">
               {{ getContentBlock('cta_button')?.text || 'Entre em Contato' }}
               <v-icon end>mdi-arrow-right</v-icon>
             </v-btn>

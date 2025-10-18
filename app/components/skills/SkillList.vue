@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import type { DjangoListResponse, Skill } from '~/types/api';
 
-const config = useRuntimeConfig();
-
-const { data: skills } = await useFetch<DjangoListResponse<Skill>>('/api/skills/', {
-    baseURL: config.public.apiBase,
+const { data: skills } = await useApi<DjangoListResponse<Skill>>('/api/skills/', {
     params: { limit: 6, ordering: '-level' }
 });
 
