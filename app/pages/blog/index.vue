@@ -144,11 +144,16 @@ onMounted(() => {
             <!-- Category Filters -->
             <v-chip-group v-model="selectedCategory" mandatory color="primary" class="filters-chips">
               <v-chip value="all" class="filter-chip">
-                Todos
+                Todas
               </v-chip>
               <v-chip v-for="category in categories?.results" :key="category.id" :value="category.id.toString()"
                 class="filter-chip">
                 {{ category.name }}
+              </v-chip>
+              <v-chip class="filter-chip">
+                <NuxtLink :to="localePath('/blog/category/')" style="color: black; font-style: italic;">
+                  Ver todas...
+                </NuxtLink>
               </v-chip>
             </v-chip-group>
           </div>
