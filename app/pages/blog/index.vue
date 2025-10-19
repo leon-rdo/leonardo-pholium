@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { DjangoListResponse } from '~/types/api';
 import type { ContentBlock } from '~/types/content';
 import type { Post, Category } from '~/types/blog';
+import BlogCategoriesDrawer from '~/components/blog/BlogCategoriesDrawer.vue';
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
@@ -13,6 +14,7 @@ const route = useRoute();
 const localePath = useLocalePath();
 const selectedCategory = ref<string>('all');
 const searchQuery = ref('');
+const showCategoriesDrawer = ref(false);
 
 // Fetch content blocks for blog page
 const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
@@ -142,24 +144,29 @@ onMounted(() => {
               variant="outlined" density="comfortable" hide-details class="search-field mb-6" />
 
             <!-- Category Filters -->
-            <v-chip-group v-model="selectedCategory" mandatory color="primary" class="filters-chips">
-              <v-chip value="all" class="filter-chip">
-                Todas
-              </v-chip>
-              <v-chip v-for="category in categories?.results" :key="category.id" :value="category.id.toString()"
-                class="filter-chip">
-                {{ category.name }}
-              </v-chip>
-              <v-chip class="filter-chip">
-                <NuxtLink :to="localePath('/blog/category/')" style="color: black; font-style: italic;">
+            <div class="d-flex justify-center">
+              <v-chip-group v-model="selectedCategory" mandatory color="primary" class="filters-chips">
+                <v-chip value="all" class="filter-chip">
+                  Todas
+                </v-chip>
+                <v-chip v-for="category in categories?.results" :key="category.id" :value="category.id.toString()"
+                  class="filter-chip">
+                  {{ category.name }}
+                </v-chip>
+              </v-chip-group>
+              <v-btn variant="tonal" class="mt-2" @click="showCategoriesDrawer = true" rounded color="secondary">
+                <span style="font-style: italic;">
                   Ver todas...
-                </NuxtLink>
-              </v-chip>
-            </v-chip-group>
+                </span>
+              </v-btn>
+            </div>
           </div>
         </v-col>
       </v-row>
     </v-container>
+
+    <!-- Categories Drawer -->
+    <BlogCategoriesDrawer v-model="showCategoriesDrawer" />
 
     <!-- Posts Grid -->
     <v-container class="posts-section">
