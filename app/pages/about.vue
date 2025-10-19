@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import type { ContentBlock, DjangoListResponse } from '~/types/api';
+import type { DjangoListResponse } from '~/types/api';
+import type { ContentBlock } from '~/types/content';
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);

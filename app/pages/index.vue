@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import type { ContentBlock, DjangoListResponse } from '~/types/api';
+import type { ContentBlock } from '~/types/content';
 import SkillList from '~/components/skills/SkillList.vue';
 import ProjectList from '~/components/projects/ProjectList.vue';
 import ExperienceList from '~/components/experiences/ExperienceList.vue';
@@ -83,7 +83,7 @@ const scrollToSection = (sectionId: string) => {
         <v-col cols="12" md="10" lg="8" class="text-center">
           <div class="hero-badge mb-6 fade-up">
             <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'Disponível para novos projetos'
-            }}</span>
+              }}</span>
           </div>
 
           <h1 class="hero-title mb-6">

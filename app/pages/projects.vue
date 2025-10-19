@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import type { ContentBlock, DjangoListResponse, Project, Skill } from '~/types/api';
+import type { DjangoListResponse } from '~/types/api';
+import type { ContentBlock } from '~/types/content';
+import type { Project, Skill } from '~/types/portfolio';
 import ProjectList from '~/components/projects/ProjectList.vue';
 
 if (import.meta.client) {
@@ -22,7 +24,7 @@ const getContentBlock = (key: string) => {
 };
 
 // Fetch all projects
-const { data: projects } = await useApi<DjangoListResponse<Project>>('/api/projects/', {
+const { data: projects } = await useApi<DjangoListResponse<Project<{ tags: true; skills: true; author: true }>>>('/api/projects/', {
     params: { expand: 'skills', limit: 3, status: 'published' }
 });
 
@@ -35,7 +37,7 @@ const selectedFilter = ref('all');
 const filters = computed(() => {
     const allSkills = new Set<string>();
     projects.value?.results?.forEach(project => {
-        project.skills?.forEach(skill => {
+        project.skills?.forEach((skill: Skill) => {
             if (typeof skill === 'object' && skill.name) {
                 allSkills.add(skill.name);
             }
@@ -49,7 +51,7 @@ const filteredProjects = computed(() => {
         return projects.value?.results || [];
     }
     return projects.value?.results?.filter(project =>
-        project.skills?.some(skill =>
+        project.skills?.some((skill: Skill) =>
             typeof skill === 'object' && skill.name === selectedFilter.value
         )
     ) || [];

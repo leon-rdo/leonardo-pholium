@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { DjangoListResponse, Skill } from '~/types/api';
+import type { DjangoListResponse } from '~/types/api';
+import type { Skill } from '~/types/portfolio';
 
 const { data: skills } = await useApi<DjangoListResponse<Skill>>('/api/skills/', {
     params: { limit: 6, ordering: '-level' }

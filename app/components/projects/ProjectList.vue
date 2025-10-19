@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import type { DjangoListResponse, Project, Skill } from '~/types/api';
+import type { DjangoListResponse } from '~/types/api';
+import type { Project } from '~/types/portfolio';
 
 const props = defineProps<{
     featuredOnly?: boolean;
-    projects?: Project[];
+    projects?: Project<{ skills: true }>[];
     cols?: string;
     mdCols?: string;
     lgCols?: string;
 }>();
 
 // Fetch projects only if not provided as prop
-const { data: fetchedProjects } = props.projects ? { data: ref(null) } : await useApi<DjangoListResponse<Project>>('/api/projects/', {
+const { data: fetchedProjects } = props.projects ? { data: ref(null) } : await useApi<DjangoListResponse<Project<{ skills: true }>>>('/api/projects/', {
     params: {
         expand: 'skills',
         ...(props.featuredOnly !== false && { featured: true }),
@@ -25,13 +26,6 @@ const projects = computed(() => {
     }
     return fetchedProjects.value;
 });
-
-// Helper function to get skills as objects
-const getSkillsAsObjects = (skills: (number | Skill)[] | undefined) => {
-    return skills?.filter((skill): skill is Skill => typeof skill === 'object') || [];
-};
-
-console.log("Projects in ProjectList:", projects.value?.results);
 </script>
 
 <template>
@@ -57,8 +51,7 @@ console.log("Projects in ProjectList:", projects.value?.results);
                     <p class="project-description">{{ project.summary }}</p>
 
                     <div class="project-tags">
-                        <span v-for="skill in getSkillsAsObjects(project.skills).slice(0, 4)" :key="skill.id"
-                            class="project-tag">
+                        <span v-for="skill in project.skills.slice(0, 4)" :key="skill.id" class="project-tag">
                             {{ skill.name }}
                         </span>
                     </div>

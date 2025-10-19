@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { DjangoListResponse, Experience } from '~/types/api';
+import type { DjangoListResponse } from '~/types/api';
+import type { Experience } from '~/types/portfolio';
 
 const { data: experiences } = await useApi<DjangoListResponse<Experience>>('/api/experiences/', {
     params: { limit: 3, ordering: '-start_date' }

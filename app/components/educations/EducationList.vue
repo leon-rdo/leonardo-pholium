@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { DjangoListResponse, Education } from '~/types/api';
+import type { DjangoListResponse } from '~/types/api';
+import type { Education } from '~/types/portfolio';
 
 const config = useRuntimeConfig();
 

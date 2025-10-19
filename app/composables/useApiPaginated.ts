@@ -1,4 +1,3 @@
-// app/composables/useApiPaginated.ts
 import type { DjangoListResponse } from "~/types/api";
 
 /**

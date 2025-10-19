@@ -128,7 +128,8 @@
 </template>
 
 <script setup lang="ts">
-import type { DjangoListResponse, NavigationItem } from '~/types/api';
+import type { DjangoListResponse } from '~/types/api';
+import type { NavigationItem } from '~/types/content';
 
 const { locale, locales, setLocale } = useI18n();
 const localePath = useLocalePath();
