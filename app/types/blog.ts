@@ -1,9 +1,9 @@
 import type { Image, Tag } from "./core";
 import type { User } from "./auth";
 
-export interface Category {
+export interface Category<TExpand = Record<string, never>> {
   id: number;
-  parent: number | null;
+  parent: TExpand extends { parent: true } ? Category : number | null;
   is_active: boolean;
   order: number;
   name: string;
@@ -12,6 +12,7 @@ export interface Category {
   seo_title: string;
   meta_description: string;
   images?: Image[];
+  children?: Category[];
 }
 
 export interface Series {
