@@ -13,8 +13,11 @@ const localePath = useLocalePath();
 const slug = route.params.slug as string;
 
 // Fetch category by slug
-const { data: categories } = await useApi<DjangoListResponse<Category>>('/api/post-categories/', {
-  params: { translations__slug: slug }
+const { data: categories } = await useApi<DjangoListResponse<Category<{ parent: true }>>>('/api/post-categories/', {
+  params: {
+    translations__slug: slug,
+    expand: 'parent,children'
+  }
 });
 
 const category = computed(() => categories.value?.results?.[0]);
@@ -86,6 +89,12 @@ onMounted(() => {
           <div class="breadcrumbs mb-6">
             <NuxtLink :to="localePath('/blog')" class="breadcrumb-link">Blog</NuxtLink>
             <v-icon size="16" class="breadcrumb-separator">mdi-chevron-right</v-icon>
+            <template v-if="category.parent">
+              <NuxtLink :to="localePath(`/blog/category/${category.parent?.slug}`)" class="breadcrumb-link">
+                {{ category.parent?.name }}
+              </NuxtLink>
+              <v-icon size="16" class="breadcrumb-separator">mdi-chevron-right</v-icon>
+            </template>
             <span class="breadcrumb-current">{{ category.name }}</span>
           </div>
 
@@ -95,12 +104,23 @@ onMounted(() => {
             {{ category.description }}
           </p>
 
+          <v-chip-group v-model="category.children" mandatory color="primary" class="filters-chips">
+            <v-chip disabled class="filter-chip-label" variant="text">
+              Relacionadas:
+            </v-chip>
+            <v-chip v-for="child in category.children" :key="child.id" :value="child.id.toString()" class="filter-chip"
+              :to="localePath(`/blog/category/${child.slug}`)">
+              {{ child.name }}
+            </v-chip>
+          </v-chip-group>
+
           <div class="category-stats">
             <span class="category-stat">
               <v-icon size="18">mdi-text-box-multiple</v-icon>
               {{ posts?.count || 0 }} {{ (posts?.count || 0) === 1 ? 'artigo' : 'artigos' }}
             </span>
           </div>
+
         </v-col>
       </v-row>
     </v-container>
