@@ -6,6 +6,7 @@ import SkillList from '~/components/skills/SkillList.vue';
 import ProjectList from '~/components/projects/ProjectList.vue';
 import ExperienceList from '~/components/experiences/ExperienceList.vue';
 import EducationList from '~/components/educations/EducationList.vue';
+import RecentPosts from '~/components/blog/RecentPosts.vue';
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
@@ -83,7 +84,7 @@ const scrollToSection = (sectionId: string) => {
         <v-col cols="12" md="10" lg="8" class="text-center">
           <div class="hero-badge mb-6 fade-up">
             <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'Disponível para novos projetos'
-              }}</span>
+            }}</span>
           </div>
 
           <h1 class="hero-title mb-6">
@@ -125,6 +126,22 @@ const scrollToSection = (sectionId: string) => {
               {{ getContentBlock('about_intro')?.text }}
             </p>
           </div>
+        </v-col>
+      </v-row>
+    </v-container>
+
+    <v-container class="section-container" id="recent-posts">
+      <v-row justify="center">
+        <v-col cols="12" md="8">
+          <div class="section-header fade-up mb-12">
+            <h2 class="section-title">
+              {{ getContentBlock('recent_posts_title')?.text || 'Posts Recentes' }}
+            </h2>
+            <p class="section-subtitle">
+              {{ getContentBlock('recent_posts_subtitle')?.text || 'Últimas novidades do meu blog' }}
+            </p>
+          </div>
+          <RecentPosts />
         </v-col>
       </v-row>
     </v-container>
