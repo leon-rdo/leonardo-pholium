@@ -9,10 +9,11 @@ if (import.meta.client) {
 }
 
 const route = useRoute();
+const localePath = useLocalePath();
 const slug = route.params.slug as string;
 
 // Fetch category by slug
-const { data: categories } = await useApi<DjangoListResponse<Category>>('/api/blog/post-categories/', {
+const { data: categories } = await useApi<DjangoListResponse<Category>>('/api/post-categories/', {
   params: { slug }
 });
 
@@ -23,10 +24,10 @@ if (!category.value) {
 }
 
 // Fetch posts in this category
-const { data: posts } = await useApi<DjangoListResponse<Post>>('/api/blog/posts/published/', {
+const { data: posts } = await useApi<DjangoListResponse<Post>>('/api/posts/published/', {
   params: {
     category: category.value.id,
-    expand: 'category,tags',
+    expand: 'category,tags,images',
     ordering: '-is_pinned,-published_at'
   }
 });
@@ -83,7 +84,7 @@ onMounted(() => {
       <v-row justify="center">
         <v-col cols="12" md="10" lg="8" class="text-center">
           <div class="breadcrumbs mb-6">
-            <NuxtLink to="/blog" class="breadcrumb-link">Blog</NuxtLink>
+            <NuxtLink :to="localePath('/blog')" class="breadcrumb-link">Blog</NuxtLink>
             <v-icon size="16" class="breadcrumb-separator">mdi-chevron-right</v-icon>
             <span class="breadcrumb-current">{{ category.name }}</span>
           </div>
@@ -110,7 +111,7 @@ onMounted(() => {
         <v-col v-for="post in posts?.results" :key="post.id" cols="12" md="6" lg="4" class="fade-up">
           <div class="post-card">
             <div class="post-image-wrapper">
-              <NuxtLink :to="`/blog/${post.slug}`">
+              <NuxtLink :to="localePath(`/blog/${post.slug}`)">
                 <v-img
                   :src="post.images?.find(image => image.image_type === 'cover')?.file || 'https://via.placeholder.com/600x400'"
                   :aspect-ratio="16 / 10" cover class="post-image" />
@@ -122,7 +123,7 @@ onMounted(() => {
                 <span class="post-date">{{ formatDate(post.published_at) }}</span>
               </div>
 
-              <NuxtLink :to="`/blog/${post.slug}`" class="post-title-link">
+              <NuxtLink :to="localePath(`/blog/${post.slug}`)" class="post-title-link">
                 <h3 class="post-title">{{ post.title }}</h3>
               </NuxtLink>
 
@@ -140,7 +141,7 @@ onMounted(() => {
                   </span>
                 </div>
 
-                <NuxtLink :to="`/blog/${post.slug}`" class="read-more">
+                <NuxtLink :to="localePath(`/blog/${post.slug}`)" class="read-more">
                   Ler mais
                   <v-icon size="14" end>mdi-arrow-right</v-icon>
                 </NuxtLink>
@@ -163,7 +164,7 @@ onMounted(() => {
     <v-container class="back-section">
       <v-row justify="center">
         <v-col cols="12" class="text-center">
-          <v-btn size="large" variant="outlined" color="grey-darken-2" class="text-none" to="/blog">
+          <v-btn size="large" variant="outlined" color="grey-darken-2" class="text-none" :to="localePath('/blog')">
             <v-icon start>mdi-arrow-left</v-icon>
             Voltar para o Blog
           </v-btn>
