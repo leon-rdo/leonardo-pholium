@@ -2,6 +2,8 @@
 import type { DjangoListResponse } from '~/types/api';
 import type { Post } from '~/types/blog';
 
+const localePath = useLocalePath();
+
 const props = defineProps<{
     limit?: number;
     excludeId?: number;
@@ -38,7 +40,8 @@ const formatDate = (date: string | null) => {
         <h3 class="recent-posts-title">Artigos Recentes</h3>
 
         <div class="recent-posts-list">
-            <NuxtLink v-for="post in filteredPosts" :key="post.id" :to="`/blog/${post.slug}`" class="recent-post-item">
+            <NuxtLink v-for="post in filteredPosts" :key="post.id" :to="localePath(`/blog/${post.slug}`)"
+                class="recent-post-item">
                 <div class="recent-post-image">
                     <v-img
                         :src="post.images?.find(img => img.image_type === 'cover')?.thumbnail || 'https://via.placeholder.com/100x80'"

@@ -8,6 +8,8 @@ import ExperienceList from '~/components/experiences/ExperienceList.vue';
 import EducationList from '~/components/educations/EducationList.vue';
 import RecentPosts from '~/components/blog/RecentPosts.vue';
 
+const localePath = useLocalePath();
+
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
 }
@@ -82,7 +84,7 @@ const scrollToSection = (sectionId: string) => {
         <v-col cols="12" md="10" lg="8" class="text-center">
           <div class="hero-badge mb-6 fade-up">
             <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'Disponível para novos projetos'
-              }}</span>
+            }}</span>
           </div>
 
           <h1 class="hero-title mb-6">
@@ -181,7 +183,7 @@ const scrollToSection = (sectionId: string) => {
 
       <v-row class="mt-8">
         <v-col cols="12" class="text-center fade-up">
-          <v-btn size="large" variant="text" color="grey-darken-2" class="text-none" to="/projects">
+          <v-btn size="large" variant="text" color="grey-darken-2" class="text-none" :to="localePath('/projects')">
             {{ getContentBlock('projects_cta')?.text || 'Ver Todos os Projetos' }}
             <v-icon end size="20">mdi-arrow-right</v-icon>
           </v-btn>
