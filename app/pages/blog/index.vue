@@ -10,6 +10,7 @@ if (import.meta.client) {
 }
 
 const route = useRoute();
+const localePath = useLocalePath();
 const selectedCategory = ref<string>('all');
 const searchQuery = ref('');
 
@@ -183,7 +184,7 @@ onMounted(() => {
                     <span class="post-date">{{ formatDate(post.published_at) }}</span>
                   </div>
 
-                  <NuxtLink :to="`/blog/${post.slug}`" class="post-title-link">
+                  <NuxtLink :to="localePath(`/blog/${post.slug}`)" class="post-title-link">
                     <h2 class="post-title">{{ post.title }}</h2>
                   </NuxtLink>
 
@@ -201,7 +202,7 @@ onMounted(() => {
                       </span>
                     </div>
 
-                    <NuxtLink :to="`/blog/${post.slug}`" class="read-more">
+                    <NuxtLink :to="localePath(`/blog/${post.slug}`)" class="read-more">
                       Ler mais
                       <v-icon size="16" end>mdi-arrow-right</v-icon>
                     </NuxtLink>
@@ -217,7 +218,7 @@ onMounted(() => {
           class="fade-up">
           <div class="post-card">
             <div class="post-image-wrapper">
-              <NuxtLink :to="`/blog/${post.slug}`">
+              <NuxtLink :to="localePath(`/blog/${post.slug}`)">
                 <v-img :src="getCoverImage(post)" :aspect-ratio="16 / 10" cover class="post-image" />
               </NuxtLink>
             </div>
@@ -230,7 +231,7 @@ onMounted(() => {
                 <span class="post-date">{{ formatDate(post.published_at) }}</span>
               </div>
 
-              <NuxtLink :to="`/blog/${post.slug}`" class="post-title-link">
+              <NuxtLink :to="localePath(`/blog/${post.slug}`)" class="post-title-link">
                 <h3 class="post-title">{{ post.title }}</h3>
               </NuxtLink>
 
@@ -248,7 +249,7 @@ onMounted(() => {
                   </span>
                 </div>
 
-                <NuxtLink :to="`/blog/${post.slug}`" class="read-more">
+                <NuxtLink :to="localePath(`/blog/${post.slug}`)" class="read-more">
                   Ler mais
                   <v-icon size="14" end>mdi-arrow-right</v-icon>
                 </NuxtLink>
