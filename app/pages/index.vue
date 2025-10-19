@@ -7,6 +7,7 @@ import ProjectList from '~/components/projects/ProjectList.vue';
 import ExperienceList from '~/components/experiences/ExperienceList.vue';
 import EducationList from '~/components/educations/EducationList.vue';
 import RecentPosts from '~/components/blog/RecentPosts.vue';
+import ContactForm from '~/components/contact-messages/ContactForm.vue';
 
 const localePath = useLocalePath();
 
@@ -83,8 +84,7 @@ const scrollToSection = (sectionId: string) => {
       <v-row align="center" justify="center" class="min-h-screen">
         <v-col cols="12" md="10" lg="8" class="text-center">
           <div class="hero-badge mb-6 fade-up">
-            <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'Disponível para novos projetos'
-            }}</span>
+            <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'Disponível para novos projetos' }}</span>
           </div>
 
           <h1 class="hero-title mb-6">
@@ -230,27 +230,38 @@ const scrollToSection = (sectionId: string) => {
     <!-- Contact Section -->
     <v-container class="section-container" id="contact">
       <v-row justify="center">
-        <v-col cols="12" md="8" lg="6" class="text-center">
+        <v-col cols="12" md="10" lg="8">
           <div class="contact-wrapper fade-up">
-            <h2 class="contact-title">
-              {{ getContentBlock('contact_title')?.text || 'Vamos Conversar?' }}
-            </h2>
-            <p class="contact-subtitle">
-              {{ getContentBlock('contact_subtitle')?.text || 'Estou sempre aberto a novos projetos e oportunidades' }}
-            </p>
+            <div class="contact-header text-center mb-12">
+              <h2 class="contact-title">
+                {{ getContentBlock('contact_title')?.text || 'Vamos Conversar?' }}
+              </h2>
+              <p class="contact-subtitle">
+                {{ getContentBlock('contact_subtitle')?.text || 'Estou sempre aberto a novos projetos e oportunidades'
+                }}
+              </p>
+            </div>
 
-            <div class="contact-links">
-              <a :href="getContentBlock('contact_linkedin')?.text || 'https://linkedin.com'" target="_blank"
-                class="contact-link">
-                <v-icon size="24">mdi-linkedin</v-icon>
-              </a>
-              <a :href="getContentBlock('contact_github')?.text || 'https://github.com'" target="_blank"
-                class="contact-link">
-                <v-icon size="24">mdi-github</v-icon>
-              </a>
-              <a :href="`mailto:${getContentBlock('contact_email')?.text || 'email@example.com'}`" class="contact-link">
-                <v-icon size="24">mdi-email</v-icon>
-              </a>
+            <!-- Contact Form -->
+            <ContactForm />
+
+            <!-- Social Links -->
+            <div class="contact-social mt-12">
+              <p class="contact-social-text text-center">Ou conecte-se comigo nas redes sociais:</p>
+              <div class="contact-links">
+                <a :href="getContentBlock('contact_linkedin')?.text || 'https://linkedin.com'" target="_blank"
+                  class="contact-link" title="LinkedIn">
+                  <v-icon size="24">mdi-linkedin</v-icon>
+                </a>
+                <a :href="getContentBlock('contact_github')?.text || 'https://github.com'" target="_blank"
+                  class="contact-link" title="GitHub">
+                  <v-icon size="24">mdi-github</v-icon>
+                </a>
+                <a :href="`mailto:${getContentBlock('contact_email')?.text || 'email@example.com'}`"
+                  class="contact-link" title="E-mail">
+                  <v-icon size="24">mdi-email</v-icon>
+                </a>
+              </div>
             </div>
           </div>
         </v-col>
