@@ -14,7 +14,7 @@ const slug = route.params.slug as string;
 
 // Fetch category by slug
 const { data: categories } = await useApi<DjangoListResponse<Category>>('/api/post-categories/', {
-  params: { slug }
+  params: { translations__slug: slug }
 });
 
 const category = computed(() => categories.value?.results?.[0]);
