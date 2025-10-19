@@ -8,6 +8,7 @@ import ExperienceList from '~/components/experiences/ExperienceList.vue';
 import EducationList from '~/components/educations/EducationList.vue';
 import RecentPosts from '~/components/blog/RecentPosts.vue';
 import ContactForm from '~/components/contact-messages/ContactForm.vue';
+import TestimonialsList from '~/components/testimonials/TestimonialsList.vue';
 
 const localePath = useLocalePath();
 
@@ -84,7 +85,8 @@ const scrollToSection = (sectionId: string) => {
       <v-row align="center" justify="center" class="min-h-screen">
         <v-col cols="12" md="10" lg="8" class="text-center">
           <div class="hero-badge mb-6 fade-up">
-            <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'Disponível para novos projetos' }}</span>
+            <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'Disponível para novos projetos'
+            }}</span>
           </div>
 
           <h1 class="hero-title mb-6">
@@ -225,6 +227,22 @@ const scrollToSection = (sectionId: string) => {
       </v-row>
 
       <EducationList />
+    </v-container>
+
+    <v-container class="section-container" id="testimonials">
+      <v-row justify="center">
+        <v-col cols="12" md="8">
+          <div class="section-header fade-up mb-12">
+            <h2 class="section-title">
+              {{ getContentBlock('testimonials_title')?.text || 'Depoimentos' }}
+            </h2>
+            <p class="section-subtitle">
+              {{ getContentBlock('testimonials_subtitle')?.text || 'O que meus clientes dizem' }}
+            </p>
+          </div>
+          <TestimonialsList />
+        </v-col>
+      </v-row>
     </v-container>
 
     <!-- Contact Section -->
