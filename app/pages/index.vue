@@ -28,8 +28,6 @@ const getContentBlock = (key: string) => {
   return contentBlocks.value?.results?.find(block => block.key === key);
 };
 
-console.log("contentBlocks:", contentBlocks.value);
-
 onMounted(() => {
   gsap.from('.hero-title', {
     y: 30,
@@ -84,7 +82,7 @@ const scrollToSection = (sectionId: string) => {
         <v-col cols="12" md="10" lg="8" class="text-center">
           <div class="hero-badge mb-6 fade-up">
             <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'Disponível para novos projetos'
-            }}</span>
+              }}</span>
           </div>
 
           <h1 class="hero-title mb-6">
