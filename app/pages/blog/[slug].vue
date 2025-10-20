@@ -10,6 +10,7 @@ if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+const { t } = useI18n();
 const route = useRoute();
 const slug = route.params.slug as string;
 
@@ -24,7 +25,7 @@ const { data: posts } = await useApi<DjangoListResponse<Post>>('/api/posts/', {
 const post = computed(() => posts.value?.results?.[0]);
 
 if (!post.value) {
-  throw createError({ statusCode: 404, message: 'Post não encontrado' });
+  throw createError({ statusCode: 404, message: t('errors.post_not_found') });
 }
 
 // Fetch related posts
@@ -142,11 +143,11 @@ onMounted(() => {
               <div class="post-stats">
                 <span class="post-stat">
                   <v-icon size="18">mdi-clock-outline</v-icon>
-                  {{ post.reading_time }} min de leitura
+                  {{ post.reading_time }} {{ t('blog.readingTime') }}
                 </span>
                 <span class="post-stat">
                   <v-icon size="18">mdi-eye-outline</v-icon>
-                  {{ post.view_count }} visualizações
+                  {{ post.view_count }} {{ t('blog.views') }}
                 </span>
               </div>
 
@@ -217,7 +218,7 @@ onMounted(() => {
       <v-row justify="center">
         <v-col cols="12">
           <h2 class="section-title text-center mb-12 fade-up">
-            Artigos Relacionados
+            {{ t('blog.relatedPosts') }}
           </h2>
         </v-col>
       </v-row>
@@ -253,7 +254,7 @@ onMounted(() => {
         <v-col cols="12" class="text-center">
           <v-btn size="large" variant="outlined" color="grey-darken-2" class="text-none" to="/blog">
             <v-icon start>mdi-arrow-left</v-icon>
-            Voltar para o Blog
+            {{ t('common.backToBlog') }}
           </v-btn>
         </v-col>
       </v-row>

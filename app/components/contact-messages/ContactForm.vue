@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const config = useRuntimeConfig();
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 
 const form = ref({
     name: '',
@@ -25,12 +25,12 @@ const resetForm = () => {
 
 const submitForm = async () => {
     if (!form.value.name || !form.value.email || !form.value.subject || !form.value.message) {
-        error.value = 'Por favor, preencha todos os campos';
+        error.value = t('contact.validationAllFields');
         return;
     }
 
     if (!form.value.email.includes('@')) {
-        error.value = 'Por favor, insira um e-mail válido';
+        error.value = t('contact.validationEmail');
         return;
     }
 
@@ -56,7 +56,7 @@ const submitForm = async () => {
         }, 5000);
     } catch (err: any) {
         console.error('Contact form error:', err);
-        error.value = err.data?.message || 'Erro ao enviar mensagem. Tente novamente.';
+        error.value = err.data?.message || t('contact.errorMessage');
     } finally {
         isSubmitting.value = false;
     }
@@ -67,9 +67,9 @@ const submitForm = async () => {
     <div class="contact-form">
         <!-- Success Message -->
         <v-alert v-if="submitted" type="success" variant="tonal" class="mb-6">
-            <strong>Mensagem enviada com sucesso!</strong>
+            <strong>{{ t('contact.successTitle') }}</strong>
             <br>
-            Obrigado pelo contato. Responderei em breve.
+            {{ t('contact.successMessage') }}
         </v-alert>
 
         <!-- Error Message -->
@@ -81,29 +81,29 @@ const submitForm = async () => {
         <form @submit.prevent="submitForm" class="contact-form-fields">
             <v-row>
                 <v-col cols="12" md="6">
-                    <v-text-field v-model="form.name" label="Nome *" variant="outlined" density="comfortable"
-                        :disabled="isSubmitting" required />
+                    <v-text-field v-model="form.name" :label="t('contact.name')" variant="outlined"
+                        density="comfortable" :disabled="isSubmitting" required />
                 </v-col>
 
                 <v-col cols="12" md="6">
-                    <v-text-field v-model="form.email" label="E-mail *" type="email" variant="outlined"
+                    <v-text-field v-model="form.email" :label="t('contact.email')" type="email" variant="outlined"
                         density="comfortable" :disabled="isSubmitting" required />
                 </v-col>
 
                 <v-col cols="12">
-                    <v-text-field v-model="form.subject" label="Assunto *" variant="outlined" density="comfortable"
-                        :disabled="isSubmitting" required />
+                    <v-text-field v-model="form.subject" :label="t('contact.subject')" variant="outlined"
+                        density="comfortable" :disabled="isSubmitting" required />
                 </v-col>
 
                 <v-col cols="12">
-                    <v-textarea v-model="form.message" label="Mensagem *" variant="outlined" rows="5"
+                    <v-textarea v-model="form.message" :label="t('contact.message')" variant="outlined" rows="5"
                         :disabled="isSubmitting" required />
                 </v-col>
 
                 <v-col cols="12">
                     <v-btn type="submit" size="large" color="primary" :loading="isSubmitting" :disabled="isSubmitting"
                         class="text-none px-8" block>
-                        Enviar Mensagem
+                        {{ t('contact.send') }}
                         <v-icon end>mdi-send</v-icon>
                     </v-btn>
                 </v-col>

@@ -6,7 +6,7 @@ const props = defineProps<{
 }>();
 
 const config = useRuntimeConfig();
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 
 // Fetch reaction summary
 const { data: reactionSummary, refresh: refreshReactions } = await useFetch<ReactionSummary>(
@@ -25,14 +25,6 @@ const reactionIcons = {
     clap: 'mdi-hand-clap',
     fire: 'mdi-fire',
     wow: 'mdi-emoticon-excited'
-};
-
-const reactionLabels = {
-    like: 'Curtir',
-    love: 'Amar',
-    clap: 'Aplaudir',
-    fire: 'Fogo',
-    wow: 'Uau'
 };
 
 const isAuthenticated = ref(false); // You should implement proper auth check
@@ -76,20 +68,20 @@ const getReactionCount = (type: string) => {
 
 <template>
     <div class="blog-reactions">
-        <h3 class="reactions-title">Reagir ao artigo</h3>
+        <h3 class="reactions-title">{{ t('blog.reactToArticle') }}</h3>
 
         <div class="reactions-grid">
             <button v-for="(icon, type) in reactionIcons" :key="type" class="reaction-button" :disabled="isLoading"
-                @click="toggleReaction(type)" :title="reactionLabels[type as keyof typeof reactionLabels]">
+                @click="toggleReaction(type)" :title="t(`reactions.${type}`)">
                 <v-icon :icon="icon" size="28" class="reaction-icon" />
                 <span class="reaction-count">{{ getReactionCount(type) }}</span>
-                <span class="reaction-label">{{ reactionLabels[type as keyof typeof reactionLabels] }}</span>
+                <span class="reaction-label">{{ t(`reactions.${type}`) }}</span>
             </button>
         </div>
 
         <div v-if="reactionSummary?.total" class="reactions-summary">
             <span class="reactions-total">
-                {{ reactionSummary.total }} {{ reactionSummary.total === 1 ? 'reação' : 'reações' }}
+                {{ t('blog.reactions', { count: reactionSummary.total }) }}
             </span>
         </div>
     </div>

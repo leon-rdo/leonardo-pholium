@@ -11,6 +11,7 @@ import ContactForm from '~/components/contact-messages/ContactForm.vue';
 import TestimonialsList from '~/components/testimonials/TestimonialsList.vue';
 
 const localePath = useLocalePath();
+const { locale, t } = useI18n();
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
@@ -265,7 +266,7 @@ const scrollToSection = (sectionId: string) => {
 
             <!-- Social Links -->
             <div class="contact-social mt-12">
-              <p class="contact-social-text text-center">Ou conecte-se comigo nas redes sociais:</p>
+              <p class="contact-social-text text-center">{{ t('contact.connectSocial') }}</p>
               <div class="contact-links">
                 <a :href="getContentBlock('contact_linkedin')?.text || 'https://linkedin.com'" target="_blank"
                   class="contact-link" title="LinkedIn">

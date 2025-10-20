@@ -11,6 +11,8 @@ if (import.meta.client) {
 }
 
 const config = useRuntimeConfig();
+const { locale, t } = useI18n();
+
 
 // Fetch content blocks for projects page
 const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
@@ -29,8 +31,8 @@ const { data: projects } = await useApi<DjangoListResponse<Project<{ tags: true;
 });
 
 useSeoMeta({
-    title: getContentBlock('page_title')?.text || 'Projetos | Leonardo',
-    description: getContentBlock('page_description')?.text || 'Conheça todos os meus projetos e trabalhos'
+    title: getContentBlock('page_title')?.text || t('projects.title'),
+    description: getContentBlock('page_description')?.text || t('projects.subtitle')
 });
 
 const selectedFilter = ref('all');
@@ -95,10 +97,10 @@ onMounted(() => {
             <v-row justify="center">
                 <v-col cols="12" md="10" lg="8" class="text-center">
                     <h1 class="page-title mb-6">
-                        {{ getContentBlock('hero_title')?.text || 'Meus Projetos' }}
+                        {{ getContentBlock('hero_title')?.text || t('projects.title') }}
                     </h1>
                     <p class="page-subtitle">
-                        {{ getContentBlock('hero_subtitle')?.text || 'Uma coleção dos meus trabalhos mais recentes e projetos pessoais' }}
+                        {{ getContentBlock('hero_subtitle')?.text || t('projects.subtitle') }}
                     </p>
                 </v-col>
             </v-row>
@@ -111,7 +113,7 @@ onMounted(() => {
                     <div class="filters-wrapper fade-up">
                         <v-chip-group v-model="selectedFilter" mandatory color="primary" class="filters-chips">
                             <v-chip v-for="filter in filters" :key="filter" :value="filter" class="filter-chip">
-                                {{ filter === 'all' ? 'Todos' : filter }}
+                                {{ filter === 'all' ? t('common.all') : filter }}
                             </v-chip>
                         </v-chip-group>
                     </div>
@@ -127,7 +129,7 @@ onMounted(() => {
                 <v-col cols="12" class="text-center py-16">
                     <v-icon size="80" color="grey-lighten-1">mdi-folder-open-outline</v-icon>
                     <p class="text-h6 text-grey-darken-1 mt-4">
-                        Nenhum projeto encontrado com este filtro
+                        {{ t('projects.noProjectsFound') }}
                     </p>
                 </v-col>
             </v-row>
@@ -138,13 +140,13 @@ onMounted(() => {
             <v-row justify="center">
                 <v-col cols="12" md="8" lg="6" class="text-center fade-up">
                     <h2 class="cta-title">
-                        {{ getContentBlock('cta_title')?.text || 'Gostou do que viu?' }}
+                        {{ getContentBlock('cta_title')?.text || t('projects.ctaTitle') }}
                     </h2>
                     <p class="cta-subtitle mb-8">
-                        {{ getContentBlock('cta_subtitle')?.text || 'Vamos trabalhar juntos no seu próximo projeto' }}
+                        {{ getContentBlock('cta_subtitle')?.text || t('projects.ctaSubtitle') }}
                     </p>
                     <v-btn size="large" color="primary" class="text-none px-8" to="/#contact">
-                        {{ getContentBlock('cta_button')?.text || 'Entre em Contato' }}
+                        {{ getContentBlock('cta_button')?.text || t('projects.ctaButton') }}
                         <v-icon end>mdi-arrow-right</v-icon>
                     </v-btn>
                 </v-col>

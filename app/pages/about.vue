@@ -8,11 +8,15 @@ if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+const localePath = useLocalePath();
+const { t } = useI18n();
+
 useSeoMeta({
-  title: 'Sobre | Leonardo',
+  title: () => `${t('about.title')} | Leonardo`,
   description: 'Conheça mais sobre mim, minha história e minha jornada no desenvolvimento',
 });
 
+const { locale } = useI18n();
 const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
   'about-content-blocks',
   '/api/content-blocks/',
@@ -65,7 +69,7 @@ onMounted(() => {
         <v-col cols="12" md="8" lg="6">
           <div class="hero-content">
             <h1 class="hero-title">
-              {{ getContentBlock('hero_title')?.text || 'Sobre Mim' }}
+              {{ getContentBlock('hero_title')?.text || t('about.title') }}
             </h1>
             <div class="hero-line"></div>
           </div>
@@ -89,7 +93,7 @@ onMounted(() => {
           <!-- Journey Section -->
           <div v-if="getContentBlock('journey_title')" class="content-block fade-up">
             <h2 class="section-subtitle">
-              {{ getContentBlock('journey_title')?.text || 'Minha Jornada' }}
+              {{ getContentBlock('journey_title')?.text || t('about.myJourney') }}
             </h2>
             <div v-if="getContentBlock('journey_text')?.kind === 'html'" v-html="getContentBlock('journey_text')?.text"
               class="content-text" />
@@ -101,7 +105,7 @@ onMounted(() => {
           <!-- Values Section -->
           <div v-if="getContentBlock('values_title')" class="content-block fade-up">
             <h2 class="section-subtitle">
-              {{ getContentBlock('values_title')?.text || 'Valores' }}
+              {{ getContentBlock('values_title')?.text || t('about.values') }}
             </h2>
             <div v-if="getContentBlock('values_text')?.kind === 'html'" v-html="getContentBlock('values_text')?.text"
               class="content-text" />
@@ -113,7 +117,7 @@ onMounted(() => {
           <!-- What I Do Section -->
           <div v-if="getContentBlock('what_i_do_title')" class="content-block fade-up">
             <h2 class="section-subtitle">
-              {{ getContentBlock('what_i_do_title')?.text || 'O Que Faço' }}
+              {{ getContentBlock('what_i_do_title')?.text || t('about.whatIDo') }}
             </h2>
             <div v-if="getContentBlock('what_i_do_text')?.kind === 'html'"
               v-html="getContentBlock('what_i_do_text')?.text" class="content-text" />
@@ -126,10 +130,10 @@ onMounted(() => {
           <div class="cta-section fade-up">
             <div class="cta-line"></div>
             <p class="cta-text">
-              {{ getContentBlock('cta_text')?.text || 'Vamos trabalhar juntos?' }}
+              {{ getContentBlock('cta_text')?.text || t('about.cta') }}
             </p>
-            <v-btn size="large" color="primary" class="text-none cta-btn" to="/#contact">
-              {{ getContentBlock('cta_button')?.text || 'Entre em Contato' }}
+            <v-btn size="large" color="primary" class="text-none cta-btn" :to="localePath('/#contact')">
+              {{ getContentBlock('cta_button')?.text || t('about.ctaButton') }}
               <v-icon end>mdi-arrow-right</v-icon>
             </v-btn>
           </div>

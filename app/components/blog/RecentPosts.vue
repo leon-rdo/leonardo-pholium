@@ -3,6 +3,7 @@ import type { DjangoListResponse } from '~/types/api';
 import type { Post } from '~/types/blog';
 
 const localePath = useLocalePath();
+const { t } = useI18n();
 
 const props = defineProps<{
     limit?: number;
@@ -37,7 +38,7 @@ const formatDate = (date: string | null) => {
 
 <template>
     <div class="recent-posts">
-        <h3 class="recent-posts-title">Artigos Recentes</h3>
+        <h3 class="recent-posts-title">{{ t('blog.recentPosts') }}</h3>
 
         <div class="recent-posts-list">
             <NuxtLink v-for="post in filteredPosts" :key="post.id" :to="localePath(`/blog/${post.slug}`)"

@@ -2,6 +2,7 @@
 import type { DjangoListResponse } from '~/types/api';
 import type { Comment } from '~/types/blog';
 
+const { t } = useI18n();
 const props = defineProps<{
   postId: number;
 }>();
@@ -90,7 +91,7 @@ const submitComment = async (parentId: number | null = null) => {
 
   if (!isAuthenticated.value) {
     if (!newComment.value.guest_name.trim() || !newComment.value.guest_email.trim()) {
-      alert('Por favor, preencha seu nome e e-mail');
+      alert(t('blog.fillGuestInfo'));
       return;
     }
   }
@@ -148,71 +149,37 @@ const cancelReply = () => {
 <template>
   <div class="blog-comments">
     <h3 class="comments-title">
-      Comentários ({{ commentsData?.count || 0 }})
+      {{ t('blog.comments') }} ({{ commentsData?.count || 0 }})
     </h3>
 
     <!-- Comment Form -->
     <div class="comment-form-wrapper">
-      <h4 class="comment-form-title">Deixe seu comentário</h4>
-      
+      <h4 class="comment-form-title">{{ t('blog.leaveComment') }}</h4>
+
       <form @submit.prevent="submitComment(null)" class="comment-form">
         <!-- Guest Info (if not authenticated) -->
         <div v-if="!isAuthenticated" class="guest-fields">
-          <v-text-field
-            v-model="newComment.guest_name"
-            label="Nome *"
-            variant="outlined"
-            density="comfortable"
-            hide-details
-            required
-          />
-          <v-text-field
-            v-model="newComment.guest_email"
-            label="E-mail *"
-            type="email"
-            variant="outlined"
-            density="comfortable"
-            hide-details
-            required
-          />
-          <v-text-field
-            v-model="newComment.guest_website"
-            label="Website (opcional)"
-            variant="outlined"
-            density="comfortable"
-            hide-details
-          />
+          <v-text-field v-model="newComment.guest_name" :label="t('blog.guestName')" variant="outlined"
+            density="comfortable" hide-details required />
+          <v-text-field v-model="newComment.guest_email" :label="t('blog.guestEmail')" type="email" variant="outlined"
+            density="comfortable" hide-details required />
+          <v-text-field v-model="newComment.guest_website" :label="t('blog.guestWebsite')" variant="outlined"
+            density="comfortable" hide-details />
         </div>
 
         <!-- Comment Content -->
-        <v-textarea
-          v-model="newComment.content"
-          label="Seu comentário *"
-          variant="outlined"
-          rows="4"
-          hide-details
-          required
-        />
+        <v-textarea v-model="newComment.content" :label="t('blog.yourComment')" variant="outlined" rows="4" hide-details
+          required />
 
-        <v-btn
-          type="submit"
-          color="primary"
-          :loading="isSubmitting"
-          :disabled="isSubmitting"
-          class="text-none"
-        >
-          Enviar Comentário
+        <v-btn type="submit" color="primary" :loading="isSubmitting" :disabled="isSubmitting" class="text-none">
+          {{ t('blog.sendComment') }}
         </v-btn>
       </form>
     </div>
 
     <!-- Comments List -->
     <div v-if="organizedComments.length" class="comments-list">
-      <div
-        v-for="comment in organizedComments"
-        :key="comment.id"
-        class="comment-thread"
-      >
+      <div v-for="comment in organizedComments" :key="comment.id" class="comment-thread">
         <!-- Parent Comment -->
         <div class="comment">
           <div class="comment-avatar">
@@ -230,44 +197,24 @@ const cancelReply = () => {
             <p class="comment-text">{{ comment.content }}</p>
 
             <div class="comment-actions">
-              <button
-                class="comment-action-btn"
-                @click="startReply(comment.id)"
-              >
+              <button class="comment-action-btn" @click="startReply(comment.id)">
                 <v-icon size="16">mdi-reply</v-icon>
-                Responder
+                {{ t('blog.reply') }}
               </button>
             </div>
 
             <!-- Reply Form -->
             <div v-if="replyingTo === comment.id" class="reply-form-wrapper">
               <form @submit.prevent="submitComment(comment.id)" class="reply-form">
-                <v-textarea
-                  v-model="newComment.content"
-                  label="Sua resposta"
-                  variant="outlined"
-                  rows="3"
-                  hide-details
-                  auto-focus
-                />
-                
+                <v-textarea v-model="newComment.content" label="Sua resposta" variant="outlined" rows="3" hide-details
+                  auto-focus />
+
                 <div class="reply-form-actions">
-                  <v-btn
-                    type="submit"
-                    color="primary"
-                    size="small"
-                    :loading="isSubmitting"
-                    class="text-none"
-                  >
-                    Responder
+                  <v-btn type="submit" color="primary" size="small" :loading="isSubmitting" class="text-none">
+                    {{ t('blog.submitReply') }}
                   </v-btn>
-                  <v-btn
-                    variant="text"
-                    size="small"
-                    @click="cancelReply"
-                    class="text-none"
-                  >
-                    Cancelar
+                  <v-btn variant="text" size="small" @click="cancelReply" class="text-none">
+                    {{ t('blog.cancel') }}
                   </v-btn>
                 </div>
               </form>
@@ -277,11 +224,7 @@ const cancelReply = () => {
 
         <!-- Replies -->
         <div v-if="comment.replies?.length" class="comment-replies">
-          <div
-            v-for="reply in comment.replies"
-            :key="reply.id"
-            class="comment reply"
-          >
+          <div v-for="reply in comment.replies" :key="reply.id" class="comment reply">
             <div class="comment-avatar">
               <v-icon size="28" color="grey-lighten-1">mdi-account-circle</v-icon>
             </div>
@@ -305,7 +248,7 @@ const cancelReply = () => {
     <div v-else class="comments-empty">
       <v-icon size="60" color="grey-lighten-2">mdi-comment-outline</v-icon>
       <p class="comments-empty-text">
-        Seja o primeiro a comentar!
+        {{ t('blog.beFirstToComment') }}
       </p>
     </div>
   </div>

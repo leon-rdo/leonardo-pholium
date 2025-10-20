@@ -2,6 +2,8 @@
 import type { DjangoListResponse } from '~/types/api';
 import type { Category } from '~/types/blog';
 
+const { locale, t } = useI18n();
+
 const props = defineProps<{
   modelValue: boolean;
 }>();
@@ -77,7 +79,7 @@ const navigateToAllCategories = () => {
     <div class="drawer-header">
       <div class="header-content">
         <v-icon size="28" color="primary">mdi-folder-multiple</v-icon>
-        <span class="header-title">Categorias</span>
+        <span class="header-title">{{ t('common.categories') }}</span>
       </div>
       <v-btn icon variant="text" size="small" @click="drawer = false">
         <v-icon>mdi-close</v-icon>
@@ -86,11 +88,11 @@ const navigateToAllCategories = () => {
 
     <v-list nav class="categories-list">
       <!-- All Categories Link -->
-      <v-list-item class="all-categories-item" @click="navigateToAllCategories" title="Ver todas as categorias">
+      <v-list-item class="all-categories-item" @click="navigateToAllCategories" :title="t('blog.viewAllCategories')">
         <template v-slot:prepend>
           <v-icon>mdi-view-grid</v-icon>
         </template>
-        <v-list-item-title class="font-weight-bold">Todas as Categorias</v-list-item-title>
+        <v-list-item-title class="font-weight-bold">{{ t('common.allCategories') }}</v-list-item-title>
         <template v-slot:append>
           <v-icon size="16">mdi-open-in-new</v-icon>
         </template>
@@ -145,7 +147,7 @@ const navigateToAllCategories = () => {
       <!-- Empty State -->
       <v-list-item v-if="!rootCategories.length" class="text-center py-8">
         <v-list-item-title class="text-grey">
-          Nenhuma categoria disponível
+          {{ t('blog.noCategoriesAvailable') }}
         </v-list-item-title>
       </v-list-item>
     </v-list>
@@ -155,7 +157,7 @@ const navigateToAllCategories = () => {
       <v-btn block variant="outlined" color="primary" class="text-none" :to="localePath('/blog')"
         @click="drawer = false">
         <v-icon start>mdi-arrow-left</v-icon>
-        Voltar para o Blog
+        {{ t('common.backToBlog') }}
       </v-btn>
     </div>
   </v-navigation-drawer>
@@ -311,68 +313,4 @@ const navigateToAllCategories = () => {
 .categories-drawer :deep(.v-navigation-drawer__content)::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
-
-/* Dark Mode Support */
-/* @media (prefers-color-scheme: dark) {
-  .categories-drawer {
-    background: #0f172a;
-  }
-
-  .drawer-header,
-  .drawer-footer {
-    background: #1e293b;
-    border-color: #334155;
-  }
-
-  .header-title {
-    color: #f1f5f9;
-  }
-
-  .all-categories-item,
-  .category-item {
-    background: #1e293b;
-    border-color: #334155;
-  }
-
-  .all-categories-item:hover {
-    background: #1e3a8a;
-  }
-
-  .parent-category:hover {
-    background: #334155;
-    border-color: #475569;
-  }
-
-  .subcategory-item {
-    background: #1e293b;
-  }
-
-  .subcategory-item:hover {
-    background: #334155;
-    border-color: #475569;
-  }
-
-  .category-item :deep(.v-list-item-title) {
-    color: #f1f5f9;
-  }
-
-  .category-item :deep(.v-list-item-subtitle) {
-    color: #94a3b8;
-  }
-
-  .categories-list :deep(.v-list-group__header) {
-    background: #1e293b;
-    border-color: #334155;
-  }
-
-  .categories-list :deep(.v-list-group__header:hover) {
-    background: #334155;
-    border-color: #475569;
-  }
-
-  .categories-list :deep(.v-list-group__header.v-list-item--active) {
-    background: #1e3a8a;
-    border-color: #3b82f6;
-  }
-} */
 </style>

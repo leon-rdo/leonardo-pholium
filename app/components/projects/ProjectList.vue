@@ -42,7 +42,7 @@ const projects = computed(() => {
                     </v-img>
                     <div v-if="project.featured" class="featured-badge">
                         <v-icon size="16">mdi-star</v-icon>
-                        Destaque
+                        {{ $t('projects.featured') }}
                     </div>
                 </div>
 
@@ -59,11 +59,11 @@ const projects = computed(() => {
                     <div class="project-links">
                         <a v-if="project.website_url" :href="project.website_url" target="_blank" class="project-link">
                             <v-icon size="20">mdi-web</v-icon>
-                            <span>Site</span>
+                            <span>{{ $t('projects.website') }}</span>
                         </a>
                         <a v-if="project.repo_url" :href="project.repo_url" target="_blank" class="project-link">
                             <v-icon size="20">mdi-github</v-icon>
-                            <span>Código</span>
+                            <span>{{ $t('projects.code') }}</span>
                         </a>
                     </div>
                 </div>

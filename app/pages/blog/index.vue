@@ -12,6 +12,7 @@ if (import.meta.client) {
 
 const route = useRoute();
 const localePath = useLocalePath();
+const { locale, t } = useI18n();
 const selectedCategory = ref<string>('all');
 const searchQuery = ref('');
 const showCategoriesDrawer = ref(false);
@@ -45,8 +46,8 @@ const { data: posts, refresh: refreshPosts } = await useApi<DjangoListResponse<P
 });
 
 useSeoMeta({
-  title: getContentBlock('page_title')?.text || 'Blog | Leonardo',
-  description: getContentBlock('page_description')?.text || 'Artigos, tutoriais e insights sobre desenvolvimento'
+  title: getContentBlock('page_title')?.text || t('blog.title'),
+  description: getContentBlock('page_description')?.text || t('blog.subtitle')
 });
 
 // Watch for category changes
@@ -125,10 +126,10 @@ onMounted(() => {
       <v-row justify="center">
         <v-col cols="12" md="10" lg="8" class="text-center">
           <h1 class="page-title mb-6">
-            {{ getContentBlock('hero_title')?.text || 'Blog' }}
+            {{ getContentBlock('hero_title')?.text || t('blog.title') }}
           </h1>
           <p class="page-subtitle">
-            {{ getContentBlock('hero_subtitle')?.text || 'Artigos, tutoriais e insights sobre desenvolvimento' }}
+            {{ getContentBlock('hero_subtitle')?.text || t('blog.subtitle') }}
           </p>
         </v-col>
       </v-row>
@@ -140,14 +141,14 @@ onMounted(() => {
         <v-col cols="12" md="10">
           <div class="filters-wrapper fade-up">
             <!-- Search -->
-            <v-text-field v-model="searchQuery" prepend-inner-icon="mdi-magnify" placeholder="Buscar artigos..."
+            <v-text-field v-model="searchQuery" prepend-inner-icon="mdi-magnify" :placeholder="t('blog.search')"
               variant="outlined" density="comfortable" hide-details class="search-field mb-6" />
 
             <!-- Category Filters -->
             <div class="d-flex justify-center">
               <v-chip-group v-model="selectedCategory" mandatory color="primary" class="filters-chips">
                 <v-chip value="all" class="filter-chip">
-                  Todas
+                  {{ t('common.all') }}
                 </v-chip>
                 <v-chip v-for="category in categories?.results" :key="category.id" :value="category.id.toString()"
                   class="filter-chip">
@@ -156,7 +157,7 @@ onMounted(() => {
               </v-chip-group>
               <v-btn variant="tonal" class="mt-2" @click="showCategoriesDrawer = true" rounded color="secondary">
                 <span style="font-style: italic;">
-                  Ver todas...
+                  {{ t('common.allCategories') }}
                 </span>
               </v-btn>
             </div>
@@ -177,7 +178,7 @@ onMounted(() => {
           <div class="post-card featured">
             <div class="featured-badge">
               <v-icon size="16">mdi-pin</v-icon>
-              Fixado
+              {{ t('projects.featured') }}
             </div>
 
             <v-row>
@@ -215,7 +216,7 @@ onMounted(() => {
                     </div>
 
                     <NuxtLink :to="localePath(`/blog/${post.slug}`)" class="read-more">
-                      Ler mais
+                      {{ t('common.readMore') }}
                       <v-icon size="16" end>mdi-arrow-right</v-icon>
                     </NuxtLink>
                   </div>
@@ -262,7 +263,7 @@ onMounted(() => {
                 </div>
 
                 <NuxtLink :to="localePath(`/blog/${post.slug}`)" class="read-more">
-                  Ler mais
+                  {{ t('common.readMore') }}
                   <v-icon size="14" end>mdi-arrow-right</v-icon>
                 </NuxtLink>
               </div>
@@ -274,7 +275,7 @@ onMounted(() => {
         <v-col v-if="!posts?.results?.length" cols="12" class="text-center py-16">
           <v-icon size="80" color="grey-lighten-1">mdi-text-box-search-outline</v-icon>
           <p class="text-h6 text-grey-darken-1 mt-4">
-            Nenhum artigo encontrado
+            {{ t('blog.noPostsFound') }}
           </p>
         </v-col>
       </v-row>

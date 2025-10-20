@@ -9,8 +9,9 @@ if (import.meta.client) {
 }
 
 const route = useRoute();
-const localePath = useLocalePath();
 const slug = route.params.slug as string;
+const localePath = useLocalePath();
+const { t } = useI18n();
 
 // Fetch category by slug
 const { data: categories } = await useApi<DjangoListResponse<Category<{ parent: true }>>>('/api/post-categories/', {
@@ -23,7 +24,7 @@ const { data: categories } = await useApi<DjangoListResponse<Category<{ parent: 
 const category = computed(() => categories.value?.results?.[0]);
 
 if (!category.value) {
-  throw createError({ statusCode: 404, message: 'Categoria não encontrada' });
+  throw createError({ statusCode: 404, message: t('errors.categoryNotFound') });
 }
 
 // Fetch posts in this category
@@ -104,9 +105,10 @@ onMounted(() => {
             {{ category.description }}
           </p>
 
-          <v-chip-group v-model="category.children" mandatory color="primary" class="filters-chips">
+          <v-chip-group v-if="category.children && category.children.length > 0" v-model="category.children" mandatory
+            color="primary" class="filters-chips">
             <v-chip disabled class="filter-chip-label" variant="text">
-              Relacionadas:
+              {{ t('common.related') }}:
             </v-chip>
             <v-chip v-for="child in category.children" :key="child.id" :value="child.id.toString()" class="filter-chip"
               :to="localePath(`/blog/category/${child.slug}`)">
@@ -117,7 +119,7 @@ onMounted(() => {
           <div class="category-stats">
             <span class="category-stat">
               <v-icon size="18">mdi-text-box-multiple</v-icon>
-              {{ posts?.count || 0 }} {{ (posts?.count || 0) === 1 ? 'artigo' : 'artigos' }}
+              {{ posts?.count || 0 }} {{ (posts?.count || 0) === 1 ? t('blog.article') : t('blog.articles') }}
             </span>
           </div>
 
@@ -162,7 +164,7 @@ onMounted(() => {
                 </div>
 
                 <NuxtLink :to="localePath(`/blog/${post.slug}`)" class="read-more">
-                  Ler mais
+                  {{ t('common.readMore') }}
                   <v-icon size="14" end>mdi-arrow-right</v-icon>
                 </NuxtLink>
               </div>

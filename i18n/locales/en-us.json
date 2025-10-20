@@ -1,1 +1,159 @@
-{}
+{
+  "common": {
+    "all": "All",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "back": "Back",
+    "viewAll": "View All",
+    "readMore": "Read more",
+    "seeMore": "See more",
+    "seeAll": "See all",
+    "categories": "Categories",
+    "allCategories": "All Categories",
+    "backToBlog": "Back to Blog",
+    "share": "Share",
+    "copyLink": "Copy link",
+    "related": "Related",
+    "language": "Language"
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "projects": "Projects",
+    "blog": "Blog",
+    "contact": "Contact"
+  },
+  "hero": {
+    "availableForProjects": "Available for new projects",
+    "greeting": "Hello, I'm",
+    "viewProjects": "View Projects",
+    "getInTouch": "Get in Touch"
+  },
+  "about": {
+    "title": "About Me",
+    "myJourney": "My Journey",
+    "values": "Values",
+    "whatIDo": "What I Do",
+    "cta": "Let's work together?",
+    "ctaButton": "Get in Touch"
+  },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Articles, tutorials and insights about development",
+    "search": "Search articles...",
+    "article": "Article",
+    "articles": "Articles",
+    "categories": "Categories",
+    "comments": "Comments",
+    "allCategories": "All Categories",
+    "viewAllCategories": "View all categories",
+    "relatedPosts": "Related Articles",
+    "recentPosts": "Recent Posts",
+    "readingTime": "min read",
+    "views": "views",
+    "publishedOn": "Published on",
+    "noPostsFound": "No articles found",
+    "noCategoriesAvailable": "No categories available",
+    "reactToArticle": "React to article",
+    "reactions": "{count} reaction | {count} reactions",
+    "shareOn": "Share on",
+    "beFirstToComment": "Be the first to comment!",
+    "leaveComment": "Leave your comment",
+    "sendComment": "Send Comment",
+    "replying": "Reply",
+    "cancel": "Cancel",
+    "reply": "Reply",
+    "fillGuestInfo": "Please fill in your name and email",
+    "guestName": "Name *",
+    "guestEmail": "Email *",
+    "guestWebsite": "Website (optional)",
+    "yourComment": "Your comment *",
+    "yourReply": "Your reply",
+    "now": "just now",
+    "minutesAgo": "{count} min ago",
+    "hoursAgo": "{count}h ago",
+    "daysAgo": "{count} days ago"
+  },
+  "projects": {
+    "title": "My Projects",
+    "subtitle": "A collection of my most recent works and personal projects",
+    "featured": "Featured",
+    "all": "All",
+    "noProjectsFound": "No projects found with this filter",
+    "website": "Website",
+    "code": "Code",
+    "viewAllProjects": "View All Projects",
+    "ctaTitle": "Like what you see?",
+    "ctaSubtitle": "Let's work together on your next project",
+    "ctaButton": "Get in Touch"
+  },
+  "skills": {
+    "title": "Skills",
+    "subtitle": "Technologies I master"
+  },
+  "experience": {
+    "title": "Experience",
+    "subtitle": "My professional journey",
+    "present": "Present"
+  },
+  "education": {
+    "title": "Education",
+    "subtitle": "My academic background",
+    "present": "Present"
+  },
+  "testimonials": {
+    "title": "Testimonials",
+    "subtitle": "What my clients say",
+    "previous": "Previous testimonial",
+    "next": "Next testimonial",
+    "goTo": "Go to testimonial {number}"
+  },
+  "contact": {
+    "title": "Let's Talk?",
+    "subtitle": "I'm always open to new projects and opportunities",
+    "name": "Name *",
+    "email": "E-mail *",
+    "subject": "Subject *",
+    "message": "Message *",
+    "send": "Send Message",
+    "sending": "Sending...",
+    "successTitle": "Message sent successfully!",
+    "successMessage": "Thank you for contacting me. I'll respond soon.",
+    "errorMessage": "Error sending message. Please try again.",
+    "validationName": "Please enter your name",
+    "validationEmail": "Please enter a valid email",
+    "validationSubject": "Please enter a subject",
+    "validationMessage": "Please enter a message",
+    "validationAllFields": "Please fill in all fields",
+    "connectSocial": "Or connect with me on social media:",
+    "linkedin": "LinkedIn",
+    "github": "GitHub"
+  },
+  "newsletter": {
+    "title": "Receive new articles",
+    "description": "Subscribe to receive notifications about new posts and exclusive content",
+    "placeholder": "Enter your e-mail",
+    "subscribe": "Subscribe",
+    "privacy": "Your data is safe. No spam, we promise!",
+    "successTitle": "Subscription confirmed!",
+    "successMessage": "Thank you for subscribing. You'll receive our next articles in your email.",
+    "errorMessage": "Error subscribing. Please try again.",
+    "validationEmail": "Please enter a valid email"
+  },
+  "footer": {
+    "copyright": "© {year} Leonardo. All rights reserved."
+  },
+  "reactions": {
+    "like": "Like",
+    "love": "Love",
+    "clap": "Clap",
+    "fire": "Fire",
+    "wow": "Wow"
+  },
+  "errors": {
+    "404": "Page not found",
+    "postNotFound": "Post not found",
+    "categoryNotFound": "Category not found"
+  }
+}

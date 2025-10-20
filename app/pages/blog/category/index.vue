@@ -9,6 +9,7 @@ if (import.meta.client) {
 }
 
 const localePath = useLocalePath();
+const { t } = useI18n();
 
 // Fetch all categories
 const { data: categories } = await useApi<DjangoListResponse<Category>>('/api/post-categories/', {
@@ -20,8 +21,8 @@ const { data: categories } = await useApi<DjangoListResponse<Category>>('/api/po
 });
 
 useSeoMeta({
-    title: 'Categorias | Blog',
-    description: 'Explore os artigos do blog por categoria'
+    title: () => `${t('common.categories')} | ${t('nav.blog')}`,
+    description: () => t('blog.subtitle')
 });
 
 const getCategoryIcon = (name: string) => {
@@ -93,15 +94,15 @@ onMounted(() => {
             <v-row justify="center">
                 <v-col cols="12" md="10" lg="8" class="text-center">
                     <div class="breadcrumbs mb-6">
-                        <NuxtLink :to="localePath('/blog')" class="breadcrumb-link">Blog</NuxtLink>
+                        <NuxtLink :to="localePath('/blog')" class="breadcrumb-link">{{ t('nav.blog') }}</NuxtLink>
                         <v-icon size="16" class="breadcrumb-separator">mdi-chevron-right</v-icon>
-                        <span class="breadcrumb-current">Categorias</span>
+                        <span class="breadcrumb-current">{{ t('common.categories') }}</span>
                     </div>
 
-                    <h1 class="page-title mb-6">Categorias</h1>
+                    <h1 class="page-title mb-6">{{ t('common.categories') }}</h1>
 
                     <p class="page-description">
-                        Explore os artigos organizados por categoria e encontre o conteúdo que mais interessa você
+                        {{ t('blog.subtitle') }}
                     </p>
                 </v-col>
             </v-row>
@@ -139,7 +140,7 @@ onMounted(() => {
 
                                 <div class="category-footer">
                                     <span class="category-link-text">
-                                        Ver artigos
+                                        {{ t('common.seeMore') }}
                                         <v-icon size="16" end>mdi-arrow-right</v-icon>
                                     </span>
                                 </div>
@@ -152,7 +153,7 @@ onMounted(() => {
                 <v-col v-if="!categories?.results?.length" cols="12" class="text-center py-16">
                     <v-icon size="80" color="grey-lighten-1">mdi-folder-open-outline</v-icon>
                     <p class="text-h6 text-grey-darken-1 mt-4">
-                        Nenhuma categoria disponível
+                        {{ t('blog.noCategoriesAvailable') }}
                     </p>
                 </v-col>
             </v-row>
@@ -165,7 +166,7 @@ onMounted(() => {
                     <v-btn size="large" variant="outlined" color="grey-darken-2" class="text-none"
                         :to="localePath('/blog')">
                         <v-icon start>mdi-arrow-left</v-icon>
-                        Voltar para o Blog
+                        {{ t('common.backToBlog') }}
                     </v-btn>
                 </v-col>
             </v-row>

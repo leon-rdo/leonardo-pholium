@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { locale, t } = useI18n();
+const currentYear = new Date().getFullYear();
 </script>
 
 <template>
@@ -13,7 +15,7 @@
         <v-row>
           <v-col cols="12" class="text-center">
             <p class="footer-text">
-              © {{ new Date().getFullYear() }} Leonardo. Todos os direitos reservados.
+              {{ t('footer.copyright', { year: currentYear }) }}
             </p>
           </v-col>
         </v-row>
