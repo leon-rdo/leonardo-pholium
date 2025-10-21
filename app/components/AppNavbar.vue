@@ -133,6 +133,8 @@ import type { NavigationItem } from '~/types/content';
 
 const { locale, locales, setLocale } = useI18n();
 const localePath = useLocalePath();
+const switchLocalePath = useSwitchLocalePath();
+
 const drawer = ref(false);
 const scrolled = ref(false);
 
@@ -176,24 +178,13 @@ const getIconForUrl = (url: string): string => {
 
 const changeLocale = async (newLocale: string) => {
     const i18nCookie = useCookie('i18n_redirected');
-    i18nCookie.value = null;
+    i18nCookie.value = newLocale;
 
-    await setLocale(newLocale as "pt-br" | "en-us");
+    const newPath = switchLocalePath(newLocale as 'pt-br' | 'en-us');
 
-    let newPath: string;
-    const currentPath = window.location.pathname;
-
-    if (newLocale === 'pt-br') {
-        newPath = currentPath.replace(/^\/[a-z]{2}-[a-z]{2}/, '') || '/';
-    } else {
-        if (currentPath.startsWith('/en-us') || currentPath.startsWith('/pt-br')) {
-            newPath = currentPath.replace(/^\/[a-z]{2}-[a-z]{2}/, `/${newLocale}`);
-        } else {
-            newPath = `/${newLocale}${currentPath}`;
-        }
+    if (newPath) {
+        await navigateTo(newPath, { external: true });
     }
-
-    window.location.href = newPath;
 };
 
 onMounted(() => {
