@@ -2,7 +2,7 @@
 import type { DjangoListResponse } from '~/types/api';
 import type { Category } from '~/types/blog';
 
-const { data: categories } = await useApi<DjangoListResponse<Category>>('/api/blog/post-categories/', {
+const { data: categories } = await useApi<DjangoListResponse<Category>>('/api/post-categories/', {
     params: {
         is_active: true,
         ordering: 'order'

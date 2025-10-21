@@ -13,7 +13,7 @@ export const useBlog = () => {
    * Fetch posts with optional filters
    */
   const fetchPosts = async (params?: Record<string, any>) => {
-    return await $fetch<DjangoListResponse<Post>>("/api/blog/posts/", {
+    return await $fetch<DjangoListResponse<Post>>("/api/posts/", {
       baseURL: config.public.apiBase,
       params: {
         expand: "category,tags",
@@ -30,7 +30,7 @@ export const useBlog = () => {
    */
   const fetchPostBySlug = async (slug: string) => {
     const response = await $fetch<DjangoListResponse<Post>>(
-      "/api/blog/posts/",
+      "/api/posts/",
       {
         baseURL: config.public.apiBase,
         params: {
@@ -51,7 +51,7 @@ export const useBlog = () => {
    */
   const fetchPublishedPosts = async (params?: Record<string, any>) => {
     return await $fetch<DjangoListResponse<Post>>(
-      "/api/blog/posts/published/",
+      "/api/posts/published/",
       {
         baseURL: config.public.apiBase,
         params: {
@@ -71,7 +71,7 @@ export const useBlog = () => {
    */
   const fetchCategories = async (params?: Record<string, any>) => {
     return await $fetch<DjangoListResponse<Category>>(
-      "/api/blog/post-categories/",
+      "/api/post-categories/",
       {
         baseURL: config.public.apiBase,
         params: {
@@ -90,7 +90,7 @@ export const useBlog = () => {
    * Fetch comments for a post
    */
   const fetchComments = async (postId: number) => {
-    return await $fetch<DjangoListResponse<Comment>>("/api/blog/comments/", {
+    return await $fetch<DjangoListResponse<Comment>>("/api/comments/", {
       baseURL: config.public.apiBase,
       params: {
         post: postId,
@@ -113,7 +113,7 @@ export const useBlog = () => {
     guest_email?: string;
     guest_website?: string;
   }) => {
-    return await $fetch("/api/blog/comments/", {
+    return await $fetch("/api/comments/", {
       baseURL: config.public.apiBase,
       method: "POST",
       body: data,
@@ -128,7 +128,7 @@ export const useBlog = () => {
    * Toggle reaction
    */
   const toggleReaction = async (postId: number, reactionType: string) => {
-    return await $fetch("/api/blog/post-reactions/toggle/", {
+    return await $fetch("/api/post-reactions/toggle/", {
       baseURL: config.public.apiBase,
       method: "POST",
       body: {
@@ -146,7 +146,7 @@ export const useBlog = () => {
    * Get reaction summary
    */
   const fetchReactionSummary = async (postId: number) => {
-    return await $fetch(`/api/blog/post-reactions/summary/${postId}/`, {
+    return await $fetch(`/api/post-reactions/summary/${postId}/`, {
       baseURL: config.public.apiBase,
       headers: {
         "Accept-Language": apiLocale.value,

@@ -4,7 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { DjangoListResponse } from '~/types/api';
 import type { Post, Category } from '~/types/blog';
 import BlogComments from '~/components/blog/BlogComments.vue';
-import BlogReactions from '~/components/blog/BlogReactions.vue';
+// import BlogReactions from '~/components/blog/BlogReactions.vue';
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
@@ -29,7 +29,7 @@ if (!post.value) {
 }
 
 // Fetch related posts
-const { data: relatedPosts } = await useApi<DjangoListResponse<Post<{ category: true }>>>('/api/blog/posts/published/', {
+const { data: relatedPosts } = await useApi<DjangoListResponse<Post<{ category: true }>>>('/api/posts/published/', {
   params: {
     category: typeof post.value.category === 'object' ? post.value.category?.id : post.value.category,
     limit: 3,
@@ -196,13 +196,13 @@ onMounted(() => {
     </v-container>
 
     <!-- Reactions -->
-    <v-container class="reactions-section">
+    <!-- <v-container class="reactions-section">
       <v-row justify="center">
         <v-col cols="12" md="10" lg="8">
           <BlogReactions :post-id="post.id" />
         </v-col>
       </v-row>
-    </v-container>
+    </v-container> -->
 
     <!-- Comments -->
     <v-container v-if="post.allow_comments" class="comments-section">
@@ -249,7 +249,7 @@ onMounted(() => {
     </v-container>
 
     <!-- Back to Blog -->
-    <v-container class="back-section">
+    <v-container class="back-section mt-6">
       <v-row justify="center">
         <v-col cols="12" class="text-center">
           <v-btn size="large" variant="outlined" color="grey-darken-2" class="text-none" to="/blog">

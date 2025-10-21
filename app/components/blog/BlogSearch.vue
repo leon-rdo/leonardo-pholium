@@ -19,7 +19,7 @@ const performSearch = async () => {
     isSearching.value = true;
 
     try {
-        const { data } = await useApi<DjangoListResponse<Post>>('/api/blog/posts/published/', {
+        const { data } = await useApi<DjangoListResponse<Post>>('/api/posts/published/', {
             params: {
                 search: searchQuery.value,
                 limit: 5,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ReactionSummary } from '~/types/blog';
+import type { PostReaction } from '~/types/blog';
 
 const props = defineProps<{
     postId: number;
@@ -9,14 +9,8 @@ const config = useRuntimeConfig();
 const { locale, t } = useI18n();
 
 // Fetch reaction summary
-const { data: reactionSummary, refresh: refreshReactions } = await useFetch<ReactionSummary>(
-    `/api/blog/post-reactions/summary/${props.postId}/`,
-    {
-        baseURL: config.public.apiBase,
-        headers: {
-            'Accept-Language': locale.value === 'pt-br' ? 'pt-br' : 'en-us'
-        }
-    }
+const { data: reactionSummary, refresh: refreshReactions } = await useApi<PostReaction>(
+    `/api/post-reactions/summary/${props.postId}/`
 );
 
 const reactionIcons = {
@@ -40,7 +34,7 @@ const toggleReaction = async (reactionType: string) => {
     isLoading.value = true;
 
     try {
-        await $fetch('/api/blog/post-reactions/toggle/', {
+        await $fetch('/api/post-reactions/toggle/', {
             baseURL: config.public.apiBase,
             method: 'POST',
             headers: {

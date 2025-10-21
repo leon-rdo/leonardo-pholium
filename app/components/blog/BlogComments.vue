@@ -24,7 +24,7 @@ const newComment = ref({
 
 // Fetch comments
 const { data: commentsData, refresh: refreshComments } = await useFetch<DjangoListResponse<Comment>>(
-  '/api/blog/comments/',
+  '/api/comments/',
   {
     baseURL: config.public.apiBase,
     params: {
@@ -99,7 +99,7 @@ const submitComment = async (parentId: number | null = null) => {
   isSubmitting.value = true;
 
   try {
-    await $fetch('/api/blog/comments/', {
+    await $fetch('/api/comments/', {
       baseURL: config.public.apiBase,
       method: 'POST',
       headers: {
