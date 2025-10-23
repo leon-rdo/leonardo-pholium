@@ -34,6 +34,11 @@ const formatDate = (date: string | null) => {
         day: 'numeric'
     });
 };
+
+const getCoverImageThumbnail = (post: Post<{ category: true }>) => {
+    const coverImage = post.images?.find(img => img.image_type === 'cover');
+    return coverImage?.thumbnail || coverImage?.file || 'https://via.placeholder.com/100x80';
+};
 </script>
 
 <template>
@@ -44,9 +49,7 @@ const formatDate = (date: string | null) => {
             <NuxtLink v-for="post in filteredPosts" :key="post.id" :to="localePath(`/blog/${post.slug}`)"
                 class="recent-post-item">
                 <div class="recent-post-image">
-                    <v-img
-                        :src="post.images?.find(img => img.image_type === 'cover')?.thumbnail || 'https://via.placeholder.com/100x80'"
-                        :aspect-ratio="5 / 4" cover />
+                    <v-img :src="getCoverImageThumbnail(post)" :aspect-ratio="5 / 4" cover />
                 </div>
 
                 <div class="recent-post-content">
