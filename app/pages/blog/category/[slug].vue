@@ -2,6 +2,7 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { DjangoListResponse } from '~/types/api';
+import Pagination from '~/components/common/Pagination.vue';
 import type { Post, Category } from '~/types/blog';
 
 if (import.meta.client) {
@@ -27,14 +28,34 @@ if (!category.value) {
   throw createError({ statusCode: 404, message: t('errors.categoryNotFound') });
 }
 
-// Fetch posts in this category
-const { data: posts } = await useApi<DjangoListResponse<Post>>('/api/posts/published/', {
-  params: {
-    category: category.value.id,
-    expand: 'category,tags,images',
-    ordering: '-is_pinned,-published_at'
-  }
+// Adicionar paginação
+const pagination = usePagination({
+  defaultLimit: 12,
+  scrollToTop: true,
+  scrollOffset: 100
 });
+
+// Atualizar params dos posts
+const postsParams = computed(() => ({
+  category: category.value?.id,
+  expand: 'category,tags,images',
+  ordering: '-is_pinned,-published_at',
+  page: pagination.currentPage.value,
+  limit: pagination.limit.value
+}));
+
+// Fetch posts com watch
+const { data: posts, pending: isLoading } = await useApi<DjangoListResponse<Post>>('/api/posts/published/', {
+  params: postsParams,
+  watch: [postsParams]
+});
+
+// Update pagination total
+watch(() => posts.value?.count, (count) => {
+  if (count !== undefined) {
+    pagination.setTotalItems(count);
+  }
+}, { immediate: true });
 
 useSeoMeta({
   title: category.value.seo_title || `${category.value.name} | Blog`,
@@ -180,6 +201,11 @@ onMounted(() => {
           </p>
         </v-col>
       </v-row>
+
+      <!-- Pagination -->
+      <Pagination :current-page="pagination.currentPage.value" :total-pages="pagination.totalPages.value"
+        :has-next="pagination.hasNext.value" :has-previous="pagination.hasPrevious.value"
+        @page-change="pagination.goToPage" />
     </v-container>
 
     <!-- Back to Blog -->

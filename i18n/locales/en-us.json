@@ -15,7 +15,11 @@
     "share": "Share",
     "copyLink": "Copy link",
     "related": "Related",
-    "language": "Language"
+    "language": "Language",
+    "page": "Page",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "of": "of"
   },
   "nav": {
     "home": "Home",
@@ -73,7 +77,8 @@
     "now": "just now",
     "minutesAgo": "{count} min ago",
     "hoursAgo": "{count}h ago",
-    "daysAgo": "{count} days ago"
+    "daysAgo": "{count} days ago",
+    "showingResults": "Showing {from} to {to} of {total} articles"
   },
   "projects": {
     "title": "My Projects",

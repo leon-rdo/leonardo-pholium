@@ -15,7 +15,11 @@
     "share": "Compartilhar",
     "copyLink": "Copiar link",
     "related": "Relacionados",
-    "language": "Idioma"
+    "language": "Idioma",
+    "page": "Página",
+    "previousPage": "Página anterior",
+    "nextPage": "Próxima página",
+    "of": "de"
   },
   "nav": {
     "home": "Início",
@@ -73,7 +77,8 @@
     "now": "agora mesmo",
     "minutesAgo": "{count} min atrás",
     "hoursAgo": "{count}h atrás",
-    "daysAgo": "{count} dias atrás"
+    "daysAgo": "{count} dias atrás",
+    "showingResults": "Mostrando {from} a {to} de {total} artigos"
   },
   "projects": {
     "title": "Meus Projetos",

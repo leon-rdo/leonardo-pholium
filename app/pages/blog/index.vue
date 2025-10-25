@@ -5,6 +5,7 @@ import type { DjangoListResponse } from '~/types/api';
 import type { ContentBlock } from '~/types/content';
 import type { Post, Category } from '~/types/blog';
 import BlogCategoriesDrawer from '~/components/blog/BlogCategoriesDrawer.vue';
+import Pagination from '~/components/common/Pagination.vue';
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
@@ -16,6 +17,13 @@ const { locale, t } = useI18n();
 const selectedCategory = ref<string>('all');
 const searchQuery = ref('');
 const showCategoriesDrawer = ref(false);
+
+// Pagination
+const pagination = usePagination({
+  defaultLimit: 12,
+  scrollToTop: true,
+  scrollOffset: 100
+});
 
 // Fetch content blocks for blog page
 const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
@@ -37,39 +45,48 @@ const { data: categories } = await useApi<DjangoListResponse<Category>>('/api/po
 const postsParams = computed(() => ({
   expand: 'category,tags,images',
   ordering: '-is_pinned,-published_at',
+  page: pagination.currentPage.value,
+  limit: pagination.limit.value,
   ...(selectedCategory.value !== 'all' && { category: selectedCategory.value }),
   ...(searchQuery.value && { search: searchQuery.value })
 }));
 
-const { data: posts, refresh: refreshPosts } = await useApi<DjangoListResponse<Post>>('/api/posts/published/', {
-  params: postsParams
+const { data: posts, refresh: refreshPosts, pending: isLoading } = await useApi<DjangoListResponse<Post>>('/api/posts/published/', {
+  params: postsParams,
+  watch: [postsParams]
 });
+
+// Update pagination total when posts data changes
+watch(() => posts.value?.count, (count) => {
+  if (count !== undefined) {
+    pagination.setTotalItems(count);
+  }
+}, { immediate: true });
 
 useSeoMeta({
   title: getContentBlock('page_title')?.text || t('blog.title'),
   description: getContentBlock('page_description')?.text || t('blog.subtitle')
 });
 
-// Watch for category changes
+// Watch for category changes - reset to page 1
 watch(selectedCategory, () => {
+  pagination.reset();
   refreshPosts();
 });
 
-// Watch for search query with debounce
-const debouncedSearch = ref(searchQuery.value);
+// Watch for search query with debounce - reset to page 1
 let searchTimeout: NodeJS.Timeout;
-
 watch(searchQuery, (newVal) => {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
-    debouncedSearch.value = newVal;
+    pagination.reset();
     refreshPosts();
   }, 500);
 });
 
 const formatDate = (date: string | null) => {
   if (!date) return '';
-  return new Date(date).toLocaleDateString('pt-BR', {
+  return new Date(date).toLocaleDateString(locale.value === 'pt-br' ? 'pt-BR' : 'en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -145,7 +162,7 @@ onMounted(() => {
               variant="outlined" density="comfortable" hide-details class="search-field mb-6" />
 
             <!-- Category Filters -->
-            <div class="d-flex justify-center">
+            <div class="d-flex justify-center align-center gap-4">
               <v-chip-group v-model="selectedCategory" mandatory color="primary" class="filters-chips">
                 <v-chip value="all" class="filter-chip">
                   {{ t('common.all') }}
@@ -155,7 +172,7 @@ onMounted(() => {
                   {{ category.name }}
                 </v-chip>
               </v-chip-group>
-              <v-btn variant="tonal" class="mt-2" @click="showCategoriesDrawer = true" rounded color="secondary">
+              <v-btn variant="tonal" @click="showCategoriesDrawer = true" rounded color="secondary">
                 <span style="font-style: italic;">
                   {{ t('common.allCategories') }}
                 </span>
@@ -169,12 +186,34 @@ onMounted(() => {
     <!-- Categories Drawer -->
     <BlogCategoriesDrawer v-model="showCategoriesDrawer" />
 
+    <!-- Loading State -->
+    <v-container v-if="isLoading" class="posts-section">
+      <v-row justify="center">
+        <v-col cols="12" class="text-center py-16">
+          <v-progress-circular indeterminate size="64" color="primary" />
+          <p class="text-h6 text-grey-darken-1 mt-4">{{ t('common.loading') }}</p>
+        </v-col>
+      </v-row>
+    </v-container>
+
     <!-- Posts Grid -->
-    <v-container class="posts-section">
+    <v-container v-else class="posts-section">
+      <v-row justify="center">
+        <!-- Results Count -->
+        <div v-if="posts?.count !== undefined" class="results-count text-center mt-3">
+          <p class="text-body-2 text-grey-darken-1">
+            {{ t('blog.showingResults', {
+              from: Math.min((pagination.currentPage.value - 1) * pagination.limit.value + 1, posts.count),
+              to: Math.min(pagination.currentPage.value * pagination.limit.value, posts.count),
+              total: posts.count
+            }) }}
+          </p>
+        </div>
+      </v-row>
       <v-row>
-        <!-- Pinned Posts -->
-        <v-col v-for="post in posts?.results?.filter(p => p.is_pinned)" :key="`pinned-${post.id}`" cols="12"
-          class="fade-up">
+        <!-- Pinned Posts (only on first page) -->
+        <v-col v-for="post in pagination.currentPage.value === 1 ? posts?.results?.filter(p => p.is_pinned) : []"
+          :key="`pinned-${post.id}`" cols="12" class="fade-up">
           <div class="post-card featured">
             <div class="featured-badge">
               <v-icon size="16">mdi-pin</v-icon>
@@ -279,6 +318,11 @@ onMounted(() => {
           </p>
         </v-col>
       </v-row>
+
+      <!-- Pagination -->
+      <Pagination :current-page="pagination.currentPage.value" :total-pages="pagination.totalPages.value"
+        :has-next="pagination.hasNext.value" :has-previous="pagination.hasPrevious.value"
+        @page-change="pagination.goToPage" />
     </v-container>
   </div>
 </template>
@@ -336,7 +380,7 @@ onMounted(() => {
 
 /* Posts Section */
 .posts-section {
-  padding: 60px 24px 120px;
+  padding: 30px 24px 120px;
   max-width: 1400px;
 }
 
@@ -524,5 +568,9 @@ onMounted(() => {
   .post-card.featured .post-title {
     font-size: 1.5rem;
   }
+}
+
+.results-count {
+  margin-top: 16px;
 }
 </style>
