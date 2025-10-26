@@ -3,6 +3,7 @@
   "dependencies": {
     "@mdi/font": "^7.4.47",
     "@nuxtjs/i18n": "^10.1.0",
+    "@nuxtjs/sitemap": "^7.4.7",
     "@types/marked": "^6.0.0",
     "gsap": "^3.13.0",
     "marked": "^16.4.0",
