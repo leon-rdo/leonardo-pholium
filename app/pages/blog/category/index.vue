@@ -10,6 +10,7 @@ if (import.meta.client) {
 
 const localePath = useLocalePath();
 const { t } = useI18n();
+const config = useRuntimeConfig();
 
 // Fetch all categories
 const { data: categories } = await useApi<DjangoListResponse<Category>>('/api/post-categories/', {
@@ -20,9 +21,22 @@ const { data: categories } = await useApi<DjangoListResponse<Category>>('/api/po
     }
 });
 
-useSeoMeta({
-    title: () => `${t('common.categories')} | ${t('nav.blog')}`,
-    description: () => t('blog.subtitle')
+// SEO Configuration
+const { setSeoMeta, setStructuredData } = useSeo();
+
+setSeoMeta({
+    title: t('blog.categories.seo.title'),
+    description: t('blog.categories.seo.description'),
+    image: `${config.public.siteUrl}/og-blog.jpg`,
+    type: 'website',
+});
+
+setStructuredData({
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: t('common.categories'),
+    description: t('blog.categories.seo.description'),
+    url: `${config.public.siteUrl}/blog/category`,
 });
 
 const getCategoryIcon = (name: string) => {

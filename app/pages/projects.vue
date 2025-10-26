@@ -13,7 +13,6 @@ if (import.meta.client) {
 const config = useRuntimeConfig();
 const { locale, t } = useI18n();
 
-
 // Fetch content blocks for projects page
 const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
     'projects-content-blocks',
@@ -27,12 +26,25 @@ const getContentBlock = (key: string) => {
 
 // Fetch all projects
 const { data: projects } = await useApi<DjangoListResponse<Project<{ tags: true; skills: true; author: true }>>>('/api/projects/', {
-    params: { expand: 'skills', limit: 3, status: 'published' }
+    params: { expand: 'skills', limit: 100, status: 'published' }
 });
 
-useSeoMeta({
-    title: getContentBlock('page_title')?.text || t('projects.title'),
-    description: getContentBlock('page_description')?.text || t('projects.subtitle')
+// SEO Configuration
+const { setSeoMeta, setStructuredData } = useSeo();
+
+setSeoMeta({
+    title: getContentBlock('seo_title')?.text || t('projects.seo.title'),
+    description: getContentBlock('seo_description')?.text || t('projects.seo.description'),
+    image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-projects.jpg`,
+    type: 'website',
+});
+
+setStructuredData({
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: getContentBlock('hero_title')?.text || t('projects.title'),
+    description: getContentBlock('hero_subtitle')?.text || t('projects.subtitle'),
+    url: `${config.public.siteUrl}/projects`,
 });
 
 const selectedFilter = ref('all');

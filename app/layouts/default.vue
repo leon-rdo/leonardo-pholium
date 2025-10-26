@@ -1,6 +1,12 @@
 <script setup lang="ts">
-const { locale, t } = useI18n();
+const { t } = useI18n();
 const currentYear = new Date().getFullYear();
+const { siteName } = useSeo();
+
+useSeoMeta({
+  ogSiteName: siteName.value,
+  twitterCard: 'summary_large_image',
+});
 </script>
 
 <template>

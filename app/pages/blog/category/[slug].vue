@@ -12,13 +12,14 @@ if (import.meta.client) {
 const route = useRoute();
 const slug = route.params.slug as string;
 const localePath = useLocalePath();
-const { t } = useI18n();
+const { locale, t } = useI18n();
+const config = useRuntimeConfig();
 
 // Fetch category by slug
 const { data: categories } = await useApi<DjangoListResponse<Category<{ parent: true }>>>('/api/post-categories/', {
   params: {
     translations__slug: slug,
-    expand: 'parent,children'
+    expand: 'parent,children,images'
   }
 });
 
@@ -28,14 +29,13 @@ if (!category.value) {
   throw createError({ statusCode: 404, message: t('errors.categoryNotFound') });
 }
 
-// Adicionar paginação
+// Pagination
 const pagination = usePagination({
   defaultLimit: 12,
   scrollToTop: true,
   scrollOffset: 100
 });
 
-// Atualizar params dos posts
 const postsParams = computed(() => ({
   category: category.value?.id,
   expand: 'category,tags,images',
@@ -44,27 +44,43 @@ const postsParams = computed(() => ({
   limit: pagination.limit.value
 }));
 
-// Fetch posts com watch
 const { data: posts, pending: isLoading } = await useApi<DjangoListResponse<Post>>('/api/posts/published/', {
   params: postsParams,
   watch: [postsParams]
 });
 
-// Update pagination total
 watch(() => posts.value?.count, (count) => {
   if (count !== undefined) {
     pagination.setTotalItems(count);
   }
 }, { immediate: true });
 
-useSeoMeta({
-  title: category.value.seo_title || `${category.value.name} | Blog`,
-  description: category.value.meta_description || category.value.description,
+// SEO Configuration
+const { setSeoMeta, setStructuredData } = useSeo();
+
+const getCategoryImage = () => {
+  const coverImage = category.value?.images?.find(img => img.image_type === 'cover');
+  return coverImage?.file || coverImage?.thumbnail || `${config.public.siteUrl}/og-blog.jpg`;
+};
+
+setSeoMeta({
+  title: category.value.seo_title || `${category.value.name} | ${t('blog.seo.title')}`,
+  description: category.value.meta_description || category.value.description || t('blog.seo.description'),
+  image: getCategoryImage(),
+  type: 'website',
+});
+
+setStructuredData({
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: category.value.name,
+  description: category.value.description,
+  url: `${config.public.siteUrl}${route.path}`,
 });
 
 const formatDate = (date: string | null) => {
   if (!date) return '';
-  return new Date(date).toLocaleDateString('pt-BR', {
+  return new Date(date).toLocaleDateString(locale.value === 'pt-br' ? 'pt-BR' : 'en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'

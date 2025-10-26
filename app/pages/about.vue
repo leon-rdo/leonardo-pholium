@@ -9,14 +9,9 @@ if (import.meta.client) {
 }
 
 const localePath = useLocalePath();
-const { t } = useI18n();
+const { locale, t } = useI18n();
+const config = useRuntimeConfig();
 
-useSeoMeta({
-  title: () => `${t('about.title')} | Leonardo`,
-  description: 'Conheça mais sobre mim, minha história e minha jornada no desenvolvimento',
-});
-
-const { locale } = useI18n();
 const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
   'about-content-blocks',
   '/api/content-blocks/',
@@ -30,6 +25,23 @@ const allContentBlocks = computed<DjangoListResponse<ContentBlock> | null>(() =>
 const getContentBlock = (key: string) => {
   return allContentBlocks.value?.results?.find(block => block.key === key);
 };
+
+// SEO Configuration
+const { setSeoMeta, setStructuredData } = useSeo();
+
+setSeoMeta({
+  title: getContentBlock('seo_title')?.text || t('about.seo.title'),
+  description: getContentBlock('seo_description')?.text || t('about.seo.description'),
+  image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-about.jpg`,
+  type: 'website',
+});
+
+setStructuredData({
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: getContentBlock('hero_title')?.text || t('about.title'),
+  description: getContentBlock('intro')?.text || t('about.seo.description'),
+});
 
 onMounted(() => {
   gsap.from('.hero-title', {

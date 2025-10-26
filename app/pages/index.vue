@@ -11,16 +11,12 @@ import ContactForm from '~/components/contact-messages/ContactForm.vue';
 import TestimonialsList from '~/components/testimonials/TestimonialsList.vue';
 
 const localePath = useLocalePath();
-const { locale, t } = useI18n();
+const { t } = useI18n();
+const config = useRuntimeConfig();
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
 }
-
-useSeoMeta({
-  title: 'Portfolio | Leonardo',
-  description: 'Desenvolvedor Full Stack - Criando experiências digitais excepcionais',
-});
 
 // Fetch all paginated content blocks
 const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
@@ -32,6 +28,30 @@ const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
 const getContentBlock = (key: string) => {
   return contentBlocks.value?.results?.find(block => block.key === key);
 };
+
+// SEO Configuration
+const { setSeoMeta, setStructuredData } = useSeo();
+
+// Set SEO meta tags with multilingual support
+setSeoMeta({
+  title: getContentBlock('seo_title')?.text || t('home.seo.title'),
+  description: getContentBlock('seo_description')?.text || t('home.seo.description'),
+  image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-home.jpg`,
+  type: 'website',
+});
+
+// Set structured data for person/organization
+setStructuredData({
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: getContentBlock('hero_name')?.text || 'Leonardo Costa',
+  jobTitle: getContentBlock('hero_subtitle')?.text || 'Full Stack Developer',
+  url: config.public.siteUrl,
+  sameAs: [
+    getContentBlock('contact_linkedin')?.text || '',
+    getContentBlock('contact_github')?.text || '',
+  ].filter(Boolean),
+});
 
 onMounted(() => {
   gsap.from('.hero-title', {

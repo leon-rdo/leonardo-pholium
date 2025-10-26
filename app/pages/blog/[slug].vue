@@ -4,21 +4,21 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { DjangoListResponse } from '~/types/api';
 import type { Post, Category } from '~/types/blog';
 import BlogComments from '~/components/blog/BlogComments.vue';
-// import BlogReactions from '~/components/blog/BlogReactions.vue';
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const { t } = useI18n();
+const { locale, t } = useI18n();
 const route = useRoute();
+const config = useRuntimeConfig();
 const slug = route.params.slug as string;
 
 // Fetch post by slug
-const { data: posts } = await useApi<DjangoListResponse<Post>>('/api/posts/', {
+const { data: posts } = await useApi<DjangoListResponse<Post<{ category: true, author: true, tags: true }>>>('/api/posts/', {
   params: {
     slug,
-    expand: 'category,series,tags'
+    expand: 'category,series,tags,images'
   }
 });
 
@@ -33,7 +33,7 @@ const { data: relatedPosts } = await useApi<DjangoListResponse<Post<{ category: 
   params: {
     category: typeof post.value.category === 'object' ? post.value.category?.id : post.value.category,
     limit: 3,
-    expand: 'category'
+    expand: 'category,images'
   }
 });
 
@@ -41,28 +41,58 @@ const filteredRelatedPosts = computed(() =>
   relatedPosts.value?.results?.filter(p => p.id !== post.value?.id).slice(0, 3) || []
 );
 
-useSeoMeta({
-  title: post.value.seo_title || post.value.title,
-  description: post.value.meta_description || post.value.excerpt,
-  ogTitle: post.value.title,
-  ogDescription: post.value.excerpt,
-  ogType: 'article',
-  articlePublishedTime: post.value.published_at || undefined,
-  articleModifiedTime: post.value.updated_at,
-});
+// SEO Configuration
+const { setSeoMeta, setStructuredData } = useSeo();
 
-const formatDate = (date: string | null) => {
-  if (!date) return '';
-  return new Date(date).toLocaleDateString('pt-BR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+const getCoverImage = (postData: Post<{ category: true, author: true, tags: true }>) => {
+  const coverImage = postData.images?.find(img => img.image_type === 'cover');
+  return coverImage?.file || coverImage?.thumbnail || `${config.public.siteUrl}/og-default.jpg`;
 };
 
 const getCategoryName = (category: number | Category | null) => {
   if (!category) return '';
   return typeof category === 'object' ? category.name : '';
+};
+
+setSeoMeta({
+  title: post.value.seo_title || post.value.title,
+  description: post.value.meta_description || post.value.excerpt,
+  image: getCoverImage(post.value),
+  type: 'article',
+  article: {
+    publishedTime: post.value.published_at || undefined,
+    modifiedTime: post.value.updated_at,
+    author: typeof post.value.author === 'object' ? post.value.author?.first_name : undefined,
+    section: getCategoryName(post.value.category),
+    tags: post.value.tags?.map(tag => typeof tag === 'object' ? tag.name : '').filter(Boolean),
+  },
+});
+
+setStructuredData({
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.value.title,
+  description: post.value.excerpt,
+  image: getCoverImage(post.value),
+  datePublished: post.value.published_at,
+  dateModified: post.value.updated_at,
+  author: {
+    '@type': 'Person',
+    name: typeof post.value.author === 'object' ? post.value.author?.first_name : 'Leonardo Costa',
+  },
+  publisher: {
+    '@type': 'Person',
+    name: 'Leonardo Costa',
+  },
+});
+
+const formatDate = (date: string | null) => {
+  if (!date) return '';
+  return new Date(date).toLocaleDateString(locale.value === 'pt-br' ? 'pt-BR' : 'en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
 };
 
 const sharePost = (platform: string) => {
@@ -83,7 +113,6 @@ const sharePost = (platform: string) => {
 
 const copyLink = () => {
   navigator.clipboard.writeText(window.location.href);
-  // You could add a toast notification here
 };
 
 onMounted(() => {
