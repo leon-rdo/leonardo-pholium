@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { DjangoListResponse } from '~/types/api';
 import type { Category } from '~/types/blog';
+import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
 
 if (import.meta.client) {
     gsap.registerPlugin(ScrollTrigger);
@@ -20,6 +21,12 @@ const { data: categories } = await useApi<DjangoListResponse<Category>>('/api/po
         expand: 'images'
     }
 });
+
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+    { title: t('nav.home'), to: '/' },
+    { title: t('nav.blog'), to: '/blog' },
+    { title: t('common.categories'), disabled: true },
+]);
 
 // SEO Configuration
 const { setSeoMeta, setStructuredData } = useSeo();
@@ -107,11 +114,7 @@ onMounted(() => {
         <v-container class="hero-section">
             <v-row justify="center">
                 <v-col cols="12" md="10" lg="8" class="text-center">
-                    <div class="breadcrumbs mb-6">
-                        <NuxtLink :to="localePath('/blog')" class="breadcrumb-link">{{ t('nav.blog') }}</NuxtLink>
-                        <v-icon size="16" class="breadcrumb-separator">mdi-chevron-right</v-icon>
-                        <span class="breadcrumb-current">{{ t('common.categories') }}</span>
-                    </div>
+                    <Breadcrumbs :items="breadcrumbItems" />
 
                     <h1 class="page-title mb-6">{{ t('common.categories') }}</h1>
 

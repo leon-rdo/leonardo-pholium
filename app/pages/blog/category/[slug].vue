@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { DjangoListResponse } from '~/types/api';
 import Pagination from '~/components/common/Pagination.vue';
 import type { Post, Category } from '~/types/blog';
+import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
@@ -116,6 +117,26 @@ onMounted(() => {
     });
   });
 });
+const breadcrumbItems = computed(() => {
+  const items: BreadcrumbItem[] = [
+    { title: t('nav.home'), to: '/' },
+    { title: t('nav.blog'), to: '/blog' },
+  ];
+
+  if (category.value?.parent && typeof category.value.parent === 'object') {
+    items.push({
+      title: category.value.parent.name,
+      to: `/blog/category/${category.value.parent.slug}`,
+    });
+  }
+
+  items.push({
+    title: category.value?.name || '',
+    disabled: true,
+  });
+
+  return items;
+});
 </script>
 
 <template>
@@ -124,17 +145,7 @@ onMounted(() => {
     <v-container class="hero-section">
       <v-row justify="center">
         <v-col cols="12" md="10" lg="8" class="text-center">
-          <div class="breadcrumbs mb-6">
-            <NuxtLink :to="localePath('/blog')" class="breadcrumb-link">Blog</NuxtLink>
-            <v-icon size="16" class="breadcrumb-separator">mdi-chevron-right</v-icon>
-            <template v-if="category.parent">
-              <NuxtLink :to="localePath(`/blog/category/${category.parent?.slug}`)" class="breadcrumb-link">
-                {{ category.parent?.name }}
-              </NuxtLink>
-              <v-icon size="16" class="breadcrumb-separator">mdi-chevron-right</v-icon>
-            </template>
-            <span class="breadcrumb-current">{{ category.name }}</span>
-          </div>
+          <Breadcrumbs :items="breadcrumbItems" />
 
           <h1 class="page-title mb-6">{{ category.name }}</h1>
 

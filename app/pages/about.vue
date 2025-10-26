@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { DjangoListResponse } from '~/types/api';
 import type { ContentBlock } from '~/types/content';
+import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
@@ -25,6 +26,11 @@ const allContentBlocks = computed<DjangoListResponse<ContentBlock> | null>(() =>
 const getContentBlock = (key: string) => {
   return allContentBlocks.value?.results?.find(block => block.key === key);
 };
+
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+  { title: t('nav.home'), to: '/' },
+  { title: t('nav.about'), to: '/about', disabled: true },
+]);
 
 // SEO Configuration
 const { setSeoMeta, setStructuredData } = useSeo();
@@ -79,6 +85,7 @@ onMounted(() => {
     <v-container class="hero-section">
       <v-row justify="center">
         <v-col cols="12" md="8" lg="6">
+          <Breadcrumbs :items="breadcrumbItems" class="mb-4" />
           <div class="hero-content">
             <h1 class="hero-title">
               {{ getContentBlock('hero_title')?.text || t('about.title') }}

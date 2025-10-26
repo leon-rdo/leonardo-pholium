@@ -5,6 +5,8 @@ import type { DjangoListResponse } from '~/types/api';
 import type { ContentBlock } from '~/types/content';
 import type { Project, Skill } from '~/types/portfolio';
 import ProjectList from '~/components/projects/ProjectList.vue';
+import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
+
 
 if (import.meta.client) {
     gsap.registerPlugin(ScrollTrigger);
@@ -28,6 +30,12 @@ const getContentBlock = (key: string) => {
 const { data: projects } = await useApi<DjangoListResponse<Project<{ tags: true; skills: true; author: true }>>>('/api/projects/', {
     params: { expand: 'skills', limit: 100, status: 'published' }
 });
+
+// Breadcrumbs
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+    { title: t('nav.home'), to: '/' },
+    { title: t('projects.title'), disabled: true },
+]);
 
 // SEO Configuration
 const { setSeoMeta, setStructuredData } = useSeo();
@@ -108,6 +116,7 @@ onMounted(() => {
         <v-container class="hero-section">
             <v-row justify="center">
                 <v-col cols="12" md="10" lg="8" class="text-center">
+                    <Breadcrumbs :items="breadcrumbItems" class="mb-4" />
                     <h1 class="page-title mb-6">
                         {{ getContentBlock('hero_title')?.text || t('projects.title') }}
                     </h1>

@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { DjangoListResponse } from '~/types/api';
 import type { Post, Category } from '~/types/blog';
 import BlogComments from '~/components/blog/BlogComments.vue';
+import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
@@ -17,7 +18,7 @@ const slug = route.params.slug as string;
 // Fetch post by slug
 const { data: posts } = await useApi<DjangoListResponse<Post<{ category: true, author: true, tags: true }>>>('/api/posts/', {
   params: {
-    slug,
+    translations__slug: slug,
     expand: 'category,series,tags,images'
   }
 });
@@ -144,6 +145,27 @@ onMounted(() => {
     });
   });
 });
+
+const breadcrumbItems = computed(() => {
+  const items: BreadcrumbItem[] = [
+    { title: t('nav.home'), to: '/' },
+    { title: t('nav.blog'), to: '/blog' },
+  ];
+
+  if (post.value?.category && typeof post.value.category === 'object') {
+    items.push({
+      title: post.value.category.name,
+      to: `/blog/category/${post.value.category.slug}`,
+    });
+  }
+
+  items.push({
+    title: post.value?.title || '',
+    disabled: true,
+  });
+
+  return items;
+});
 </script>
 
 <template>
@@ -152,6 +174,7 @@ onMounted(() => {
     <v-container class="post-header-section">
       <v-row justify="center">
         <v-col cols="12" md="10" lg="8">
+          <Breadcrumbs :items="breadcrumbItems" />
           <div class="post-header">
             <!-- Category Badge -->
             <div class="post-meta-top">

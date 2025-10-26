@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { DjangoListResponse } from '~/types/api';
 import type { ContentBlock } from '~/types/content';
 import type { Post, Category } from '~/types/blog';
+import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
 import BlogCategoriesDrawer from '~/components/blog/BlogCategoriesDrawer.vue';
 import Pagination from '~/components/common/Pagination.vue';
 
@@ -50,6 +51,11 @@ const postsParams = computed(() => ({
   ...(selectedCategory.value !== 'all' && { category: selectedCategory.value }),
   ...(searchQuery.value && { search: searchQuery.value })
 }));
+
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+  { title: t('nav.home'), to: '/' },
+  { title: t('nav.blog'), to: '/blog', disabled: true },
+]);
 
 const { data: posts, refresh: refreshPosts, pending: isLoading } = await useApi<DjangoListResponse<Post>>('/api/posts/published/', {
   params: postsParams,
@@ -142,6 +148,7 @@ onMounted(() => {
     <v-container class="hero-section">
       <v-row justify="center">
         <v-col cols="12" md="10" lg="8" class="text-center">
+          <Breadcrumbs :items="breadcrumbItems" />
           <h1 class="page-title mb-6">
             {{ getContentBlock('hero_title')?.text || t('blog.title') }}
           </h1>
