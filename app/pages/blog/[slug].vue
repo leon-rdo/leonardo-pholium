@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { DjangoListResponse } from '~/types/api';
 import type { Post, Category } from '~/types/blog';
+import type { BreadcrumbItem } from '~/composables/useBreadcrumbs';
 import BlogComments from '~/components/blog/BlogComments.vue';
 import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
 
@@ -32,7 +33,7 @@ if (!post.value) {
 // Fetch related posts
 const { data: relatedPosts } = await useApi<DjangoListResponse<Post<{ category: true }>>>('/api/posts/published/', {
   params: {
-    category: typeof post.value.category === 'object' ? post.value.category?.id : post.value.category,
+    category: post.value.category?.id,
     limit: 3,
     expand: 'category,images'
   }
@@ -42,9 +43,7 @@ const filteredRelatedPosts = computed(() =>
   relatedPosts.value?.results?.filter(p => p.id !== post.value?.id).slice(0, 3) || []
 );
 
-// SEO Configuration
-const { setSeoMeta, setStructuredData } = useSeo();
-
+// Utility functions
 const getCoverImage = (postData: Post<{ category: true, author: true, tags: true }>) => {
   const coverImage = postData.images?.find(img => img.image_type === 'cover');
   return coverImage?.file || coverImage?.thumbnail || `${config.public.siteUrl}/og-default.jpg`;
@@ -55,6 +54,18 @@ const getCategoryName = (category: number | Category | null) => {
   return typeof category === 'object' ? category.name : '';
 };
 
+const getWordCount = (html: string) => {
+  const text = html.replace(/<[^>]*>/g, ' ').trim();
+  return text.split(/\s+/).filter(Boolean).length;
+};
+
+const getArticleBody = (html: string) => {
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 500);
+};
+
+// SEO Configuration
+const { setSeoMeta, setStructuredData } = useSeo();
+
 setSeoMeta({
   title: post.value.seo_title || post.value.title,
   description: post.value.meta_description || post.value.excerpt,
@@ -63,28 +74,92 @@ setSeoMeta({
   article: {
     publishedTime: post.value.published_at || undefined,
     modifiedTime: post.value.updated_at,
-    author: typeof post.value.author === 'object' ? post.value.author?.first_name : undefined,
+    author: typeof post.value.author === 'object'
+      ? `${post.value.author.first_name} ${post.value.author.last_name}`.trim()
+      : undefined,
     section: getCategoryName(post.value.category),
     tags: post.value.tags?.map(tag => typeof tag === 'object' ? tag.name : '').filter(Boolean),
   },
 });
 
+// Enhanced Article Schema
 setStructuredData({
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',
   headline: post.value.title,
   description: post.value.excerpt,
-  image: getCoverImage(post.value),
+  image: {
+    '@type': 'ImageObject',
+    url: getCoverImage(post.value),
+    width: 1200,
+    height: 630,
+  },
   datePublished: post.value.published_at,
-  dateModified: post.value.updated_at,
+  dateModified: post.value.updated_at || post.value.published_at,
   author: {
     '@type': 'Person',
-    name: typeof post.value.author === 'object' ? post.value.author?.first_name : 'Leonardo Costa',
+    name: typeof post.value.author === 'object'
+      ? `${post.value.author.first_name} ${post.value.author.last_name}`.trim()
+      : 'Leonardo Costa',
   },
   publisher: {
     '@type': 'Person',
     name: 'Leonardo Costa',
+    logo: {
+      '@type': 'ImageObject',
+      url: `${config.public.siteUrl}/logo.png`,
+    },
   },
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': `${config.public.siteUrl}/blog/${post.value.slug}`,
+  },
+  timeRequired: `${post.value.reading_time || 5}M`,
+  wordCount: getWordCount(post.value.body || ''),
+  // commentCount: post.value.comments_count || 0,
+  // isPartOf: ...,
+  articleBody: getArticleBody(post.value.body || ''),
+  ...(getCategoryName(post.value.category) && {
+    articleSection: getCategoryName(post.value.category),
+  }),
+  ...(post.value.tags?.length && {
+    keywords: post.value.tags
+      .map(tag => typeof tag === 'object' ? tag.name : '')
+      .filter(Boolean)
+      .join(', '),
+  }),
+  inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
+  ...(post.value.view_count && {
+    interactionStatistic: [
+      {
+        '@type': 'InteractionCounter',
+        interactionType: 'https://schema.org/ReadAction',
+        userInteractionCount: post.value.view_count,
+      },
+    ],
+  }),
+});
+
+// Breadcrumbs
+const breadcrumbItems = computed(() => {
+  const items: BreadcrumbItem[] = [
+    { title: t('nav.home'), to: '/' },
+    { title: t('nav.blog'), to: '/blog' },
+  ];
+
+  if (post.value?.category && typeof post.value.category === 'object') {
+    items.push({
+      title: post.value.category.name,
+      to: `/blog/category/${post.value.category.slug}`,
+    });
+  }
+
+  items.push({
+    title: post.value?.title || '',
+    disabled: true,
+  });
+
+  return items;
 });
 
 const formatDate = (date: string | null) => {
@@ -144,27 +219,6 @@ onMounted(() => {
       }
     });
   });
-});
-
-const breadcrumbItems = computed(() => {
-  const items: BreadcrumbItem[] = [
-    { title: t('nav.home'), to: '/' },
-    { title: t('nav.blog'), to: '/blog' },
-  ];
-
-  if (post.value?.category && typeof post.value.category === 'object') {
-    items.push({
-      title: post.value.category.name,
-      to: `/blog/category/${post.value.category.slug}`,
-    });
-  }
-
-  items.push({
-    title: post.value?.title || '',
-    disabled: true,
-  });
-
-  return items;
 });
 </script>
 
@@ -231,9 +285,13 @@ const breadcrumbItems = computed(() => {
     <v-container v-if="post.images?.find(image => image.image_type === 'cover')" class="post-featured-image">
       <v-row justify="center">
         <v-col cols="12" md="10" lg="8">
-          <v-img
-            :src="post.images?.find(image => image.image_type === 'cover')?.file || 'https://via.placeholder.com/600x400'"
-            :aspect-ratio="16 / 9" cover class="featured-image" />
+          <div style="aspect-ratio: 16 / 9; width: 100%; overflow: hidden; border-radius: 16px;">
+            <NuxtImg
+              :src="post.images?.find(image => image.image_type === 'cover')?.file || 'https://via.placeholder.com/600x400'"
+              class="featured-image" format="webp" :alt="post.title" sizes="(max-width: 800px) 100vw, 800px"
+              width="1200" height="675" :placeholder="true" :quality="80" :fit="'cover'"
+              style="width: 100%; height: 100%; object-fit: cover; object-position: center;" />
+          </div>
         </v-col>
       </v-row>
     </v-container>
@@ -279,9 +337,12 @@ const breadcrumbItems = computed(() => {
         <v-col v-for="relatedPost in filteredRelatedPosts" :key="relatedPost.id" cols="12" md="4" class="fade-up">
           <div class="related-post-card">
             <NuxtLink :to="`/blog/${relatedPost.slug}`">
-              <v-img
+              <NuxtImg
                 :src="relatedPost.images?.find(image => image.image_type === 'cover')?.file || 'https://via.placeholder.com/600x400'"
-                :aspect-ratio="16 / 10" cover class="related-post-image" />
+                class="related-post-image" format="webp" :alt="relatedPost.title"
+                sizes="(max-width: 600px) 100vw, 400px" width="400" height="250" :placeholder="true" :quality="80"
+                :fit="'cover'"
+                style="width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: center;" />
             </NuxtLink>
 
             <div class="related-post-content">

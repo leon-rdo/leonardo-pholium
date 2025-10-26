@@ -182,9 +182,8 @@ const breadcrumbItems = computed(() => {
           <div class="post-card">
             <div class="post-image-wrapper">
               <NuxtLink :to="localePath(`/blog/${post.slug}`)">
-                <v-img
-                  :src="post.images?.find(image => image.image_type === 'cover')?.file || 'https://via.placeholder.com/600x400'"
-                  :aspect-ratio="16 / 10" cover class="post-image" />
+                <NuxtImg :src="getCoverImageThumbnail(post)" class="post-image" :width="800" :height="500"
+                  style="aspect-ratio: 16 / 10; width: 100%; height: auto; object-fit: cover;" />
               </NuxtLink>
             </div>
 

@@ -133,17 +133,19 @@ onMounted(() => {
                     <NuxtLink :to="localePath(`/blog/category/${category.slug}`)" class="category-card-link">
                         <div class="category-card">
                             <!-- Category Image or Icon -->
-                            <div class="category-visual">
-                                <div v-if="getCategoryImage(category)" class="category-image-wrapper">
-                                    <v-img :src="getCategoryImage(category)!" :aspect-ratio="16 / 9" cover
-                                        class="category-image" />
-                                    <div class="category-overlay">
+                            <div class="category-visual" style="height: 160px; display: flex; align-items: stretch;">
+                                <div v-if="getCategoryImage(category)" class="category-image-wrapper"
+                                    style="aspect-ratio: 16 / 9; width: 100%; height: 100%; overflow: hidden; display: flex; align-items: stretch;">
+                                    <NuxtImg :src="getCategoryImage(category)!" class="category-image"
+                                        style="width: 100%; height: 100%; object-fit: cover;" format="webp" />
+                                    <div class="category-overlay" style="position: absolute; inset: 0;">
                                         <v-icon :icon="getCategoryIcon(category.name)" size="40"
                                             class="category-icon" />
                                     </div>
                                 </div>
-                                <div v-else class="category-icon-wrapper">
-                                    <v-icon :icon="getCategoryIcon(category.name)" size="48" class="category-icon" />
+                                <div v-else class="category-icon-wrapper"
+                                    style="width: 100%; height: 100%; min-height: 0; display: flex; align-items: center; justify-content: center;">
+                                    <v-icon :icon="getCategoryIcon(category.name)" size="40" class="category-icon" />
                                 </div>
                             </div>
 

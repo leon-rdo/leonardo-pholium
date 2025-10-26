@@ -33,13 +33,10 @@ const projects = computed(() => {
         <v-col v-for="project in projects?.results" :key="project.id" :cols="props.cols || '12'"
             :md="props.mdCols || '4'" :lg="props.lgCols || '4'" class="fade-up">
             <div class="project-card">
-                <div class="project-image-wrapper">
-                    <v-img :src="project.cover || 'https://via.placeholder.com/600x400'" :aspect-ratio="16 / 10" cover
-                        class="project-image">
-                        <template v-slot:placeholder>
-                            <v-skeleton-loader type="image" />
-                        </template>
-                    </v-img>
+                <div class="project-image-wrapper" style="aspect-ratio: 16 / 10;">
+                    <NuxtImg :src="project.cover || 'https://via.placeholder.com/600x400'" :alt="project.title"
+                        :width="600" :height="375" class="project-image" format="webp" :placeholder="true"
+                        style="width: 100%; height: 100%; object-fit: cover;" />
                     <div v-if="project.featured" class="featured-badge">
                         <v-icon size="16">mdi-star</v-icon>
                         {{ $t('projects.featured') }}

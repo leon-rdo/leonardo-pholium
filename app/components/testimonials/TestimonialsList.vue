@@ -77,8 +77,8 @@ onUnmounted(() => {
                     <!-- Author Info -->
                     <div class="testimonial-author">
                         <div v-if="currentTestimonial.photo" class="author-photo">
-                            <v-img :src="currentTestimonial.photo" :alt="currentTestimonial.author_name" cover
-                                class="photo-img" />
+                            <NuxtImg :src="currentTestimonial.photo" :alt="currentTestimonial.author_name"
+                                class="photo-img" width="64" height="64" :cover="true" />
                         </div>
                         <div v-else class="author-photo-placeholder">
                             <v-icon size="32" color="grey-lighten-1">mdi-account-circle</v-icon>

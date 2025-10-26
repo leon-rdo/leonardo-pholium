@@ -230,7 +230,9 @@ onMounted(() => {
             <v-row>
               <v-col cols="12" md="5">
                 <div class="post-image-wrapper">
-                  <v-img :src="getCoverImage(post)" :aspect-ratio="16 / 10" cover class="post-image" />
+                  <NuxtLink :to="localePath(`/blog/${post.slug}`)">
+                    <NuxtImg :src="getCoverImage(post)" :aspect-ratio="16 / 10" class="post-image" />
+                  </NuxtLink>
                 </div>
               </v-col>
 
@@ -278,7 +280,8 @@ onMounted(() => {
           <div class="post-card">
             <div class="post-image-wrapper">
               <NuxtLink :to="localePath(`/blog/${post.slug}`)">
-                <v-img :src="getCoverImage(post)" :aspect-ratio="16 / 10" cover class="post-image" />
+                <NuxtImg :src="getCoverImage(post)" class="post-image" :width="800" :height="500"
+                  style="aspect-ratio: 16 / 10; width: 100%; height: auto; object-fit: cover;" />
               </NuxtLink>
             </div>
 

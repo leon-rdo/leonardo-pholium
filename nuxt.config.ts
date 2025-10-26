@@ -27,6 +27,7 @@ export default defineNuxtConfig({
     },
     "@nuxtjs/i18n",
     "@nuxtjs/sitemap",
+    "@nuxt/image",
   ],
 
   vite: {

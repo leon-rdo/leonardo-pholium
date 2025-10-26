@@ -87,8 +87,8 @@ const formatDate = (date: string | null) => {
                     <NuxtLink v-for="post in searchResults" :key="post.id" :to="`/blog/${post.slug}`"
                         class="search-result-item" @click="closeSearch">
                         <div class="search-result-image">
-                            <v-img :src="post.featured_image || 'https://via.placeholder.com/80x60'"
-                                :aspect-ratio="4 / 3" cover />
+                            <NuxtImg :src="getCoverImageThumbnail(post)" :aspect-ratio="4 / 3" format="webp"
+                                fit="cover" />
                         </div>
 
                         <div class="search-result-content">
@@ -202,6 +202,7 @@ const formatDate = (date: string | null) => {
     margin: 4px 0;
     line-height: 1.4;
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;

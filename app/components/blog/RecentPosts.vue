@@ -49,7 +49,8 @@ const getCoverImageThumbnail = (post: Post<{ category: true }>) => {
             <NuxtLink v-for="post in filteredPosts" :key="post.id" :to="localePath(`/blog/${post.slug}`)"
                 class="recent-post-item">
                 <div class="recent-post-image">
-                    <v-img :src="getCoverImageThumbnail(post)" :aspect-ratio="5 / 4" cover />
+                    <NuxtImg :src="getCoverImageThumbnail(post)" :aspect-ratio="5 / 4"
+                        class="w-full h-full object-cover" />
                 </div>
 
                 <div class="recent-post-content">

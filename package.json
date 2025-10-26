@@ -2,6 +2,7 @@
   "name": "nuxt-app",
   "dependencies": {
     "@mdi/font": "^7.4.47",
+    "@nuxt/image": "^1.11.0",
     "@nuxtjs/i18n": "^10.1.0",
     "@nuxtjs/sitemap": "^7.4.7",
     "@types/marked": "^6.0.0",
