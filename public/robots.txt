@@ -1,14 +1,49 @@
+# Robots.txt for Leonardo Costa Portfolio
+# Generated: 2025
+
+# Allow all robots
 User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: http://localhost:3000/sitemap.xml
+Sitemap: https://leonardocosta.dev/sitemap.xml
 
-# Disallow admin and API routes
+# RSS Feeds
+# PT-BR: https://leonardocosta.dev/api/rss/pt-br.xml
+# EN-US: https://leonardocosta.dev/api/rss/en-us.xml
+
+# Disallow admin and API routes (except RSS)
 Disallow: /admin/
-Disallow: /api/
+Disallow: /api/*
+Allow: /api/rss/
+
+# Disallow Nuxt internal routes
 Disallow: /_nuxt/
 Disallow: /*.json$
 
-# Crawl-delay for respectful crawling
+# Disallow query parameters for duplicate content
+Disallow: /*?*page=*
+Disallow: /*?*limit=*
+
+# Crawl-delay for respectful crawling (0 = no delay)
 Crawl-delay: 0
+
+# Specific bots optimizations
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: bingbot
+Allow: /
+
+# Bad bots (optional - uncomment to block)
+# User-agent: AhrefsBot
+# Disallow: /
+
+# User-agent: SemrushBot
+# Disallow: /
+
+# User-agent: MJ12bot
+# Disallow: /

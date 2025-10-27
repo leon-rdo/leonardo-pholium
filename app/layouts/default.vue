@@ -1,7 +1,9 @@
 <script setup lang="ts">
 const { t } = useI18n();
 const currentYear = new Date().getFullYear();
-const { siteName } = useSeo();
+const { siteName, setRssFeed } = useSeo();
+
+setRssFeed({ includeBlog: true });
 
 useSeoMeta({
   ogSiteName: siteName.value,

@@ -14,6 +14,16 @@ interface SeoMetaInput {
   noindex?: boolean;
   nofollow?: boolean;
   canonicalUrl?: string;
+  robots?: {
+    index?: boolean;
+    follow?: boolean;
+    noarchive?: boolean;
+    nosnippet?: boolean;
+    noimageindex?: boolean;
+    maxSnippet?: number;
+    maxImagePreview?: "none" | "standard" | "large";
+    maxVideoPreview?: number;
+  };
 }
 
 export const useSeo = () => {
@@ -41,6 +51,11 @@ export const useSeo = () => {
     }
     return `${config.public.siteUrl}/og-default.jpg`;
   });
+
+  const availableLocales = locales.value as Array<{
+    code: "pt-br" | "en-us";
+    iso: string;
+  }>;
 
   /**
    * Set comprehensive SEO meta tags
@@ -74,13 +89,46 @@ export const useSeo = () => {
 
     // Robots meta
     const robotsContent = [];
-    if (noindex) robotsContent.push("noindex");
-    if (nofollow) robotsContent.push("nofollow");
-    if (!noindex) robotsContent.push("index");
-    if (!nofollow) robotsContent.push("follow");
-    robotsContent.push("max-image-preview:large");
-    robotsContent.push("max-snippet:-1");
-    robotsContent.push("max-video-preview:-1");
+
+    if (input.robots) {
+      const r = input.robots;
+
+      // Index/noindex
+      if (r.index === false || noindex) {
+        robotsContent.push("noindex");
+      } else {
+        robotsContent.push("index");
+      }
+
+      // Follow/nofollow
+      if (r.follow === false || nofollow) {
+        robotsContent.push("nofollow");
+      } else {
+        robotsContent.push("follow");
+      }
+
+      // Additional directives
+      if (r.noarchive) robotsContent.push("noarchive");
+      if (r.nosnippet) robotsContent.push("nosnippet");
+      if (r.noimageindex) robotsContent.push("noimageindex");
+      if (r.maxSnippet !== undefined)
+        robotsContent.push(`max-snippet:${r.maxSnippet}`);
+      if (r.maxImagePreview)
+        robotsContent.push(`max-image-preview:${r.maxImagePreview}`);
+      if (r.maxVideoPreview !== undefined)
+        robotsContent.push(`max-video-preview:${r.maxVideoPreview}`);
+    } else {
+      // Default behavior
+      if (noindex) robotsContent.push("noindex");
+      else robotsContent.push("index");
+
+      if (nofollow) robotsContent.push("nofollow");
+      else robotsContent.push("follow");
+
+      robotsContent.push("max-image-preview:large");
+      robotsContent.push("max-snippet:-1");
+      robotsContent.push("max-video-preview:-1");
+    }
 
     // Build meta object
     const meta: any = {
@@ -167,12 +215,6 @@ export const useSeo = () => {
     const baseUrl = config.public.siteUrl || "https://leonardocosta.dev";
     const links: any[] = [];
 
-    // Get all available locales
-    const availableLocales = locales.value as Array<{
-      code: "pt-br" | "en-us";
-      iso: string;
-    }>;
-
     availableLocales.forEach((loc) => {
       const localePath = switchLocalePath(loc.code);
       if (localePath) {
@@ -211,9 +253,59 @@ export const useSeo = () => {
     });
   };
 
+  /**
+   * Add RSS feed links to head
+   */
+  const setRssFeed = (options?: {
+    includeBlog?: boolean;
+    customFeeds?: Array<{ title: string; href: string; type?: string }>;
+  }) => {
+    const baseUrl = config.public.siteUrl || "http://localhost:3000";
+    const feeds: Array<{
+      rel: string;
+      title: string;
+      href: string;
+      type?: string;
+    }> = [];
+
+    // Add blog RSS feeds if enabled (default: true)
+    if (options?.includeBlog !== false) {
+      availableLocales.forEach((loc) => {
+        const title =
+          loc.code === "pt-br"
+            ? `${siteName.value} - Blog (Português)`
+            : `${siteName.value} - Blog (English)`;
+
+        feeds.push({
+          rel: "alternate",
+          type: "application/rss+xml",
+          title,
+          href: `${baseUrl}/api/rss/${loc.code}.xml`,
+        });
+      });
+    }
+
+    // Add custom feeds if provided
+    if (options?.customFeeds) {
+      options.customFeeds.forEach((feed) => {
+        feeds.push({
+          rel: "alternate",
+          type: feed.type || "application/rss+xml",
+          title: feed.title,
+          href: feed.href,
+        });
+      });
+    }
+
+    useHead({
+      link: feeds,
+    });
+  };
+
   return {
     setSeoMeta,
     setStructuredData,
+    setRssFeed,
     siteName,
     defaultTitle,
     defaultDescription,
