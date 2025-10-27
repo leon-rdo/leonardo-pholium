@@ -26,9 +26,15 @@ export interface Series {
   images?: Image[];
 }
 
+export interface Author {
+  id: number;
+  first_name: string;
+  last_name: string;
+}
+
 export interface Post<TExpand = Record<string, never>> {
   id: number;
-  author: TExpand extends { author: true } ? User : number | null;
+  author: Author;
   category: TExpand extends { category: true } ? Category : number | null;
   series: TExpand extends { series: true } ? Series : number | null;
   status: "draft" | "scheduled" | "published" | "archived";
