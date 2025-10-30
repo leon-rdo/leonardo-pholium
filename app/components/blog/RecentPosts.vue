@@ -45,7 +45,7 @@ const getCoverImageThumbnail = (post: Post<{ category: true }>) => {
     <div class="recent-posts">
         <h3 class="recent-posts-title">{{ t('blog.recentPosts') }}</h3>
 
-        <div class="recent-posts-list">
+        <div v-if="filteredPosts.length > 0" class="recent-posts-list">
             <NuxtLink v-for="post in filteredPosts" :key="post.id" :to="localePath(`/blog/${post.slug}`)"
                 class="recent-post-item">
                 <div class="recent-post-image">
@@ -59,6 +59,7 @@ const getCoverImageThumbnail = (post: Post<{ category: true }>) => {
                 </div>
             </NuxtLink>
         </div>
+        <p v-else class="text-gray-500 text-sm">{{ t('blog.noPosts') }}</p>
     </div>
 </template>
 

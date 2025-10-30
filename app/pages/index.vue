@@ -106,8 +106,7 @@ const scrollToSection = (sectionId: string) => {
       <v-row align="center" justify="center" class="min-h-screen">
         <v-col cols="12" md="10" lg="8" class="text-center">
           <div class="hero-badge mb-6 fade-up">
-            <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'Disponível para novos projetos'
-            }}</span>
+            <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'Disponível para novos projetos' }}</span>
           </div>
 
           <h1 class="hero-title mb-6">

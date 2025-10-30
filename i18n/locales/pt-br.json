@@ -78,7 +78,8 @@
     "minutesAgo": "{count} min atrás",
     "hoursAgo": "{count}h atrás",
     "daysAgo": "{count} dias atrás",
-    "showingResults": "Mostrando {from} a {to} de {total} artigos"
+    "showingResults": "Mostrando {from} a {to} de {total} artigos",
+    "noPosts": "Nenhum post disponível"
   },
   "projects": {
     "title": "Meus Projetos",
