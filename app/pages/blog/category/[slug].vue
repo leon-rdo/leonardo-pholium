@@ -5,6 +5,7 @@ import type { DjangoListResponse } from '~/types/api';
 import Pagination from '~/components/common/Pagination.vue';
 import type { Post, Category } from '~/types/blog';
 import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
+import { formatYearMonthDay } from '~/utils/date';
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
@@ -79,14 +80,7 @@ setStructuredData({
   url: `${config.public.siteUrl}${route.path}`,
 });
 
-const formatDate = (date: string | null) => {
-  if (!date) return '';
-  return new Date(date).toLocaleDateString(locale.value === 'pt-br' ? 'pt-BR' : 'en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-};
+
 
 onMounted(() => {
   gsap.from('.page-title', {
@@ -189,7 +183,7 @@ const breadcrumbItems = computed(() => {
 
             <div class="post-content">
               <div class="post-meta">
-                <span class="post-date">{{ formatDate(post.published_at) }}</span>
+                <span class="post-date">{{ formatYearMonthDay(post.published_at, locale) }}</span>
               </div>
 
               <NuxtLink :to="localePath(`/blog/${post.slug}`)" class="post-title-link">

@@ -1,18 +1,13 @@
 <script setup lang="ts">
 import type { DjangoListResponse } from '~/types/api';
 import type { Experience } from '~/types/portfolio';
+import { formatShortMonthYearOrPresent } from '~/utils/date';
+
+const { locale, t } = useI18n();
 
 const { data: experiences } = await useApi<DjangoListResponse<Experience>>('/api/experiences/', {
     params: { limit: 3, ordering: '-start_date' }
 });
-
-const formatDate = (date: string | null) => {
-    if (!date) return 'Presente';
-    return new Date(date).toLocaleDateString('pt-BR', {
-        year: 'numeric',
-        month: 'short'
-    });
-};
 </script>
 
 <template>
@@ -23,8 +18,9 @@ const formatDate = (date: string | null) => {
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
                         <div class="timeline-date">
-                            {{ formatDate(exp.start_date) }} -
-                            {{ exp.current ? 'Presente' : formatDate(exp.end_date) }}
+                            {{ formatShortMonthYearOrPresent(exp.start_date, locale, t('common.present')) }} -
+                            {{ exp.current ? t('common.present') : formatShortMonthYearOrPresent(exp.end_date, locale,
+                                t('common.present')) }}
                         </div>
                         <h3 class="timeline-title">{{ exp.role }}</h3>
                         <p class="timeline-company">{{ exp.company }}</p>

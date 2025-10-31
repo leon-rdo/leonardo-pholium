@@ -6,6 +6,7 @@ import type { Post, Category } from '~/types/blog';
 import type { BreadcrumbItem } from '~/composables/useBreadcrumbs';
 import BlogComments from '~/components/blog/BlogComments.vue';
 import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
+import { formatYearMonthDay } from '~/utils/date';
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
@@ -162,14 +163,7 @@ const breadcrumbItems = computed(() => {
   return items;
 });
 
-const formatDate = (date: string | null) => {
-  if (!date) return '';
-  return new Date(date).toLocaleDateString(locale.value === 'pt-br' ? 'pt-BR' : 'en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-};
+
 
 const sharePost = (platform: string) => {
   const url = window.location.href;
@@ -235,7 +229,7 @@ onMounted(() => {
               <span v-if="getCategoryName(post.category)" class="post-category-badge">
                 {{ getCategoryName(post.category) }}
               </span>
-              <span class="post-date">{{ formatDate(post.published_at) }}</span>
+              <span class="post-date">{{ formatYearMonthDay(post.published_at, locale) }}</span>
             </div>
 
             <!-- Title -->

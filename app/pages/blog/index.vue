@@ -7,6 +7,7 @@ import type { Post, Category } from '~/types/blog';
 import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
 import BlogCategoriesDrawer from '~/components/blog/BlogCategoriesDrawer.vue';
 import Pagination from '~/components/common/Pagination.vue';
+import { formatYearMonthDay } from '~/utils/date';
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
@@ -90,14 +91,7 @@ watch(searchQuery, (newVal) => {
   }, 500);
 });
 
-const formatDate = (date: string | null) => {
-  if (!date) return '';
-  return new Date(date).toLocaleDateString(locale.value === 'pt-br' ? 'pt-BR' : 'en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-};
+
 
 const getCategoryName = (categoryId: number | Category | null) => {
   if (!categoryId) return '';
@@ -108,7 +102,7 @@ const getCategoryName = (categoryId: number | Category | null) => {
 
 const getCoverImage = (post: Post) => {
   const coverImage = post.images?.find(img => img.image_type === 'cover');
-  return coverImage?.thumbnail || coverImage?.file || 'https://via.placeholder.com/800x500';
+  return coverImage?.thumbnail || coverImage?.file || `https://placehold.co/800x500?text=${post.title}`;
 };
 
 onMounted(() => {
@@ -242,7 +236,7 @@ onMounted(() => {
                     <span v-if="getCategoryName(post.category)" class="post-category">
                       {{ getCategoryName(post.category) }}
                     </span>
-                    <span class="post-date">{{ formatDate(post.published_at) }}</span>
+                    <span class="post-date">{{ formatYearMonthDay(post.published_at, locale) }}</span>
                   </div>
 
                   <NuxtLink :to="localePath(`/blog/${post.slug}`)" class="post-title-link">
@@ -290,7 +284,7 @@ onMounted(() => {
                 <span v-if="getCategoryName(post.category)" class="post-category">
                   {{ getCategoryName(post.category) }}
                 </span>
-                <span class="post-date">{{ formatDate(post.published_at) }}</span>
+                <span class="post-date">{{ formatYearMonthDay(post.published_at, locale) }}</span>
               </div>
 
               <NuxtLink :to="localePath(`/blog/${post.slug}`)" class="post-title-link">

@@ -1,21 +1,15 @@
 <script setup lang="ts">
 import type { DjangoListResponse } from '~/types/api';
 import type { Education } from '~/types/portfolio';
+import { formatShortMonthYearOrPresent } from '~/utils/date';
 
 const config = useRuntimeConfig();
+const { locale, t } = useI18n();
 
-const { data: educations } = await useFetch<DjangoListResponse<Education>>('/api/educations/', {
+const { data: educations } = await useApi<DjangoListResponse<Education>>('/api/educations/', {
     baseURL: config.public.apiBase,
     params: { limit: 3, ordering: '-start_date' }
 });
-
-const formatDate = (date: string | null) => {
-    if (!date) return 'Presente';
-    return new Date(date).toLocaleDateString('pt-BR', {
-        year: 'numeric',
-        month: 'short'
-    });
-};
 </script>
 
 <template>
@@ -28,7 +22,8 @@ const formatDate = (date: string | null) => {
                 <h3 class="education-degree">{{ edu.degree }}</h3>
                 <p class="education-institution">{{ edu.institution }}</p>
                 <p class="education-date">
-                    {{ formatDate(edu.start_date) }} - {{ formatDate(edu.end_date) }}
+                    {{ formatShortMonthYearOrPresent(edu.start_date, locale, t('common.present')) }} - {{
+                        formatShortMonthYearOrPresent(edu.end_date, locale, t('common.present')) }}
                 </p>
                 <p v-if="edu.description" class="education-description">
                     {{ edu.description }}

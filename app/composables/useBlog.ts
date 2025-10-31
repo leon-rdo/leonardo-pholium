@@ -29,19 +29,16 @@ export const useBlog = () => {
    * Fetch a single post by slug
    */
   const fetchPostBySlug = async (slug: string) => {
-    const response = await $fetch<DjangoListResponse<Post>>(
-      "/api/posts/",
-      {
-        baseURL: config.public.apiBase,
-        params: {
-          slug,
-          expand: "category,series,tags",
-        },
-        headers: {
-          "Accept-Language": apiLocale.value,
-        },
-      }
-    );
+    const response = await $fetch<DjangoListResponse<Post>>("/api/posts/", {
+      baseURL: config.public.apiBase,
+      params: {
+        slug,
+        expand: "category,series,tags",
+      },
+      headers: {
+        "Accept-Language": apiLocale.value,
+      },
+    });
 
     return response.results?.[0] || null;
   };
@@ -50,40 +47,34 @@ export const useBlog = () => {
    * Fetch published posts
    */
   const fetchPublishedPosts = async (params?: Record<string, any>) => {
-    return await $fetch<DjangoListResponse<Post>>(
-      "/api/posts/published/",
-      {
-        baseURL: config.public.apiBase,
-        params: {
-          expand: "category,tags",
-          ordering: "-is_pinned,-published_at",
-          ...params,
-        },
-        headers: {
-          "Accept-Language": apiLocale.value,
-        },
-      }
-    );
+    return await $fetch<DjangoListResponse<Post>>("/api/posts/published/", {
+      baseURL: config.public.apiBase,
+      params: {
+        expand: "category,tags",
+        ordering: "-is_pinned,-published_at",
+        ...params,
+      },
+      headers: {
+        "Accept-Language": apiLocale.value,
+      },
+    });
   };
 
   /**
    * Fetch categories
    */
   const fetchCategories = async (params?: Record<string, any>) => {
-    return await $fetch<DjangoListResponse<Category>>(
-      "/api/post-categories/",
-      {
-        baseURL: config.public.apiBase,
-        params: {
-          is_active: true,
-          ordering: "order",
-          ...params,
-        },
-        headers: {
-          "Accept-Language": apiLocale.value,
-        },
-      }
-    );
+    return await $fetch<DjangoListResponse<Category>>("/api/post-categories/", {
+      baseURL: config.public.apiBase,
+      params: {
+        is_active: true,
+        ordering: "order",
+        ...params,
+      },
+      headers: {
+        "Accept-Language": apiLocale.value,
+      },
+    });
   };
 
   /**
@@ -155,48 +146,6 @@ export const useBlog = () => {
   };
 
   /**
-   * Format date helper
-   */
-  const formatDate = (
-    date: string | null,
-    options?: Intl.DateTimeFormatOptions
-  ) => {
-    if (!date) return "";
-
-    const defaultOptions: Intl.DateTimeFormatOptions = {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    };
-
-    return new Date(date).toLocaleDateString(
-      locale.value === "pt-br" ? "pt-BR" : "en-US",
-      options || defaultOptions
-    );
-  };
-
-  /**
-   * Format relative time (e.g., "2 days ago")
-   */
-  const formatRelativeTime = (date: string) => {
-    const commentDate = new Date(date);
-    const now = new Date();
-    const diffInSeconds = Math.floor(
-      (now.getTime() - commentDate.getTime()) / 1000
-    );
-
-    if (diffInSeconds < 60) return "agora mesmo";
-    if (diffInSeconds < 3600)
-      return `${Math.floor(diffInSeconds / 60)} min atrás`;
-    if (diffInSeconds < 86400)
-      return `${Math.floor(diffInSeconds / 3600)} h atrás`;
-    if (diffInSeconds < 604800)
-      return `${Math.floor(diffInSeconds / 86400)} dias atrás`;
-
-    return formatDate(date, { month: "short", day: "numeric" });
-  };
-
-  /**
    * Get category name from category object or ID
    */
   const getCategoryName = (
@@ -229,8 +178,6 @@ export const useBlog = () => {
     submitComment,
     toggleReaction,
     fetchReactionSummary,
-    formatDate,
-    formatRelativeTime,
     getCategoryName,
     calculateReadingTime,
   };

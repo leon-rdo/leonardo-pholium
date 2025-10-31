@@ -68,7 +68,6 @@ export interface Comment<TExpand = Record<string, never>> {
   id: number;
   post: TExpand extends { post: true } ? Post : number;
   parent: TExpand extends { parent: true } ? Comment : number | null;
-  user: TExpand extends { user: true } ? User : number | null;
   guest_name: string;
   guest_email: string;
   guest_website: string;

@@ -16,6 +16,7 @@
     "copyLink": "Copiar link",
     "related": "Relacionados",
     "language": "Idioma",
+    "present": "Presente",
     "page": "Página",
     "previousPage": "Página anterior",
     "nextPage": "Próxima página",
@@ -100,13 +101,11 @@
   },
   "experience": {
     "title": "Experiência",
-    "subtitle": "Minha jornada profissional",
-    "present": "Presente"
+    "subtitle": "Minha jornada profissional"
   },
   "education": {
     "title": "Educação",
-    "subtitle": "Minha formação acadêmica",
-    "present": "Presente"
+    "subtitle": "Minha formação acadêmica"
   },
   "testimonials": {
     "title": "Depoimentos",

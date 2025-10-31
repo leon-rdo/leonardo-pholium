@@ -71,12 +71,12 @@ const formatDate = (date: string) => {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - commentDate.getTime()) / 1000);
 
-  if (diffInSeconds < 60) return 'agora mesmo';
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min atrás`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} h atrás`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} dias atrás`;
+  if (diffInSeconds < 60) return t('blog.now');
+  if (diffInSeconds < 3600) return t('blog.minutesAgo', { count: Math.floor(diffInSeconds / 60) });
+  if (diffInSeconds < 86400) return t('blog.hoursAgo', { count: Math.floor(diffInSeconds / 3600) });
+  if (diffInSeconds < 604800) return t('blog.daysAgo', { count: Math.floor(diffInSeconds / 86400) });
 
-  return commentDate.toLocaleDateString('pt-BR', {
+  return commentDate.toLocaleDateString(locale.value, {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
@@ -102,10 +102,6 @@ const submitComment = async (parentId: number | null = null) => {
     await $fetch('/api/comments/', {
       baseURL: config.public.apiBase,
       method: 'POST',
-      headers: {
-        'Accept-Language': locale.value === 'pt-br' ? 'pt-br' : 'en-us',
-        // Add authorization header if authenticated
-      },
       body: {
         post: props.postId,
         parent: parentId,
@@ -189,7 +185,7 @@ const cancelReply = () => {
           <div class="comment-content">
             <div class="comment-header">
               <span class="comment-author">
-                {{ comment.user ? 'Usuário' : comment.guest_name }}
+                {{ comment.guest_name }}
               </span>
               <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
             </div>
@@ -232,7 +228,7 @@ const cancelReply = () => {
             <div class="comment-content">
               <div class="comment-header">
                 <span class="comment-author">
-                  {{ reply.user ? 'Usuário' : reply.guest_name }}
+                  {{ reply.guest_name }}
                 </span>
                 <span class="comment-date">{{ formatDate(reply.created_at) }}</span>
               </div>

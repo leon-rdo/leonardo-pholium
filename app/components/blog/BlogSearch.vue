@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { DjangoListResponse } from '~/types/api';
 import type { Post, Category } from '~/types/blog';
+import { formatShortMonthDay } from '~/utils/date';
 
 const searchQuery = ref('');
 const isSearching = ref(false);
 const showResults = ref(false);
 const searchResults = ref<Post[]>([]);
+const { locale } = useI18n();
 
 let searchTimeout: NodeJS.Timeout;
 
@@ -58,14 +60,6 @@ const getCategoryName = (category: number | Category | null) => {
 const closeSearch = () => {
     showResults.value = false;
 };
-
-const formatDate = (date: string | null) => {
-    if (!date) return '';
-    return new Date(date).toLocaleDateString('pt-BR', {
-        month: 'short',
-        day: 'numeric'
-    });
-};
 </script>
 
 <template>
@@ -97,7 +91,7 @@ const formatDate = (date: string | null) => {
                             </span>
                             <h4 class="search-result-title">{{ post.title }}</h4>
                             <p class="search-result-meta">
-                                <span>{{ formatDate(post.published_at) }}</span>
+                                <span>{{ formatShortMonthDay(post.published_at, locale) }}</span>
                                 <span>•</span>
                                 <span>{{ post.reading_time }} min</span>
                             </p>

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { DjangoListResponse } from '~/types/api';
 import type { Post } from '~/types/blog';
+import { formatYearShortMonthDay } from '~/utils/date';
 
 const localePath = useLocalePath();
-const { t } = useI18n();
+const { locale, t } = useI18n();
 
 const props = defineProps<{
     limit?: number;
@@ -26,15 +27,6 @@ const filteredPosts = computed(() => {
     return result;
 });
 
-const formatDate = (date: string | null) => {
-    if (!date) return '';
-    return new Date(date).toLocaleDateString('pt-BR', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-};
-
 const getCoverImageThumbnail = (post: Post<{ category: true }>) => {
     const coverImage = post.images?.find(img => img.image_type === 'cover');
     return coverImage?.thumbnail || coverImage?.file || 'https://via.placeholder.com/100x80';
@@ -55,7 +47,7 @@ const getCoverImageThumbnail = (post: Post<{ category: true }>) => {
 
                 <div class="recent-post-content">
                     <h4 class="recent-post-title">{{ post.title }}</h4>
-                    <p class="recent-post-date">{{ formatDate(post.published_at) }}</p>
+                    <p class="recent-post-date">{{ formatYearShortMonthDay(post.published_at, locale) }}</p>
                 </div>
             </NuxtLink>
         </div>
