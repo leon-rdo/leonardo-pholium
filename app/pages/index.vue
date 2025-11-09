@@ -9,6 +9,9 @@ import EducationList from '~/components/educations/EducationList.vue';
 import RecentPosts from '~/components/blog/RecentPosts.vue';
 import ContactForm from '~/components/contact-messages/ContactForm.vue';
 import TestimonialsList from '~/components/testimonials/TestimonialsList.vue';
+import { useContentBlockImages } from '~/composables/useContentBlockImages';
+import ContentBlockImage from '~/components/content-blocks/ContentBlockImage.vue';
+
 
 const localePath = useLocalePath();
 const { t } = useI18n();
@@ -22,12 +25,20 @@ if (import.meta.client) {
 const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
   'home-content-blocks',
   '/api/content-blocks/',
-  { page_name: 'home' }
+  { page_name: 'home', expand: 'images' }
 );
 
 const getContentBlock = (key: string) => {
   return contentBlocks.value?.results?.find(block => block.key === key);
 };
+
+// Image helpers
+const { hasImages, getImageUrl } = useContentBlockImages();
+
+// Hero background URL
+const heroBackgroundUrl = computed(() => 
+  getImageUrl(getContentBlock('hero_background'), 'cover')
+);
 
 // SEO Configuration
 const { setSeoMeta, setStructuredData } = useSeo();
@@ -102,7 +113,16 @@ const scrollToSection = (sectionId: string) => {
 <template>
   <div class="portfolio-home">
     <!-- Hero Section -->
-    <v-container class="hero-section">
+    <v-container 
+      class="hero-section" 
+      :class="{ 'hero-with-bg': heroBackgroundUrl }"
+      :style="heroBackgroundUrl ? {
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.75)), url(${heroBackgroundUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      } : {}"
+    >
+      <div class="hero-overlay"></div>
       <v-row align="center" justify="center" class="min-h-screen">
         <v-col cols="12" md="10" lg="8" class="text-center">
           <div class="hero-badge mb-6 fade-up">
@@ -123,7 +143,9 @@ const scrollToSection = (sectionId: string) => {
               @click="scrollToSection('projects')">
               {{ getContentBlock('hero_cta_projects')?.text || 'Ver Projetos' }}
             </v-btn>
-            <v-btn size="large" variant="outlined" color="grey-darken-2" class="text-none px-8 hero-btn-outline ma-2"
+            <v-btn size="large" variant="outlined" 
+              :color="heroBackgroundUrl ? 'white' : 'grey-darken-2'" 
+              class="text-none px-8 hero-btn-outline ma-2"
               @click="scrollToSection('contact')">
               {{ getContentBlock('hero_cta_contact')?.text || 'Entrar em Contato' }}
             </v-btn>
@@ -134,19 +156,68 @@ const scrollToSection = (sectionId: string) => {
 
     <!-- About Section -->
     <v-container v-if="getContentBlock('about_intro')" class="section-container">
-      <v-row justify="center">
-        <v-col cols="12" md="8">
-          <div class="section-header fade-up mb-12">
+      <v-row justify="center" align="center">
+        <!-- Profile Image -->
+        <v-col 
+          v-if="hasImages(getContentBlock('about_intro'))" 
+          cols="12" 
+          md="5" 
+          class="fade-up"
+          order="2"
+          order-md="1"
+        >
+          <ContentBlockImage 
+            :content-block="getContentBlock('about_intro')!" 
+            image-type="cover"
+            aspect-ratio="4/5"
+            sizes="(max-width: 960px) 100vw, 500px"
+            class="about-image"
+          />
+        </v-col>
+
+        <!-- About Text -->
+        <v-col 
+          cols="12" 
+          :md="hasImages(getContentBlock('about_intro')) ? 7 : 8"
+          order="1"
+          order-md="2"
+        >
+          <div 
+            class="section-header fade-up mb-8" 
+            :class="{ 
+              'text-left': hasImages(getContentBlock('about_intro')),
+              'text-center': !hasImages(getContentBlock('about_intro'))
+            }"
+          >
             <h2 class="section-title">
               {{ getContentBlock('about_title')?.text || 'Sobre Mim' }}
             </h2>
           </div>
 
-          <div class="about-content fade-up">
+          <div 
+            class="about-content fade-up"
+            :class="{
+              'text-left': hasImages(getContentBlock('about_intro')),
+              'mx-auto text-center': !hasImages(getContentBlock('about_intro'))
+            }"
+          >
             <div v-if="getContentBlock('about_intro')?.kind === 'html'" v-html="getContentBlock('about_intro')?.text" />
             <p v-else class="about-text">
               {{ getContentBlock('about_intro')?.text }}
             </p>
+          </div>
+          
+          <div 
+            class="mt-6 fade-up" 
+            :class="{
+              'text-left': hasImages(getContentBlock('about_intro')),
+              'text-center': !hasImages(getContentBlock('about_intro'))
+            }"
+          >
+            <v-btn size="large" variant="outlined" color="grey-darken-2" class="text-none" :to="localePath('/about')">
+              {{ getContentBlock('about_cta')?.text || t('about.title') }}
+              <v-icon end size="20">mdi-arrow-right</v-icon>
+            </v-btn>
           </div>
         </v-col>
       </v-row>
@@ -346,6 +417,50 @@ const scrollToSection = (sectionId: string) => {
   display: flex;
   align-items: center;
   background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+  transition: all 0.3s ease;
+  position: relative;
+  border-radius: 8px;
+}
+
+.hero-section.hero-with-bg {
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.hero-overlay {
+  backdrop-filter: blur(4px);
+  position: absolute;
+  width: 99%;
+  height: 99%;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 8px;
+}
+
+.hero-with-bg .hero-title,
+.hero-with-bg .hero-name,
+.hero-with-bg .hero-subtitle,
+.hero-with-bg .hero-badge-text {
+  color: white;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.hero-with-bg .hero-badge {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(100px);
+}
+
+.hero-with-bg .hero-btn-outline {
+  border-color: white;
+  color: white;
+}
+
+.hero-with-bg .hero-btn-outline:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: white;
 }
 
 .hero-badge {
@@ -411,13 +526,35 @@ const scrollToSection = (sectionId: string) => {
 /* About Section */
 .about-content {
   max-width: 700px;
-  margin: 0 auto;
 }
 
 .about-text {
   font-size: 1.125rem;
   line-height: 1.8;
   color: #4b5563;
+}
+
+.about-image {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.about-image:hover {
+  transform: translateY(-8px);
+}
+
+.about-image :deep(.content-block-image) {
+  border-radius: 20px;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-left .section-title {
+  text-align: left;
 }
 
 /* Contact Section */
