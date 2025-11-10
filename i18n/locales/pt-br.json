@@ -7,7 +7,9 @@
     "back": "Voltar",
     "viewAll": "Ver Todos",
     "readMore": "Ler mais",
+    "readLess": "Ler menos",
     "seeMore": "Ver mais",
+    "seeLess": "Ver menos",
     "seeAll": "Ver Tudo",
     "categories": "Categorias",
     "allCategories": "Todas as Categorias",
@@ -17,6 +19,12 @@
     "related": "Relacionados",
     "language": "Idioma",
     "present": "Presente",
+    "current": "atual",
+    "month": "mês",
+    "months": "meses",
+    "year": "ano",
+    "years": "anos",
+    "and": "e",
     "page": "Página",
     "previousPage": "Página anterior",
     "nextPage": "Próxima página",
@@ -101,7 +109,8 @@
   },
   "experience": {
     "title": "Experiência",
-    "subtitle": "Minha jornada profissional"
+    "subtitle": "Minha jornada profissional",
+    "positions": "cargos"
   },
   "education": {
     "title": "Educação",

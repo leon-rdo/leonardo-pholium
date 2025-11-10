@@ -7,7 +7,9 @@
     "back": "Back",
     "viewAll": "View All",
     "readMore": "Read more",
+    "readLess": "Read less",
     "seeMore": "See more",
+    "seeLess": "See less",
     "seeAll": "See all",
     "categories": "Categories",
     "allCategories": "All Categories",
@@ -17,6 +19,12 @@
     "related": "Related",
     "language": "Language",
     "present": "Present",
+    "current": "current",
+    "month": "month",
+    "months": "months",
+    "year": "year",
+    "years": "years",
+    "and": "and",
     "page": "Page",
     "previousPage": "Previous page",
     "nextPage": "Next page",
@@ -101,7 +109,8 @@
   },
   "experience": {
     "title": "Experience",
-    "subtitle": "My professional journey"
+    "subtitle": "My professional journey",
+    "positions": "positions"
   },
   "education": {
     "title": "Education",
