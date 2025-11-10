@@ -113,7 +113,7 @@ const scrollToSection = (sectionId: string) => {
 <template>
   <div class="portfolio-home">
     <!-- Hero Section -->
-    <v-container 
+    <div 
       class="hero-section" 
       :class="{ 'hero-with-bg': heroBackgroundUrl }"
       :style="heroBackgroundUrl ? {
@@ -123,36 +123,38 @@ const scrollToSection = (sectionId: string) => {
       } : {}"
     >
       <div class="hero-overlay"></div>
-      <v-row align="center" justify="center" class="min-h-screen">
-        <v-col cols="12" md="10" lg="8" class="text-center">
-          <div class="hero-badge mb-6 fade-up">
-            <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'Disponível para novos projetos' }}</span>
-          </div>
+      <v-container>
+        <v-row align="center" justify="center" class="min-h-screen">
+          <v-col cols="12" md="10" lg="8" class="text-center">
+            <div class="hero-badge mb-6 fade-up">
+              <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'Disponível para novos projetos' }}</span>
+            </div>
 
-          <h1 class="hero-title mb-6">
-            {{ getContentBlock('hero_greeting')?.text || 'Olá, eu sou' }}
-            <span class="hero-name">{{ getContentBlock('hero_name')?.text || 'Leonardo' }}</span>
-          </h1>
+            <h1 class="hero-title mb-6">
+              {{ getContentBlock('hero_greeting')?.text || 'Olá, eu sou' }}
+              <span class="hero-name">{{ getContentBlock('hero_name')?.text || 'Leonardo' }}</span>
+            </h1>
 
-          <p class="hero-subtitle mb-12">
-            {{ getContentBlock('hero_subtitle')?.text || 'Full Stack Developer & Creative Problem Solver' }}
-          </p>
+            <p class="hero-subtitle mb-12">
+              {{ getContentBlock('hero_subtitle')?.text || 'Full Stack Developer & Creative Problem Solver' }}
+            </p>
 
-          <div class="hero-cta d-flex justify-center flex-wrap">
-            <v-btn size="large" flat color="primary" class="text-none px-8 hero-btn ma-2"
-              @click="scrollToSection('projects')">
-              {{ getContentBlock('hero_cta_projects')?.text || 'Ver Projetos' }}
-            </v-btn>
-            <v-btn size="large" variant="outlined" 
-              :color="heroBackgroundUrl ? 'white' : 'grey-darken-2'" 
-              class="text-none px-8 hero-btn-outline ma-2"
-              @click="scrollToSection('contact')">
-              {{ getContentBlock('hero_cta_contact')?.text || 'Entrar em Contato' }}
-            </v-btn>
-          </div>
-        </v-col>
-      </v-row>
-    </v-container>
+            <div class="hero-cta d-flex justify-center flex-wrap">
+              <v-btn size="large" flat color="primary" class="text-none px-8 hero-btn ma-2"
+                @click="scrollToSection('projects')">
+                {{ getContentBlock('hero_cta_projects')?.text || 'Ver Projetos' }}
+              </v-btn>
+              <v-btn size="large" variant="outlined" 
+                :color="heroBackgroundUrl ? 'white' : 'grey-darken-2'" 
+                class="text-none px-8 hero-btn-outline ma-2"
+                @click="scrollToSection('contact')">
+                {{ getContentBlock('hero_cta_contact')?.text || 'Entrar em Contato' }}
+              </v-btn>
+            </div>
+          </v-col>
+        </v-row>
+      </v-container>
+    </div>
 
     <!-- About Section -->
     <v-container v-if="getContentBlock('about_intro')" class="section-container">
@@ -431,13 +433,12 @@ const scrollToSection = (sectionId: string) => {
 .hero-overlay {
   backdrop-filter: blur(4px);
   position: absolute;
-  width: 99%;
-  height: 99%;
+  width: 100%;
+  height: 100%;
   top: 0;
   bottom: 0;
   left: 0;
   right: 0;
-  border-radius: 8px;
 }
 
 .hero-with-bg .hero-title,
