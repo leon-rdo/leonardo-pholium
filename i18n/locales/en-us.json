@@ -114,7 +114,9 @@
   },
   "education": {
     "title": "Education",
-    "subtitle": "My academic background"
+    "subtitle": "My academic background",
+    "noEducations": "No education records",
+    "noEducationsDescription": "Education information not available at the moment"
   },
   "testimonials": {
     "title": "Testimonials",

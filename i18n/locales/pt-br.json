@@ -114,7 +114,9 @@
   },
   "education": {
     "title": "Educação",
-    "subtitle": "Minha formação acadêmica"
+    "subtitle": "Minha formação acadêmica",
+    "noEducations": "Nenhuma formação registrada",
+    "noEducationsDescription": "Informações sobre educação não disponíveis no momento"
   },
   "testimonials": {
     "title": "Depoimentos",
