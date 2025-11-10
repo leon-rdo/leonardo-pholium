@@ -187,7 +187,7 @@ const scrollToSection = (sectionId: string) => {
           <div 
             class="section-header fade-up mb-8" 
             :class="{ 
-              'text-left': hasImages(getContentBlock('about_intro')),
+              'text-center text-md-left': hasImages(getContentBlock('about_intro')),
               'text-center': !hasImages(getContentBlock('about_intro'))
             }"
           >
@@ -199,7 +199,7 @@ const scrollToSection = (sectionId: string) => {
           <div 
             class="about-content fade-up"
             :class="{
-              'text-left': hasImages(getContentBlock('about_intro')),
+              'text-center text-md-left': hasImages(getContentBlock('about_intro')),
               'mx-auto text-center': !hasImages(getContentBlock('about_intro'))
             }"
           >
@@ -212,7 +212,7 @@ const scrollToSection = (sectionId: string) => {
           <div 
             class="mt-6 fade-up" 
             :class="{
-              'text-left': hasImages(getContentBlock('about_intro')),
+              'text-center text-md-left': hasImages(getContentBlock('about_intro')),
               'text-center': !hasImages(getContentBlock('about_intro'))
             }"
           >
@@ -421,7 +421,8 @@ const scrollToSection = (sectionId: string) => {
   background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
   transition: all 0.3s ease;
   position: relative;
-  border-radius: 8px;
+  width: 100%;
+  padding: 0;
 }
 
 .hero-section.hero-with-bg {
@@ -548,14 +549,6 @@ const scrollToSection = (sectionId: string) => {
 
 .about-image :deep(.content-block-image) {
   border-radius: 20px;
-}
-
-.text-left {
-  text-align: left;
-}
-
-.text-left .section-title {
-  text-align: left;
 }
 
 /* Contact Section */
