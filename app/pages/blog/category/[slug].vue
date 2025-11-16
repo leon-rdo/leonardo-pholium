@@ -62,7 +62,7 @@ const { setSeoMeta, setStructuredData } = useSeo();
 
 const getCategoryImage = () => {
   const coverImage = category.value?.images?.find(img => img.image_type === 'cover');
-  return coverImage?.file || coverImage?.thumbnail || `${config.public.siteUrl}/og-blog.jpg`;
+  return coverImage?.file || coverImage?.thumbnail || `${config.public.siteUrl}/og-default.jpg`;
 };
 
 setSeoMeta({

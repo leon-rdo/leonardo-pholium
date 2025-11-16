@@ -47,7 +47,7 @@ const { setSeoMeta, setStructuredData } = useSeo();
 setSeoMeta({
   title: getContentBlock('seo_title')?.text || t('home.seo.title'),
   description: getContentBlock('seo_description')?.text || t('home.seo.description'),
-  image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-home.jpg`,
+  image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-default.jpg`,
   type: 'website',
 });
 

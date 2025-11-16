@@ -34,7 +34,7 @@ const { setSeoMeta, setStructuredData } = useSeo();
 setSeoMeta({
     title: t('blog.categories.seo.title'),
     description: t('blog.categories.seo.description'),
-    image: `${config.public.siteUrl}/og-blog.jpg`,
+    image: `${config.public.siteUrl}/og-default.jpg`,
     type: 'website',
 });
 
