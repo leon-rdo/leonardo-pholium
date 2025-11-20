@@ -36,6 +36,21 @@ if (!post.value) {
   throw createError({ statusCode: 404, message: t("errors.post_not_found") });
 }
 
+const localViewCount = ref(post.value.view_count);
+
+const { viewCounted, timeSpent } = usePostViewTracking(
+  computed(() => post.value?.id || 0),
+  {
+    minReadTime: 3000,
+  }
+);
+
+watch(viewCounted, (counted) => {
+  if (counted && post.value) {
+    localViewCount.value = post.value.view_count + 1;
+  }
+});
+
 // Fetch images separately
 const { data: imagesData } = await useApi<DjangoListResponse<Image>>(
   "/api/images/",
@@ -166,6 +181,18 @@ const getArticleBody = (html: string) => {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 500);
+};
+
+// Formata o tempo gasto na página
+const formatTimeSpent = (ms: number) => {
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  if (minutes > 0) {
+    return `${minutes}m ${remainingSeconds}s`;
+  }
+  return `${seconds}s`;
 };
 
 // SEO Configuration
@@ -331,9 +358,12 @@ const copyLink = () => {
                   <v-icon size="18">mdi-clock-outline</v-icon>
                   {{ post.reading_time }} {{ t("blog.readingTime") }}
                 </span>
-                <span class="post-stat">
+                <span
+                  class="post-stat"
+                  :class="{ 'view-counted': viewCounted }"
+                >
                   <v-icon size="18">mdi-eye-outline</v-icon>
-                  {{ post.view_count }} {{ t("blog.views") }}
+                  {{ localViewCount }} {{ t("blog.views") }}
                 </span>
               </div>
 
@@ -622,6 +652,26 @@ const copyLink = () => {
   font-size: 0.9375rem;
   color: #6b7280;
   font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.post-stat.view-counted {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.post-stat.view-counted .v-icon {
+  animation: pulse 1s ease-in-out;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
 }
 
 .share-buttons {
