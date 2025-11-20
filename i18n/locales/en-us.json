@@ -175,6 +175,7 @@
   "errors": {
     "404": "Page not found",
     "postNotFound": "Post not found",
-    "categoryNotFound": "Category not found"
+    "categoryNotFound": "Category not found",
+    "post_not_found": "Post not found"
   }
 }
