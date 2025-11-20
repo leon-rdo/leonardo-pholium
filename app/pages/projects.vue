@@ -41,8 +41,8 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
 const { setSeoMeta, setStructuredData } = useSeo();
 
 setSeoMeta({
-    title: getContentBlock('seo_title')?.text || t('projects.seo.title'),
-    description: getContentBlock('seo_description')?.text || t('projects.seo.description'),
+    title: getContentBlock('seo_title')?.text || t('projects.title'),
+    description: getContentBlock('seo_description')?.text || t('projects.subtitle'),
     image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-default.jpg`,
     type: 'website',
 });

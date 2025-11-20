@@ -36,8 +36,8 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
 const { setSeoMeta, setStructuredData } = useSeo();
 
 setSeoMeta({
-  title: getContentBlock('seo_title')?.text || t('about.seo.title'),
-  description: getContentBlock('seo_description')?.text || t('about.seo.description'),
+  title: getContentBlock('seo_title')?.text || t('about.title'),
+  description: getContentBlock('seo_description')?.text || t('about.description'),
   image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-default.jpg`,
   type: 'website',
 });
@@ -46,7 +46,7 @@ setStructuredData({
   '@context': 'https://schema.org',
   '@type': 'AboutPage',
   name: getContentBlock('hero_title')?.text || t('about.title'),
-  description: getContentBlock('intro')?.text || t('about.seo.description'),
+  description: getContentBlock('intro')?.text || t('about.description'),
 });
 
 onMounted(() => {

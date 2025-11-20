@@ -32,8 +32,8 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
 const { setSeoMeta, setStructuredData } = useSeo();
 
 setSeoMeta({
-    title: t('blog.categories.seo.title'),
-    description: t('blog.categories.seo.description'),
+    title: t('blog.categories'),
+    description: t('blog.allCategories'),
     image: `${config.public.siteUrl}/og-default.jpg`,
     type: 'website',
 });
@@ -42,7 +42,7 @@ setStructuredData({
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     name: t('common.categories'),
-    description: t('blog.categories.seo.description'),
+    description: t('blog.allCategories'),
     url: `${config.public.siteUrl}/blog/category`,
 });
 

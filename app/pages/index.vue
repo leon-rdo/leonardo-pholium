@@ -45,8 +45,8 @@ const { setSeoMeta, setStructuredData } = useSeo();
 
 // Set SEO meta tags with multilingual support
 setSeoMeta({
-  title: getContentBlock('seo_title')?.text || t('home.seo.title'),
-  description: getContentBlock('seo_description')?.text || t('home.seo.description'),
+  title: getContentBlock('seo_title')?.text || t('home.seo_title'),
+  description: getContentBlock('seo_description')?.text || t('home.seo_description'),
   image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-default.jpg`,
   type: 'website',
 });

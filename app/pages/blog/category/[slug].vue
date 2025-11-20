@@ -66,8 +66,8 @@ const getCategoryImage = () => {
 };
 
 setSeoMeta({
-  title: category.value.seo_title || `${category.value.name} | ${t('blog.seo.title')}`,
-  description: category.value.meta_description || category.value.description || t('blog.seo.description'),
+  title: category.value.seo_title || `${category.value.name} | ${t('blog.title')}`,
+  description: category.value.meta_description || category.value.description || t('blog.subtitle'),
   image: getCategoryImage(),
   type: 'website',
 });

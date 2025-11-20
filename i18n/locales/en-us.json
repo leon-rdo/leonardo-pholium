@@ -37,6 +37,10 @@
     "blog": "Blog",
     "contact": "Contact"
   },
+  "home": {
+    "seo_title": "Home",
+    "seo_description": "Personal Portfolio and Blog"
+  },
   "hero": {
     "availableForProjects": "Available for new projects",
     "greeting": "Hello, I'm",
@@ -45,6 +49,7 @@
   },
   "about": {
     "title": "About Me",
+    "description": "Learn more about my journey, my values, and what I do.",
     "myJourney": "My Journey",
     "values": "Values",
     "whatIDo": "What I Do",
