@@ -30,6 +30,10 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // Fetch posts and settings independently so either failure still produces
+  // a valid (possibly empty) feed. Feed readers treat 500 as a broken feed
+  // and may unsubscribe, so we always return 200 with valid XML.
+  let posts: Post<{ category: true; author: true; tags: true }>[] = [];
   try {
     const postsResponse = await $fetch<
       DjangoListResponse<Post<{ category: true; author: true; tags: true }>>
@@ -40,46 +44,39 @@ export default defineEventHandler(async (event) => {
         ordering: "-published_at",
         expand: "category,author,images,tags",
       },
-      headers: {
-        "Accept-Language": locale,
-      },
+      headers: { "Accept-Language": locale },
     });
-
-    const posts = postsResponse.results || [];
-
-    let siteName = "Leonardo Costa";
-    let siteDescription = "Full Stack Developer & Creative Problem Solver";
-
-    try {
-      const settings: SiteSetting = await $fetch("/api/site-settings/", {
-        baseURL: apiBase,
-        headers: { "Accept-Language": locale },
-      });
-      siteName = settings.site_name || siteName;
-      siteDescription = settings.tagline || siteDescription;
-    } catch {
-      console.warn("[rss] Could not fetch site settings, using defaults");
-    }
-
-    const rss = generateRSS({
-      posts,
-      locale,
-      siteUrl,
-      siteName,
-      siteDescription,
-    });
-
-    setHeader(event, "Content-Type", "application/rss+xml; charset=utf-8");
-    setHeader(event, "Cache-Control", "public, max-age=3600, s-maxage=3600");
-
-    return rss;
+    posts = postsResponse.results || [];
   } catch (error: any) {
-    console.error("[rss] ❌ Error:", error?.message || error);
-    throw createError({
-      statusCode: 500,
-      message: `Error generating RSS feed: ${error?.message || "Unknown error"}`,
-    });
+    console.error("[rss] Failed to fetch posts, returning empty feed:", error?.message || error);
   }
+
+  let siteName = "Leonardo Costa";
+  let siteDescription = "Full Stack Developer & Creative Problem Solver";
+
+  try {
+    const settings: SiteSetting = await $fetch("/api/site-settings/", {
+      baseURL: apiBase,
+      headers: { "Accept-Language": locale },
+    });
+    siteName = settings.site_name || siteName;
+    siteDescription = settings.tagline || siteDescription;
+  } catch {
+    console.warn("[rss] Could not fetch site settings, using defaults");
+  }
+
+  const rss = generateRSS({
+    posts,
+    locale,
+    siteUrl,
+    siteName,
+    siteDescription,
+  });
+
+  setHeader(event, "Content-Type", "application/rss+xml; charset=utf-8");
+  setHeader(event, "Cache-Control", "public, max-age=3600, s-maxage=3600");
+
+  return rss;
 });
 
 interface RSSOptions {
