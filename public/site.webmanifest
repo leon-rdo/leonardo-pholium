@@ -1,0 +1,22 @@
+{
+  "name": "Leonardo Costa",
+  "short_name": "Leonardo Costa",
+  "description": "Full Stack Developer & Creative Problem Solver",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/og-default.jpg",
+      "sizes": "1200x630",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
