@@ -1,7 +1,15 @@
+interface OgImageInput {
+  url: string;
+  width?: number;
+  height?: number;
+  alt?: string;
+  type?: string;
+}
+
 interface SeoMetaInput {
   title?: string;
   description?: string;
-  image?: string;
+  image?: string | OgImageInput;
   url?: string;
   type?: "website" | "article" | "profile";
   article?: {
@@ -14,6 +22,7 @@ interface SeoMetaInput {
   noindex?: boolean;
   nofollow?: boolean;
   canonicalUrl?: string;
+  keywords?: string[];
   robots?: {
     index?: boolean;
     follow?: boolean;
@@ -26,10 +35,13 @@ interface SeoMetaInput {
   };
 }
 
+const DEFAULT_OG_WIDTH = 1200;
+const DEFAULT_OG_HEIGHT = 630;
+
 export const useSeo = () => {
   const route = useRoute();
   const config = useRuntimeConfig();
-  const { locale, locales } = useI18n();
+  const { locale, locales, defaultLocale } = useI18n();
   const switchLocalePath = useSwitchLocalePath();
 
   // Get site settings from nuxtData (set by plugin)
@@ -43,7 +55,9 @@ export const useSeo = () => {
     () => siteSettings.value?.default_title || "Portfolio | Leonardo Costa"
   );
   const defaultDescription = computed(
-    () => siteSettings.value?.default_description || "Full Stack Developer"
+    () =>
+      siteSettings.value?.default_description ||
+      "Full Stack Developer & Creative Problem Solver"
   );
   const defaultImage = computed(() => {
     if (siteSettings.value?.default_image) {
@@ -54,8 +68,39 @@ export const useSeo = () => {
 
   const availableLocales = locales.value as Array<{
     code: "pt-br" | "en-us";
-    iso: string;
+    language?: string;
+    iso?: string;
   }>;
+
+  const getLanguageTag = (code: string) => {
+    const loc = availableLocales.find((l) => l.code === code);
+    return loc?.language || loc?.iso || code;
+  };
+
+  const normalizeOgImage = (input: SeoMetaInput["image"]): OgImageInput => {
+    if (!input) {
+      return {
+        url: defaultImage.value,
+        width: DEFAULT_OG_WIDTH,
+        height: DEFAULT_OG_HEIGHT,
+        type: "image/jpeg",
+      };
+    }
+    if (typeof input === "string") {
+      return {
+        url: input,
+        width: DEFAULT_OG_WIDTH,
+        height: DEFAULT_OG_HEIGHT,
+      };
+    }
+    return {
+      url: input.url,
+      width: input.width || DEFAULT_OG_WIDTH,
+      height: input.height || DEFAULT_OG_HEIGHT,
+      alt: input.alt,
+      type: input.type,
+    };
+  };
 
   /**
    * Set comprehensive SEO meta tags
@@ -71,168 +116,142 @@ export const useSeo = () => {
       noindex = false,
       nofollow = false,
       canonicalUrl,
+      keywords,
     } = input;
 
-    // Build full URL
     const baseUrl = config.public.siteUrl || "https://leonardocosta.dev";
     const currentPath = route.path;
     const fullUrl = url || `${baseUrl}${currentPath}`;
-    const imageUrl = image || defaultImage.value;
+    const ogImage = normalizeOgImage(image);
 
-    // Build title with site name
     const fullTitle = title
       ? `${title} | ${siteName.value}`
       : defaultTitle.value;
 
-    // Canonical URL
-    const canonical = canonicalUrl || fullUrl;
+    // Canonical — strip volatile query params (pagination, search) to prevent dup content
+    const canonical = canonicalUrl || stripVolatileQuery(fullUrl);
 
-    // Robots meta
-    const robotsContent = [];
-
+    // Robots directives
+    const robotsContent: string[] = [];
     if (input.robots) {
       const r = input.robots;
-
-      // Index/noindex
-      if (r.index === false || noindex) {
-        robotsContent.push("noindex");
-      } else {
-        robotsContent.push("index");
-      }
-
-      // Follow/nofollow
-      if (r.follow === false || nofollow) {
-        robotsContent.push("nofollow");
-      } else {
-        robotsContent.push("follow");
-      }
-
-      // Additional directives
+      robotsContent.push(r.index === false || noindex ? "noindex" : "index");
+      robotsContent.push(
+        r.follow === false || nofollow ? "nofollow" : "follow"
+      );
       if (r.noarchive) robotsContent.push("noarchive");
       if (r.nosnippet) robotsContent.push("nosnippet");
       if (r.noimageindex) robotsContent.push("noimageindex");
       if (r.maxSnippet !== undefined)
         robotsContent.push(`max-snippet:${r.maxSnippet}`);
-      if (r.maxImagePreview)
-        robotsContent.push(`max-image-preview:${r.maxImagePreview}`);
+      robotsContent.push(`max-image-preview:${r.maxImagePreview || "large"}`);
       if (r.maxVideoPreview !== undefined)
         robotsContent.push(`max-video-preview:${r.maxVideoPreview}`);
+      else robotsContent.push("max-video-preview:-1");
     } else {
-      // Default behavior
-      if (noindex) robotsContent.push("noindex");
-      else robotsContent.push("index");
-
-      if (nofollow) robotsContent.push("nofollow");
-      else robotsContent.push("follow");
-
+      robotsContent.push(noindex ? "noindex" : "index");
+      robotsContent.push(nofollow ? "nofollow" : "follow");
       robotsContent.push("max-image-preview:large");
       robotsContent.push("max-snippet:-1");
       robotsContent.push("max-video-preview:-1");
     }
 
-    // Build meta object
-    const meta: any = {
+    const meta: Record<string, unknown> = {
       title: fullTitle,
       description: description || defaultDescription.value,
 
       // Open Graph
       ogTitle: title || defaultTitle.value,
       ogDescription: description || defaultDescription.value,
-      ogImage: imageUrl,
-      ogImageAlt: title || siteName.value,
+      ogImage: ogImage.url,
+      ogImageAlt: ogImage.alt || title || siteName.value,
       ogUrl: fullUrl,
       ogType: type,
       ogSiteName: siteName.value,
       ogLocale: locale.value === "pt-br" ? "pt_BR" : "en_US",
+      ogLocaleAlternate: availableLocales
+        .filter((l) => l.code !== locale.value)
+        .map((l) => (l.code === "pt-br" ? "pt_BR" : "en_US")),
 
       // Twitter Card
       twitterCard: "summary_large_image",
       twitterTitle: title || defaultTitle.value,
       twitterDescription: description || defaultDescription.value,
-      twitterImage: imageUrl,
-      twitterImageAlt: title || siteName.value,
+      twitterImage: ogImage.url,
+      twitterImageAlt: ogImage.alt || title || siteName.value,
     };
 
-    // Article specific meta
-    if (type === "article" && article) {
-      if (article.publishedTime) {
-        meta.articlePublishedTime = article.publishedTime;
-      }
-      if (article.modifiedTime) {
-        meta.articleModifiedTime = article.modifiedTime;
-      }
-      if (article.author) {
-        meta.articleAuthor = article.author;
-      }
-      if (article.section) {
-        meta.articleSection = article.section;
-      }
-      if (article.tags) {
-        meta.articleTag = article.tags;
-      }
+    if (config.public.twitterHandle) {
+      meta.twitterSite = config.public.twitterHandle;
+      meta.twitterCreator = config.public.twitterHandle;
     }
 
-    // Set meta tags using Nuxt's useSeoMeta
+    // Article-specific meta
+    if (type === "article" && article) {
+      if (article.publishedTime)
+        meta.articlePublishedTime = article.publishedTime;
+      if (article.modifiedTime)
+        meta.articleModifiedTime = article.modifiedTime;
+      if (article.author) meta.articleAuthor = article.author;
+      if (article.section) meta.articleSection = article.section;
+      if (article.tags) meta.articleTag = article.tags;
+    }
+
+    if (keywords?.length) {
+      meta.keywords = keywords.join(", ");
+    }
+
     useSeoMeta(meta);
 
-    // Set head tags for additional control
+    const imageMeta: Array<Record<string, string>> = [
+      { property: "og:image:width", content: String(ogImage.width) },
+      { property: "og:image:height", content: String(ogImage.height) },
+    ];
+    if (ogImage.type) {
+      imageMeta.push({ property: "og:image:type", content: ogImage.type });
+    }
+
     useHead({
       title: fullTitle,
       htmlAttrs: {
-        lang: locale.value === "pt-br" ? "pt-BR" : "en-US",
+        lang: getLanguageTag(locale.value),
       },
       link: [
-        // Canonical
-        {
-          rel: "canonical",
-          href: canonical,
-        },
-        // Hreflang for alternate languages
+        { rel: "canonical", href: canonical },
         ...getHreflangLinks(currentPath),
       ],
       meta: [
-        // Robots
-        {
-          name: "robots",
-          content: robotsContent.join(", "),
-        },
-        // Additional OG image dimensions
-        ...(imageUrl
-          ? [
-              { property: "og:image:width", content: "1200" },
-              { property: "og:image:height", content: "630" },
-              { property: "og:image:type", content: "image/jpeg" },
-            ]
-          : []),
+        { name: "robots", content: robotsContent.join(", ") },
+        { name: "googlebot", content: robotsContent.join(", ") },
+        ...imageMeta,
       ],
     });
   };
 
   /**
-   * Generate hreflang links for all locales
+   * Generate hreflang links for all locales (+ x-default → default locale)
    */
-  const getHreflangLinks = (path: string) => {
+  const getHreflangLinks = (_path: string) => {
     const baseUrl = config.public.siteUrl || "https://leonardocosta.dev";
-    const links: any[] = [];
+    const links: Array<{ rel: string; hreflang: string; href: string }> = [];
 
     availableLocales.forEach((loc) => {
       const localePath = switchLocalePath(loc.code);
       if (localePath) {
         links.push({
           rel: "alternate",
-          hreflang: loc.iso.toLowerCase(),
+          hreflang: getLanguageTag(loc.code),
           href: `${baseUrl}${localePath}`,
         });
       }
     });
 
-    // Add x-default for fallback
-    const defaultLocalePath = switchLocalePath("pt-br");
-    if (defaultLocalePath) {
+    const defaultPath = switchLocalePath(defaultLocale || "pt-br");
+    if (defaultPath) {
       links.push({
         rel: "alternate",
         hreflang: "x-default",
-        href: `${baseUrl}${defaultLocalePath}`,
+        href: `${baseUrl}${defaultPath}`,
       });
     }
 
@@ -240,16 +259,15 @@ export const useSeo = () => {
   };
 
   /**
-   * Set JSON-LD structured data
+   * Set JSON-LD structured data. Accepts single object or array — each gets its own script.
    */
-  const setStructuredData = (data: any) => {
+  const setStructuredData = (data: unknown | unknown[]) => {
+    const items = Array.isArray(data) ? data : [data];
     useHead({
-      script: [
-        {
-          type: "application/ld+json",
-          innerHTML: JSON.stringify(data),
-        },
-      ],
+      script: items.map((item) => ({
+        type: "application/ld+json",
+        innerHTML: JSON.stringify(item),
+      })),
     });
   };
 
@@ -268,13 +286,12 @@ export const useSeo = () => {
       type?: string;
     }> = [];
 
-    // Add blog RSS feeds if enabled (default: true)
     if (options?.includeBlog !== false) {
       availableLocales.forEach((loc) => {
         const title =
           loc.code === "pt-br"
-            ? `${siteName.value} - Blog (Português)`
-            : `${siteName.value} - Blog (English)`;
+            ? `${siteName.value} — Blog (Português)`
+            : `${siteName.value} — Blog (English)`;
 
         feeds.push({
           rel: "alternate",
@@ -285,7 +302,6 @@ export const useSeo = () => {
       });
     }
 
-    // Add custom feeds if provided
     if (options?.customFeeds) {
       options.customFeeds.forEach((feed) => {
         feeds.push({
@@ -297,9 +313,7 @@ export const useSeo = () => {
       });
     }
 
-    useHead({
-      link: feeds,
-    });
+    useHead({ link: feeds });
   };
 
   return {
@@ -312,3 +326,15 @@ export const useSeo = () => {
     defaultImage,
   };
 };
+
+function stripVolatileQuery(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const volatile = ["page", "limit", "search", "q", "sort", "ordering"];
+    volatile.forEach((key) => parsed.searchParams.delete(key));
+    const qs = parsed.searchParams.toString();
+    return `${parsed.origin}${parsed.pathname}${qs ? `?${qs}` : ""}`;
+  } catch {
+    return url;
+  }
+}
