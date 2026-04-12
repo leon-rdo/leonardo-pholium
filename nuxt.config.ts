@@ -13,6 +13,13 @@ export default defineNuxtConfig({
       gzip: true,
       brotli: true,
     },
+    // Force inline of unhead — the bun preset otherwise copies only the
+    // subpaths its static tracer sees, missing `unhead/server` used by the
+    // SSR renderer chunk and producing a 500 on every page.
+    inlineDynamicImports: false,
+    externals: {
+      inline: ["unhead", "@unhead/vue", "@unhead/schema-org"],
+    },
   },
 
   devtools: { enabled: true },
