@@ -201,8 +201,18 @@ const { setSeoMeta, setStructuredData } = useSeo();
 setSeoMeta({
   title: post.value.seo_title || post.value.title,
   description: post.value.meta_description || post.value.excerpt,
-  image: getCoverImageUrl(),
+  image: {
+    url: getCoverImageUrl(),
+    width: coverImage.value?.width || 1200,
+    height: coverImage.value?.height || 630,
+    alt: coverImage.value?.alt_text || post.value.title,
+    type: coverImage.value?.mime_type || "image/jpeg",
+  },
   type: "article",
+  canonicalUrl: post.value.canonical_url || undefined,
+  keywords: post.value.tags
+    ?.map((tag) => (typeof tag === "object" ? tag.name : ""))
+    .filter(Boolean) as string[] | undefined,
   article: {
     publishedTime: post.value.published_at || undefined,
     modifiedTime: post.value.updated_at,
@@ -217,63 +227,59 @@ setSeoMeta({
   },
 });
 
-// Enhanced Article Schema
-setStructuredData({
-  "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  headline: post.value.title,
-  description: post.value.excerpt,
-  image: {
-    "@type": "ImageObject",
-    url: getCoverImageUrl(),
-    width: coverImage.value?.width || 1200,
-    height: coverImage.value?.height || 630,
-  },
-  datePublished: post.value.published_at,
-  dateModified: post.value.updated_at || post.value.published_at,
-  author: {
-    "@type": "Person",
-    name:
-      typeof post.value.author === "object"
-        ? `${post.value.author.first_name} ${post.value.author.last_name}`.trim()
-        : "Leonardo Costa",
-  },
-  publisher: {
-    "@type": "Person",
-    name: "Leonardo Costa",
-    logo: {
-      "@type": "ImageObject",
-      url: `${config.public.siteUrl}/logo.png`,
-    },
-  },
-  mainEntityOfPage: {
-    "@type": "WebPage",
-    "@id": `${config.public.siteUrl}/${locale.value}/blog/${post.value.slug}`,
-  },
+// Enhanced Article Schema — linked into the site graph (#person, #website)
+const postUrl = `${config.public.siteUrl}/${locale.value}/blog/${post.value.slug}`;
 
-  timeRequired: `${post.value.reading_time || 5}M`,
-  wordCount: getWordCount(post.value.body || ""),
-  articleBody: getArticleBody(post.value.body || ""),
-  ...(getCategoryName(post.value.category) && {
-    articleSection: getCategoryName(post.value.category),
-  }),
-  ...(post.value.tags?.length && {
-    keywords: post.value.tags
-      .map((tag) => (typeof tag === "object" ? tag.name : ""))
-      .filter(Boolean)
-      .join(", "),
-  }),
-  inLanguage: locale.value === "pt-br" ? "pt-BR" : "en-US",
-  ...(post.value.view_count && {
-    interactionStatistic: [
-      {
-        "@type": "InteractionCounter",
-        interactionType: "https://schema.org/ReadAction",
-        userInteractionCount: post.value.view_count,
-      },
-    ],
-  }),
-});
+setStructuredData([
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "@id": `${postUrl}#article`,
+    isPartOf: {
+      "@type": "WebSite",
+      "@id": `${config.public.siteUrl}#website`,
+    },
+    headline: post.value.title,
+    alternativeHeadline: post.value.seo_title || undefined,
+    description: post.value.meta_description || post.value.excerpt,
+    image: {
+      "@type": "ImageObject",
+      url: getCoverImageUrl(),
+      width: coverImage.value?.width || 1200,
+      height: coverImage.value?.height || 630,
+    },
+    datePublished: post.value.published_at,
+    dateModified: post.value.updated_at || post.value.published_at,
+    author: { "@id": `${config.public.siteUrl}#person` },
+    publisher: { "@id": `${config.public.siteUrl}#person` },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": postUrl,
+    },
+    timeRequired: `PT${post.value.reading_time || 5}M`,
+    wordCount: getWordCount(post.value.body || ""),
+    articleBody: getArticleBody(post.value.body || ""),
+    ...(getCategoryName(post.value.category) && {
+      articleSection: getCategoryName(post.value.category),
+    }),
+    ...(post.value.tags?.length && {
+      keywords: post.value.tags
+        .map((tag) => (typeof tag === "object" ? tag.name : ""))
+        .filter(Boolean)
+        .join(", "),
+    }),
+    inLanguage: locale.value === "pt-br" ? "pt-BR" : "en-US",
+    ...(post.value.view_count && {
+      interactionStatistic: [
+        {
+          "@type": "InteractionCounter",
+          interactionType: "https://schema.org/ReadAction",
+          userInteractionCount: post.value.view_count,
+        },
+      ],
+    }),
+  },
+]);
 
 // Breadcrumbs
 const breadcrumbItems = computed(() => {

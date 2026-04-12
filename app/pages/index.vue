@@ -41,28 +41,81 @@ const heroBackgroundUrl = computed(() =>
 );
 
 // SEO Configuration
+const { locale } = useI18n();
 const { setSeoMeta, setStructuredData } = useSeo();
 
-// Set SEO meta tags with multilingual support
 setSeoMeta({
   title: getContentBlock('seo_title')?.text || t('home.seo_title'),
   description: getContentBlock('seo_description')?.text || t('home.seo_description'),
   image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-default.jpg`,
   type: 'website',
+  keywords: [
+    'Leonardo Costa',
+    'Full Stack Developer',
+    'Portfolio',
+    'Vue',
+    'Nuxt',
+    'Django',
+    'Python',
+    'TypeScript',
+  ],
 });
 
-// Set structured data for person/organization
-setStructuredData({
-  '@context': 'https://schema.org',
-  '@type': 'Person',
-  name: getContentBlock('hero_name')?.text || 'Leonardo Costa',
-  jobTitle: getContentBlock('hero_subtitle')?.text || 'Full Stack Developer',
-  url: config.public.siteUrl,
-  sameAs: [
-    getContentBlock('contact_linkedin')?.text || '',
-    getContentBlock('contact_github')?.text || '',
-  ].filter(Boolean),
-});
+const homeUrl = computed(() => `${config.public.siteUrl}/${locale.value}`);
+
+setStructuredData([
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    '@id': `${config.public.siteUrl}#person`,
+    name: getContentBlock('hero_name')?.text || 'Leonardo Costa',
+    jobTitle: getContentBlock('hero_subtitle')?.text || 'Full Stack Developer',
+    description:
+      getContentBlock('seo_description')?.text || t('home.seo_description'),
+    url: config.public.siteUrl,
+    image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-default.jpg`,
+    sameAs: [
+      getContentBlock('contact_linkedin')?.text || '',
+      getContentBlock('contact_github')?.text || '',
+    ].filter(Boolean),
+    knowsAbout: [
+      'Web Development',
+      'Full Stack Engineering',
+      'Vue.js',
+      'Nuxt',
+      'Django',
+      'TypeScript',
+      'Python',
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${config.public.siteUrl}#website`,
+    url: config.public.siteUrl,
+    name: 'Leonardo Costa',
+    description:
+      getContentBlock('seo_description')?.text || t('home.seo_description'),
+    inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
+    publisher: { '@id': `${config.public.siteUrl}#person` },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${config.public.siteUrl}/${locale.value}/blog?search={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    '@id': `${homeUrl.value}#profile`,
+    url: homeUrl.value,
+    mainEntity: { '@id': `${config.public.siteUrl}#person` },
+    inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
+  },
+]);
 
 onMounted(() => {
   gsap.from('.hero-title', {

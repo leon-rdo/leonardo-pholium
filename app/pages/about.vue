@@ -39,15 +39,29 @@ setSeoMeta({
   title: getContentBlock('seo_title')?.text || t('about.title'),
   description: getContentBlock('seo_description')?.text || t('about.description'),
   image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-default.jpg`,
-  type: 'website',
+  type: 'profile',
 });
 
-setStructuredData({
-  '@context': 'https://schema.org',
-  '@type': 'AboutPage',
-  name: getContentBlock('hero_title')?.text || t('about.title'),
-  description: getContentBlock('intro')?.text || t('about.description'),
-});
+const aboutUrl = computed(() => `${config.public.siteUrl}/${locale.value}/about`);
+
+setStructuredData([
+  {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    '@id': `${aboutUrl.value}#about`,
+    name: getContentBlock('hero_title')?.text || t('about.title'),
+    description: (getContentBlock('intro')?.text || t('about.description'))
+      .replace(/<[^>]*>/g, '')
+      .slice(0, 300),
+    url: aboutUrl.value,
+    inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
+    mainEntity: { '@id': `${config.public.siteUrl}#person` },
+    isPartOf: {
+      '@type': 'WebSite',
+      '@id': `${config.public.siteUrl}#website`,
+    },
+  },
+]);
 
 onMounted(() => {
   gsap.from('.hero-title', {

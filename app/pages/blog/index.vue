@@ -70,9 +70,57 @@ watch(() => posts.value?.count, (count) => {
   }
 }, { immediate: true });
 
-useSeoMeta({
+const config = useRuntimeConfig();
+const { setSeoMeta, setStructuredData } = useSeo();
+
+setSeoMeta({
   title: getContentBlock('page_title')?.text || t('blog.title'),
-  description: getContentBlock('page_description')?.text || t('blog.subtitle')
+  description: getContentBlock('page_description')?.text || t('blog.subtitle'),
+  type: 'website',
+});
+
+// Blog + ItemList schema — helps search engines surface the blog as a content hub
+const blogUrl = computed(() => `${config.public.siteUrl}/${locale.value}/blog`);
+
+watchEffect(() => {
+  const postResults = posts.value?.results || [];
+  setStructuredData([
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Blog',
+      '@id': `${blogUrl.value}#blog`,
+      name: getContentBlock('hero_title')?.text || t('blog.title'),
+      description: getContentBlock('hero_subtitle')?.text || t('blog.subtitle'),
+      url: blogUrl.value,
+      inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
+      publisher: {
+        '@type': 'Person',
+        name: 'Leonardo Costa',
+        url: config.public.siteUrl,
+      },
+      blogPost: postResults.slice(0, 10).map((post) => ({
+        '@type': 'BlogPosting',
+        headline: post.title,
+        description: post.excerpt,
+        url: `${config.public.siteUrl}/${locale.value}/blog/${post.slug}`,
+        datePublished: post.published_at,
+        dateModified: post.updated_at || post.published_at,
+        author: { '@type': 'Person', name: 'Leonardo Costa' },
+      })),
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListOrder: 'https://schema.org/ItemListOrderDescending',
+      numberOfItems: postResults.length,
+      itemListElement: postResults.map((post, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        url: `${config.public.siteUrl}/${locale.value}/blog/${post.slug}`,
+        name: post.title,
+      })),
+    },
+  ]);
 });
 
 // Watch for category changes - reset to page 1

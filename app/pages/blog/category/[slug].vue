@@ -72,12 +72,39 @@ setSeoMeta({
   type: 'website',
 });
 
-setStructuredData({
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  name: category.value.name,
-  description: category.value.description,
-  url: `${config.public.siteUrl}${route.path}`,
+const categoryUrl = computed(
+  () => `${config.public.siteUrl}/${locale.value}/blog/category/${category.value?.slug}`
+);
+
+watchEffect(() => {
+  const postResults = posts.value?.results || [];
+  setStructuredData([
+    {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      '@id': `${categoryUrl.value}#collection`,
+      name: category.value?.name,
+      description: category.value?.description,
+      url: categoryUrl.value,
+      inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
+      isPartOf: {
+        '@type': 'Blog',
+        '@id': `${config.public.siteUrl}/${locale.value}/blog#blog`,
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListOrder: 'https://schema.org/ItemListOrderDescending',
+      numberOfItems: postResults.length,
+      itemListElement: postResults.map((post, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        url: `${config.public.siteUrl}/${locale.value}/blog/${post.slug}`,
+        name: post.title,
+      })),
+    },
+  ]);
 });
 
 

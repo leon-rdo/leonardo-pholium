@@ -47,12 +47,66 @@ setSeoMeta({
     type: 'website',
 });
 
-setStructuredData({
-    '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    name: getContentBlock('hero_title')?.text || t('projects.title'),
-    description: getContentBlock('hero_subtitle')?.text || t('projects.subtitle'),
-    url: `${config.public.siteUrl}/projects`,
+const projectsUrl = computed(
+    () => `${config.public.siteUrl}/${locale.value}/projects`
+);
+
+watchEffect(() => {
+    const projectResults = projects.value?.results || [];
+    setStructuredData([
+        {
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            '@id': `${projectsUrl.value}#collection`,
+            name: getContentBlock('hero_title')?.text || t('projects.title'),
+            description:
+                getContentBlock('hero_subtitle')?.text || t('projects.subtitle'),
+            url: projectsUrl.value,
+            inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
+            isPartOf: {
+                '@type': 'WebSite',
+                '@id': `${config.public.siteUrl}#website`,
+                url: config.public.siteUrl,
+                name: 'Leonardo Costa',
+            },
+        },
+        {
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            itemListOrder: 'https://schema.org/ItemListOrderDescending',
+            numberOfItems: projectResults.length,
+            itemListElement: projectResults.map((project, index) => ({
+                '@type': 'ListItem',
+                position: index + 1,
+                item: {
+                    '@type': 'CreativeWork',
+                    '@id': `${config.public.siteUrl}/${locale.value}/projects/${project.slug}`,
+                    name: project.title,
+                    description: project.summary,
+                    url:
+                        project.website_url ||
+                        `${config.public.siteUrl}/${locale.value}/projects/${project.slug}`,
+                    image: project.cover || undefined,
+                    dateCreated: project.start_date || undefined,
+                    dateModified: project.updated_at,
+                    author: {
+                        '@type': 'Person',
+                        name: 'Leonardo Costa',
+                        url: config.public.siteUrl,
+                    },
+                    keywords: project.skills
+                        ?.map((skill: Skill) =>
+                            typeof skill === 'object' ? skill.name : ''
+                        )
+                        .filter(Boolean)
+                        .join(', '),
+                    ...(project.repo_url && {
+                        codeRepository: project.repo_url,
+                    }),
+                },
+            })),
+        },
+    ]);
 });
 
 const selectedFilter = ref('all');

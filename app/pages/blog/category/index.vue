@@ -10,7 +10,7 @@ if (import.meta.client) {
 }
 
 const localePath = useLocalePath();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const config = useRuntimeConfig();
 
 // Fetch all categories
@@ -38,12 +38,38 @@ setSeoMeta({
     type: 'website',
 });
 
-setStructuredData({
-    '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    name: t('common.categories'),
-    description: t('blog.allCategories'),
-    url: `${config.public.siteUrl}/blog/category`,
+const categoriesUrl = computed(
+    () => `${config.public.siteUrl}/${locale.value}/blog/category`
+);
+
+watchEffect(() => {
+    const categoryList = categories.value?.results || [];
+    setStructuredData([
+        {
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            '@id': `${categoriesUrl.value}#collection`,
+            name: t('common.categories'),
+            description: t('blog.allCategories'),
+            url: categoriesUrl.value,
+            inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
+            isPartOf: {
+                '@type': 'Blog',
+                '@id': `${config.public.siteUrl}/${locale.value}/blog#blog`,
+            },
+        },
+        {
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            numberOfItems: categoryList.length,
+            itemListElement: categoryList.map((cat, index) => ({
+                '@type': 'ListItem',
+                position: index + 1,
+                url: `${config.public.siteUrl}/${locale.value}/blog/category/${cat.slug}`,
+                name: cat.name,
+            })),
+        },
+    ]);
 });
 
 const getCategoryIcon = (name: string) => {
