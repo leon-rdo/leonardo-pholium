@@ -51,6 +51,7 @@ export default defineNuxtConfig({
     "@nuxtjs/sitemap",
     "@nuxtjs/robots",
     "nuxt-schema-org",
+    "nuxt-gtag",
   ],
 
   vite: {
@@ -167,6 +168,19 @@ export default defineNuxtConfig({
   // NOTE: nuxt-og-image module was installed but disabled because pages already
   // supply explicit og:image URLs from the backend (cover image) with
   // /og-default.jpg as a fallback — we don't need runtime image generation.
+
+  // nuxt-gtag — Google Analytics 4 with automatic SPA page_view tracking.
+  // ID is sourced from NUXT_PUBLIC_GTAG_ID so it can be omitted in dev/staging.
+  // Loading is skipped entirely when the id is empty, so there is no hit to
+  // Core Web Vitals in environments without an analytics target.
+  gtag: {
+    id: process.env.NUXT_PUBLIC_GTAG_ID || "",
+    loadingStrategy: "async",
+    initCommands: [
+      ["config", process.env.NUXT_PUBLIC_GTAG_ID || "", { anonymize_ip: true }],
+    ],
+    enabled: isProduction && !!process.env.NUXT_PUBLIC_GTAG_ID,
+  },
 
   // @nuxt/image — format/quality defaults
   image: {
