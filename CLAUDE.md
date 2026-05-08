@@ -4,13 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Stack
 
-Nuxt 4 (Vue 3, SSR) + TypeScript, run on Bun (Nitro `bun` preset). Source lives under [app/](app/) using the Nuxt 4 layout (`app/pages`, `app/components`, `app/composables`, `app/plugins`, `app/layouts`, `app/types`, `app/utils`). Server routes are in [server/api/](server/api/). i18n locale JSON lives in [i18n/locales/](i18n/locales/).
+Nuxt 4 (Vue 3, SSR) + Tailwind v4 + TypeScript, run on Bun (Nitro `bun` preset). Source lives under [app/](app/) using the Nuxt 4 layout (`app/pages`, `app/components`, `app/composables`, `app/plugins`, `app/layouts`, `app/types`, `app/utils`). Server routes are in [server/api/](server/api/). i18n locale JSON lives in [i18n/locales/](i18n/locales/).
 
-**Styling — mid-migration on the `redesign-v2` branch:** the codebase is moving from Vuetify 3 to Tailwind v4 + custom UI primitives. Both stacks coexist while components are rewritten one section at a time:
+**Styling**: Tailwind v4 with CSS tokens in [app/assets/styles/tokens.css](app/assets/styles/tokens.css) (light + `.dark` overrides), exposed as utility classes via the `@theme` block in [app/assets/styles/main.css](app/assets/styles/main.css). UI primitives live in [app/components/ui/](app/components/ui/) (`Tile`, `Chip`, `UiButton`, `UiDropdown`, `SectionLabel`, `AuroraBg`, `TerminalPanel`, `TerminalLine`, `ThemeToggle`). Domain components are colocated with their list page (e.g. [app/components/projects/](app/components/projects/), [app/components/home/](app/components/home/)).
 
-- **Tailwind v4** is the target. CSS tokens live in [app/assets/styles/tokens.css](app/assets/styles/tokens.css) (light + `.dark` overrides), exposed as utility classes via the `@theme` block in [app/assets/styles/main.css](app/assets/styles/main.css). Primitives are in [app/components/ui/](app/components/ui/) (`Tile`, `Chip`, `UiButton`, `SectionLabel`, `AuroraBg`, `TerminalPanel`, `TerminalLine`, `ThemeToggle`). New components must use Tailwind, not Vuetify.
-- **Vuetify 3** still ships and renders existing legacy components. It will be uninstalled in PR 8 once every `v-*` reference is migrated. Do not introduce new Vuetify components.
-- Dark mode is class-based via [`@nuxtjs/color-mode`](https://color-mode.nuxtjs.org) with `classSuffix: ""` and `storageKey: "lc-color-mode"`. The toggle UI is [`ThemeToggle.vue`](app/components/ui/ThemeToggle.vue).
+Dark mode is class-based via [`@nuxtjs/color-mode`](https://color-mode.nuxtjs.org) with `classSuffix: ""` and `storageKey: "lc-color-mode"`. The toggle UI is [`ThemeToggle.vue`](app/components/ui/ThemeToggle.vue).
 
 This is a frontend only — it consumes a Django REST API backend (via `NUXT_PUBLIC_API_BASE`, e.g. `http://localhost:8000`). There is no local DB, no auth server, no test suite.
 
@@ -82,12 +80,6 @@ nitro: {
 }
 ```
 The bun preset's static tracer misses `unhead/server` (used by the SSR renderer) and produces a 500 on every page in production unless these are force-inlined. Don't remove or "simplify" this block without verifying SSR still works against the production build — there is a documented history of this breaking.
-
-### Vuetify integration (legacy, being phased out)
-
-Two-piece setup: a function module in [nuxt.config.ts](nuxt.config.ts) injects `vite-plugin-vuetify` for component auto-import + `transformAssetUrls`, and [app/plugins/vuetify.js](app/plugins/vuetify.js) creates the Vuetify instance with the theme palette. Both must change together if you swap themes/components. `vuetify` is in `build.transpile`.
-
-The Vuetify body background is suppressed in [main.css](app/assets/styles/main.css) so the cream paper token (`--color-paper`) takes during the parallel migration period. Remove that suppression block when Vuetify is uninstalled.
 
 ### Tailwind v4 setup
 

@@ -1,5 +1,4 @@
 import tailwindcss from "@tailwindcss/vite";
-import vuetify, { transformAssetUrls } from "vite-plugin-vuetify";
 
 const siteUrl =
   process.env.NUXT_PUBLIC_SITE_URL || "https://leonardocosta.dev";
@@ -33,22 +32,9 @@ export default defineNuxtConfig({
     },
   },
 
-  build: {
-    transpile: ["vuetify"],
-  },
-
   css: ["~/assets/styles/main.css"],
 
   modules: [
-    // Vuetify still in parallel during the redesign-v2 migration — gradually
-    // replaced by Tailwind primitives in app/components/ui/. Will be removed
-    // when the last v-* component is rewritten.
-    (_options, nuxt) => {
-      nuxt.hooks.hook("vite:extendConfig", (config) => {
-        // @ts-expect-error
-        config.plugins.push(vuetify({ autoImport: true }));
-      });
-    },
     "@nuxtjs/i18n",
     "@nuxtjs/color-mode",
     "@nuxt/image",
@@ -78,11 +64,6 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
-    vue: {
-      template: {
-        transformAssetUrls,
-      },
-    },
   },
 
   i18n: {

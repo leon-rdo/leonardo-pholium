@@ -1,7 +1,6 @@
 {
   "name": "nuxt-app",
   "dependencies": {
-    "@mdi/font": "^7.4.47",
     "@nuxt/fonts": "^0.14.0",
     "@nuxt/image": "^1.11.0",
     "@nuxtjs/color-mode": "^4.0.0",
@@ -29,9 +28,5 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },
-  "type": "module",
-  "devDependencies": {
-    "vite-plugin-vuetify": "^2.1.2",
-    "vuetify": "^3.10.4"
-  }
+  "type": "module"
 }

@@ -176,14 +176,3 @@ body {
     border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-/* ---------------------------------------------------------------------------
- * Vuetify temporary suppressions — keep Vuetify rendering during migration
- * but stop it from injecting its default body background, so the cream takes.
- * Removed when Vuetify is uninstalled in PR 8.
- * ------------------------------------------------------------------------- */
-.v-application,
-.v-application__wrap {
-  background: transparent !important;
-  color: inherit !important;
-  font-family: inherit !important;
-}

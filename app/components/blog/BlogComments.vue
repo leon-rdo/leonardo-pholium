@@ -1,103 +1,80 @@
 <script setup lang="ts">
+import { CornerUpLeft, MessageSquare, Send, User } from 'lucide-vue-next';
 import type { DjangoListResponse } from '~/types/api';
 import type { Comment } from '~/types/blog';
 
-const { t } = useI18n();
-const props = defineProps<{
-  postId: number;
-}>();
+const props = defineProps<{ postId: number }>();
 
 const config = useRuntimeConfig();
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 
 const isAuthenticated = ref(false);
 const isSubmitting = ref(false);
 const replyingTo = ref<number | null>(null);
 
-// Comment form data
 const newComment = ref({
   content: '',
   guest_name: '',
   guest_email: '',
-  guest_website: ''
+  guest_website: '',
 });
 
-// Fetch comments
-const { data: commentsData, refresh: refreshComments } = await useFetch<DjangoListResponse<Comment>>(
-  '/api/comments/',
-  {
-    baseURL: config.public.apiBase,
-    params: {
-      post: props.postId,
-      ordering: 'created_at'
-    },
-    headers: {
-      'Accept-Language': locale.value === 'pt-br' ? 'pt-br' : 'en-us'
-    }
-  }
-);
+const { data: commentsData, refresh: refreshComments } = await useFetch<
+  DjangoListResponse<Comment>
+>('/api/comments/', {
+  baseURL: config.public.apiBase,
+  params: { post: props.postId, ordering: 'created_at' },
+  headers: { 'Accept-Language': locale.value === 'pt-br' ? 'pt-br' : 'en-us' },
+});
 
-// Organize comments into threads
+// Two-pass thread organisation: build a map first, then attach replies
+// to their parents. Anything without a `parent` field becomes a root.
 const organizedComments = computed(() => {
   const comments = commentsData.value?.results || [];
-  const commentMap = new Map<number, Comment & { replies: Comment[] }>();
-  const rootComments: (Comment & { replies: Comment[] })[] = [];
-
-  // First pass: create map with replies array
-  comments.forEach(comment => {
-    commentMap.set(comment.id, { ...comment, replies: [] });
-  });
-
-  // Second pass: organize into threads
-  comments.forEach(comment => {
-    const commentWithReplies = commentMap.get(comment.id);
-    if (!commentWithReplies) return;
-
-    if (comment.parent) {
-      const parent = commentMap.get(comment.parent);
-      if (parent) {
-        parent.replies.push(commentWithReplies);
-      }
+  const map = new Map<number, Comment & { replies: Comment[] }>();
+  const roots: (Comment & { replies: Comment[] })[] = [];
+  comments.forEach((c) => map.set(c.id, { ...c, replies: [] }));
+  comments.forEach((c) => {
+    const node = map.get(c.id);
+    if (!node) return;
+    if (c.parent) {
+      const parent = map.get(c.parent);
+      if (parent) parent.replies.push(node);
     } else {
-      rootComments.push(commentWithReplies);
+      roots.push(node);
     }
   });
-
-  return rootComments;
+  return roots;
 });
 
 const formatDate = (date: string) => {
   const commentDate = new Date(date);
   const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - commentDate.getTime()) / 1000);
-
-  if (diffInSeconds < 60) return t('blog.now');
-  if (diffInSeconds < 3600) return t('blog.minutesAgo', { count: Math.floor(diffInSeconds / 60) });
-  if (diffInSeconds < 86400) return t('blog.hoursAgo', { count: Math.floor(diffInSeconds / 3600) });
-  if (diffInSeconds < 604800) return t('blog.daysAgo', { count: Math.floor(diffInSeconds / 86400) });
-
+  const diffSec = Math.floor((now.getTime() - commentDate.getTime()) / 1000);
+  if (diffSec < 60) return t('blog.now');
+  if (diffSec < 3600)
+    return t('blog.minutesAgo', { count: Math.floor(diffSec / 60) });
+  if (diffSec < 86400)
+    return t('blog.hoursAgo', { count: Math.floor(diffSec / 3600) });
+  if (diffSec < 604800)
+    return t('blog.daysAgo', { count: Math.floor(diffSec / 86400) });
   return commentDate.toLocaleDateString(locale.value, {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   });
 };
 
 const submitComment = async (parentId: number | null = null) => {
-  if (!newComment.value.content.trim()) {
-    alert('Por favor, escreva um comentário');
+  if (!newComment.value.content.trim()) return;
+  if (
+    !isAuthenticated.value &&
+    (!newComment.value.guest_name.trim() ||
+      !newComment.value.guest_email.trim())
+  ) {
     return;
   }
-
-  if (!isAuthenticated.value) {
-    if (!newComment.value.guest_name.trim() || !newComment.value.guest_email.trim()) {
-      alert(t('blog.fillGuestInfo'));
-      return;
-    }
-  }
-
   isSubmitting.value = true;
-
   try {
     await $fetch('/api/comments/', {
       baseURL: config.public.apiBase,
@@ -106,333 +83,194 @@ const submitComment = async (parentId: number | null = null) => {
         post: props.postId,
         parent: parentId,
         content: newComment.value.content,
-        ...((!isAuthenticated.value) && {
+        ...(!isAuthenticated.value && {
           guest_name: newComment.value.guest_name,
           guest_email: newComment.value.guest_email,
-          guest_website: newComment.value.guest_website
-        })
-      }
+          guest_website: newComment.value.guest_website,
+        }),
+      },
     });
-
-    // Reset form
     newComment.value = {
       content: '',
       guest_name: '',
       guest_email: '',
-      guest_website: ''
+      guest_website: '',
     };
     replyingTo.value = null;
-
     await refreshComments();
   } catch (error) {
     console.error('Error submitting comment:', error);
-    alert('Erro ao enviar comentário. Tente novamente.');
   } finally {
     isSubmitting.value = false;
   }
 };
 
-const startReply = (commentId: number) => {
-  replyingTo.value = commentId;
-};
-
-const cancelReply = () => {
-  replyingTo.value = null;
-  newComment.value.content = '';
-};
+const inputClass =
+  'w-full bg-paper text-ink placeholder:text-ink-4 ring-hair rounded-input ' +
+  'px-4 py-2.5 text-[14.5px] focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ' +
+  'focus:ring-offset-card transition-shadow color-mode-fade ' +
+  'disabled:opacity-60 disabled:cursor-not-allowed';
 </script>
 
 <template>
-  <div class="blog-comments">
-    <h3 class="comments-title">
-      {{ t('blog.comments') }} ({{ commentsData?.count || 0 }})
+  <section>
+    <h3 class="h-display text-[24px] sm:text-[28px] font-bold mb-6">
+      {{ $t('blog.comments') }}
+      <span class="font-mono text-[14px] text-ink-3 align-middle ml-1">
+        ({{ commentsData?.count || 0 }})
+      </span>
     </h3>
 
-    <!-- Comment Form -->
-    <div class="comment-form-wrapper">
-      <h4 class="comment-form-title">{{ t('blog.leaveComment') }}</h4>
-
-      <form @submit.prevent="submitComment(null)" class="comment-form">
-        <!-- Guest Info (if not authenticated) -->
-        <div v-if="!isAuthenticated" class="guest-fields">
-          <v-text-field v-model="newComment.guest_name" :label="t('blog.guestName')" variant="outlined"
-            density="comfortable" hide-details required />
-          <v-text-field v-model="newComment.guest_email" :label="t('blog.guestEmail')" type="email" variant="outlined"
-            density="comfortable" hide-details required />
-          <v-text-field v-model="newComment.guest_website" :label="t('blog.guestWebsite')" variant="outlined"
-            density="comfortable" hide-details />
+    <!-- New comment form -->
+    <Tile class="px-5 py-5 mb-10">
+      <h4 class="font-mono-rail mb-4">{{ $t('blog.leaveComment') }}</h4>
+      <form @submit.prevent="submitComment(null)" class="space-y-3">
+        <div v-if="!isAuthenticated" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <input
+            v-model="newComment.guest_name"
+            type="text"
+            :placeholder="$t('blog.guestName')"
+            required
+            :disabled="isSubmitting"
+            :class="inputClass"
+          />
+          <input
+            v-model="newComment.guest_email"
+            type="email"
+            :placeholder="$t('blog.guestEmail')"
+            required
+            :disabled="isSubmitting"
+            :class="inputClass"
+          />
+          <input
+            v-model="newComment.guest_website"
+            type="url"
+            :placeholder="$t('blog.guestWebsite')"
+            :disabled="isSubmitting"
+            :class="inputClass"
+          />
         </div>
-
-        <!-- Comment Content -->
-        <v-textarea v-model="newComment.content" :label="t('blog.yourComment')" variant="outlined" rows="4" hide-details
-          required />
-
-        <v-btn type="submit" color="primary" :loading="isSubmitting" :disabled="isSubmitting" class="text-none">
-          {{ t('blog.sendComment') }}
-        </v-btn>
+        <textarea
+          v-model="newComment.content"
+          rows="4"
+          required
+          :disabled="isSubmitting"
+          :placeholder="$t('blog.yourComment')"
+          :class="inputClass + ' resize-y min-h-[110px]'"
+        />
+        <button
+          type="submit"
+          :disabled="isSubmitting"
+          class="inline-flex items-center justify-center gap-2 bg-accent text-paper font-semibold px-5 py-2.5 rounded-input hover:bg-accent-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+        >
+          {{ isSubmitting ? $t('common.loading') : $t('blog.sendComment') }}
+          <Send :size="14" :stroke-width="2" />
+        </button>
       </form>
-    </div>
+    </Tile>
 
-    <!-- Comments List -->
-    <div v-if="organizedComments.length" class="comments-list">
-      <div v-for="comment in organizedComments" :key="comment.id" class="comment-thread">
-        <!-- Parent Comment -->
-        <div class="comment">
-          <div class="comment-avatar">
-            <v-icon size="32" color="grey-lighten-1">mdi-account-circle</v-icon>
+    <!-- Comments list -->
+    <ol v-if="organizedComments.length" class="space-y-7">
+      <li
+        v-for="comment in organizedComments"
+        :key="comment.id"
+        class="space-y-4"
+      >
+        <article class="flex gap-3">
+          <div class="shrink-0 w-9 h-9 rounded-full bg-card-soft text-ink-3 grid place-items-center">
+            <User :size="16" :stroke-width="1.6" />
           </div>
-
-          <div class="comment-content">
-            <div class="comment-header">
-              <span class="comment-author">
-                {{ comment.guest_name }}
+          <div class="flex-1 min-w-0">
+            <header class="flex flex-wrap items-baseline gap-3">
+              <span class="font-semibold text-[14.5px]">
+                {{ comment.guest_name || $t('blog.guestName') }}
               </span>
-              <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
-            </div>
-
-            <p class="comment-text">{{ comment.content }}</p>
-
-            <div class="comment-actions">
-              <button class="comment-action-btn" @click="startReply(comment.id)">
-                <v-icon size="16">mdi-reply</v-icon>
-                {{ t('blog.reply') }}
+              <span class="font-mono text-[11.5px] text-ink-3">
+                {{ formatDate(comment.created_at) }}
+              </span>
+            </header>
+            <p class="mt-2 text-[14.5px] text-ink-2 leading-[1.7] whitespace-pre-wrap">
+              {{ comment.content }}
+            </p>
+            <div class="mt-2.5 flex items-center gap-4">
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 text-[12.5px] font-medium text-ink-3 hover:text-accent transition-colors"
+                @click="replyingTo = comment.id"
+              >
+                <CornerUpLeft :size="13" :stroke-width="1.8" />
+                {{ $t('blog.reply') }}
               </button>
             </div>
 
-            <!-- Reply Form -->
-            <div v-if="replyingTo === comment.id" class="reply-form-wrapper">
-              <form @submit.prevent="submitComment(comment.id)" class="reply-form">
-                <v-textarea v-model="newComment.content" label="Sua resposta" variant="outlined" rows="3" hide-details
-                  auto-focus />
-
-                <div class="reply-form-actions">
-                  <v-btn type="submit" color="primary" size="small" :loading="isSubmitting" class="text-none">
-                    {{ t('blog.submitReply') }}
-                  </v-btn>
-                  <v-btn variant="text" size="small" @click="cancelReply" class="text-none">
-                    {{ t('blog.cancel') }}
-                  </v-btn>
-                </div>
-              </form>
-            </div>
+            <!-- Reply form -->
+            <form
+              v-if="replyingTo === comment.id"
+              class="mt-4 space-y-3"
+              @submit.prevent="submitComment(comment.id)"
+            >
+              <textarea
+                v-model="newComment.content"
+                rows="3"
+                required
+                :placeholder="$t('blog.yourReply')"
+                :class="inputClass + ' resize-y min-h-[80px]'"
+              />
+              <div class="flex items-center gap-2">
+                <button
+                  type="submit"
+                  :disabled="isSubmitting"
+                  class="inline-flex items-center gap-1.5 bg-accent text-paper text-[13px] font-semibold px-4 py-2 rounded-input hover:bg-accent-2 disabled:opacity-60 transition-colors"
+                >
+                  <Send :size="13" :stroke-width="2" />
+                  {{ $t('blog.submitReply', $t('blog.sendComment')) }}
+                </button>
+                <button
+                  type="button"
+                  class="text-[13px] font-medium text-ink-3 hover:text-ink px-3 py-2 transition-colors"
+                  @click="(replyingTo = null), (newComment.content = '')"
+                >
+                  {{ $t('blog.cancel') }}
+                </button>
+              </div>
+            </form>
           </div>
-        </div>
+        </article>
 
         <!-- Replies -->
-        <div v-if="comment.replies?.length" class="comment-replies">
-          <div v-for="reply in comment.replies" :key="reply.id" class="comment reply">
-            <div class="comment-avatar">
-              <v-icon size="28" color="grey-lighten-1">mdi-account-circle</v-icon>
+        <ol v-if="comment.replies?.length" class="ml-12 pl-4 border-l border-line space-y-4">
+          <li
+            v-for="reply in comment.replies"
+            :key="reply.id"
+            class="flex gap-3"
+          >
+            <div class="shrink-0 w-8 h-8 rounded-full bg-card-soft text-ink-3 grid place-items-center">
+              <User :size="14" :stroke-width="1.6" />
             </div>
-
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="comment-author">
-                  {{ reply.guest_name }}
+            <div class="flex-1 min-w-0">
+              <header class="flex flex-wrap items-baseline gap-3">
+                <span class="font-semibold text-[14px]">
+                  {{ reply.guest_name || $t('blog.guestName') }}
                 </span>
-                <span class="comment-date">{{ formatDate(reply.created_at) }}</span>
-              </div>
-
-              <p class="comment-text">{{ reply.content }}</p>
+                <span class="font-mono text-[11.5px] text-ink-3">
+                  {{ formatDate(reply.created_at) }}
+                </span>
+              </header>
+              <p class="mt-1.5 text-[14px] text-ink-2 leading-[1.7] whitespace-pre-wrap">
+                {{ reply.content }}
+              </p>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          </li>
+        </ol>
+      </li>
+    </ol>
 
-    <!-- Empty State -->
-    <div v-else class="comments-empty">
-      <v-icon size="60" color="grey-lighten-2">mdi-comment-outline</v-icon>
-      <p class="comments-empty-text">
-        {{ t('blog.beFirstToComment') }}
-      </p>
+    <div
+      v-else
+      class="flex flex-col items-center text-center py-12 text-ink-3"
+    >
+      <MessageSquare :size="40" :stroke-width="1.4" class="text-ink-4" />
+      <p class="text-[15px] mt-3">{{ $t('blog.beFirstToComment') }}</p>
     </div>
-  </div>
+  </section>
 </template>
-
-<style scoped>
-.blog-comments {
-  padding: 40px 0;
-}
-
-.comments-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin-bottom: 32px;
-}
-
-/* Comment Form */
-.comment-form-wrapper {
-  background: #f9fafb;
-  padding: 32px;
-  border-radius: 12px;
-  margin-bottom: 48px;
-}
-
-.comment-form-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin-bottom: 24px;
-}
-
-.comment-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.guest-fields {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-/* Comments List */
-.comments-list {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-}
-
-.comment-thread {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.comment {
-  display: flex;
-  gap: 16px;
-}
-
-.comment.reply {
-  padding-left: 48px;
-}
-
-.comment-avatar {
-  flex-shrink: 0;
-}
-
-.comment-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.comment-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-
-.comment-author {
-  font-weight: 600;
-  color: #1a1a1a;
-  font-size: 0.9375rem;
-}
-
-.comment-date {
-  font-size: 0.875rem;
-  color: #9ca3af;
-}
-
-.comment-text {
-  font-size: 0.9375rem;
-  color: #4b5563;
-  line-height: 1.6;
-  margin-bottom: 12px;
-  word-wrap: break-word;
-}
-
-.comment-actions {
-  display: flex;
-  gap: 16px;
-}
-
-.comment-action-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.875rem;
-  color: #6b7280;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  font-weight: 500;
-}
-
-.comment-action-btn:hover {
-  color: #2563eb;
-  background: #f3f4f6;
-}
-
-/* Reply Form */
-.reply-form-wrapper {
-  margin-top: 16px;
-  padding: 16px;
-  background: #f9fafb;
-  border-radius: 8px;
-}
-
-.reply-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.reply-form-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.comment-replies {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-left: 48px;
-  padding-left: 16px;
-  border-left: 2px solid #e5e7eb;
-}
-
-/* Empty State */
-.comments-empty {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.comments-empty-text {
-  font-size: 1rem;
-  color: #9ca3af;
-  margin-top: 16px;
-}
-
-/* Responsive */
-@media (max-width: 600px) {
-  .comment-form-wrapper {
-    padding: 24px;
-  }
-
-  .guest-fields {
-    grid-template-columns: 1fr;
-  }
-
-  .comment.reply {
-    padding-left: 24px;
-  }
-
-  .comment-replies {
-    margin-left: 24px;
-    padding-left: 12px;
-  }
-
-  .reply-form-wrapper {
-    padding: 12px;
-  }
-}
-</style>

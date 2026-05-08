@@ -18,82 +18,73 @@ const rssHref = computed(() => `/api/rss/${locale.value}.xml`);
 </script>
 
 <template>
-  <!--
-    <v-app> is kept temporarily because legacy pages still render Vuetify
-    components (v-row/v-col/v-btn/v-skeleton-loader). It will be removed in
-    PR 8 once every v-* reference has been migrated to Tailwind primitives.
-    The cream paper background is applied to <body> via tokens.css; v-app's
-    own background is suppressed in main.css so it doesn't override.
-  -->
-  <v-app>
-    <div class="min-h-screen flex flex-col bg-paper text-ink color-mode-fade">
-      <AppNavbar />
+  <div class="min-h-screen flex flex-col bg-paper text-ink color-mode-fade">
+    <AppNavbar />
 
-      <main class="flex-1">
-        <slot />
-      </main>
+    <main class="flex-1">
+      <slot />
+    </main>
 
-      <footer
-        class="border-t border-line color-mode-fade mt-auto"
-        :aria-label="$t('footer.label')"
+    <footer
+      class="border-t border-line color-mode-fade mt-auto"
+      :aria-label="$t('footer.label')"
+    >
+      <div
+        class="max-w-[1280px] mx-auto px-6 py-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between font-mono text-[12px] text-ink-3"
       >
-        <div
-          class="max-w-[1280px] mx-auto px-6 py-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between font-mono text-[12px] text-ink-3"
-        >
-          <div class="flex items-center gap-3">
-            <span
-              class="w-6 h-6 grid place-items-center rounded-md bg-ink text-paper text-[10px] font-bold"
-              >LC</span
-            >
-            <span>© {{ currentYear }} leonardocosta.dev</span>
-          </div>
-
-          <nav class="flex items-center gap-5" :aria-label="$t('footer.social')">
-            <a
-              href="https://github.com/leonardo-costa"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
-              title="GitHub"
-            >
-              <Github :size="14" :stroke-width="1.8" />
-              <span class="hidden sm:inline">github</span>
-            </a>
-            <a
-              href="https://linkedin.com/in/leonardo-costa"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
-              title="LinkedIn"
-            >
-              <Linkedin :size="14" :stroke-width="1.8" />
-              <span class="hidden sm:inline">linkedin</span>
-            </a>
-            <a
-              :href="rssHref"
-              class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
-              title="RSS"
-            >
-              <Rss :size="14" :stroke-width="1.8" />
-              <span class="hidden sm:inline">rss</span>
-            </a>
-            <a
-              href="https://twitter.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
-              title="X / Twitter"
-            >
-              <Twitter :size="14" :stroke-width="1.8" />
-              <span class="hidden sm:inline">x</span>
-            </a>
-          </nav>
-
-          <div class="text-ink-3">
-            built with nuxt · tailwind
-          </div>
+        <div class="flex items-center gap-3">
+          <span
+            class="w-6 h-6 grid place-items-center rounded-md bg-ink text-paper text-[10px] font-bold"
+            >LC</span
+          >
+          <span>© {{ currentYear }} leonardocosta.dev</span>
         </div>
-      </footer>
-    </div>
-  </v-app>
+
+        <nav class="flex items-center gap-5" :aria-label="$t('footer.social')">
+          <a
+            href="https://github.com/leonardo-costa"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
+            title="GitHub"
+          >
+            <Github :size="14" :stroke-width="1.8" />
+            <span class="hidden sm:inline">github</span>
+          </a>
+          <a
+            href="https://linkedin.com/in/leonardo-costa"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
+            title="LinkedIn"
+          >
+            <Linkedin :size="14" :stroke-width="1.8" />
+            <span class="hidden sm:inline">linkedin</span>
+          </a>
+          <a
+            :href="rssHref"
+            class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
+            title="RSS"
+          >
+            <Rss :size="14" :stroke-width="1.8" />
+            <span class="hidden sm:inline">rss</span>
+          </a>
+          <a
+            href="https://twitter.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
+            title="X / Twitter"
+          >
+            <Twitter :size="14" :stroke-width="1.8" />
+            <span class="hidden sm:inline">x</span>
+          </a>
+        </nav>
+
+        <div class="text-ink-3">
+          built with nuxt · tailwind
+        </div>
+      </div>
+    </footer>
+  </div>
 </template>
