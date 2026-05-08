@@ -59,6 +59,14 @@ export default defineNuxtConfig({
     "nuxt-gtag",
   ],
 
+  // Auto-import primitives from app/components/ui/ without the `Ui` path
+  // prefix (so <Tile>, <Chip>, <ThemeToggle> work directly). Files that
+  // genuinely need the prefix (UiButton, UiDropdown) keep it via filename.
+  components: [
+    { path: "~/components/ui", pathPrefix: false },
+    "~/components",
+  ],
+
   // @nuxtjs/color-mode — applies `class="dark"` on <html> when dark.
   // Cookie persisted; respects prefers-color-scheme on first SSR.
   colorMode: {

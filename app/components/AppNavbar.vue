@@ -1,359 +1,308 @@
-<template>
-    <div>
-        <v-app-bar :elevation="scrolled ? 2 : 0" :color="scrolled ? 'white' : 'rgba(255, 255, 255, 0.95)'" app flat
-            class="navbar">
-            <v-container class="d-flex align-center px-4">
-                <NuxtLink to="/" class="brand-logo">
-                    <span class="brand-name">Leonardo Costa</span>
-                </NuxtLink>
-
-                <v-spacer></v-spacer>
-
-                <nav class="desktop-nav hidden-md-and-down">
-                    <template v-if="navItems?.length">
-                        <template v-for="item in navItems" :key="item.id">
-                            <!-- Item with children - show as dropdown -->
-                            <v-menu v-if="item.children && item.children.length > 0" offset-y>
-                                <template v-slot:activator="{ props }">
-                                    <v-btn v-bind="props" variant="text" class="nav-link-btn" :title="item.title">
-                                        {{ item.label }}
-                                        <v-icon end size="18">mdi-chevron-down</v-icon>
-                                    </v-btn>
-                                </template>
-                                <v-list class="nav-dropdown">
-                                    <v-list-item v-for="child in item.children" :key="child.id"
-                                        :href="child.url.startsWith('http') ? child.url : undefined"
-                                        :to="child.url.startsWith('http') ? undefined : localePath(child.url)"
-                                        :target="child.url.startsWith('http') ? '_blank' : undefined"
-                                        :title="child.label" class="dropdown-item">
-                                        <template v-slot:append v-if="child.url.startsWith('http')">
-                                            <v-icon size="16">mdi-open-in-new</v-icon>
-                                        </template>
-                                    </v-list-item>
-                                </v-list>
-                            </v-menu>
-
-                            <!-- Item without children - show as regular link -->
-                            <NuxtLink v-else :to="item.url.startsWith('http') ? undefined : localePath(item.url)"
-                                :href="item.url.startsWith('http') ? item.url : undefined"
-                                :target="item.url.startsWith('http') ? '_blank' : undefined" class="nav-link"
-                                :title="item.title">
-                                {{ item.label }}
-                            </NuxtLink>
-                        </template>
-                    </template>
-
-                    <v-menu offset-y>
-                        <template v-slot:activator="{ props }">
-                            <v-btn v-bind="props" variant="text" class="language-btn">
-                                <v-icon start>mdi-translate</v-icon>
-                                {{ currentLocale?.toUpperCase() ?? '' }}
-                            </v-btn>
-                        </template>
-                        <v-list>
-                            <v-list-item v-for="lang in availableLocales" :key="lang.code"
-                                @click="changeLocale(lang.code)" :active="locale === lang.code">
-                                <v-list-item-title>{{ lang.name }}</v-list-item-title>
-                            </v-list-item>
-                        </v-list>
-                    </v-menu>
-                </nav>
-
-                <v-btn icon variant="text" class="hidden-lg-and-up" @click="drawer = !drawer">
-                    <v-icon>mdi-menu</v-icon>
-                </v-btn>
-            </v-container>
-        </v-app-bar>
-
-        <v-navigation-drawer v-model="drawer" temporary location="right" class="mobile-drawer">
-            <div class="drawer-header">
-                <span class="brand-name">Leonardo Costa</span>
-                <v-btn icon variant="text" @click="drawer = false">
-                    <v-icon>mdi-close</v-icon>
-                </v-btn>
-            </div>
-
-            <v-list nav class="drawer-list">
-                <template v-if="navItems?.length">
-                    <template v-for="item in navItems" :key="item.id">
-                        <!-- Item with children - show as expandable group -->
-                        <v-list-group v-if="item.children && item.children.length > 0" :value="item.id">
-                            <template v-slot:activator="{ props }">
-                                <v-list-item v-bind="props" class="drawer-item" :title="item.label">
-                                    <template v-slot:prepend v-if="getIconForUrl(item.url)">
-                                        <v-icon :icon="getIconForUrl(item.url)"></v-icon>
-                                    </template>
-                                </v-list-item>
-                            </template>
-
-                            <v-list-item v-for="child in item.children" :key="child.id"
-                                :href="child.url.startsWith('http') ? child.url : undefined"
-                                :to="child.url.startsWith('http') ? undefined : localePath(child.url)"
-                                :target="child.url.startsWith('http') ? '_blank' : undefined"
-                                @click="child.url.startsWith('http') ? null : drawer = false"
-                                class="drawer-item drawer-subitem" :title="child.label">
-                                <template v-slot:append v-if="child.url.startsWith('http')">
-                                    <v-icon size="16">mdi-open-in-new</v-icon>
-                                </template>
-                            </v-list-item>
-                        </v-list-group>
-
-                        <!-- Item without children - show as regular link -->
-                        <v-list-item v-else :href="item.url.startsWith('http') ? item.url : undefined"
-                            :to="item.url.startsWith('http') ? undefined : localePath(item.url)"
-                            :target="item.url.startsWith('http') ? '_blank' : undefined"
-                            @click="item.url.startsWith('http') ? null : drawer = false" class="drawer-item"
-                            :title="item.label">
-                            <template v-slot:prepend v-if="getIconForUrl(item.url)">
-                                <v-icon :icon="getIconForUrl(item.url)"></v-icon>
-                            </template>
-                            <template v-slot:append v-if="item.url.startsWith('http')">
-                                <v-icon size="16">mdi-open-in-new</v-icon>
-                            </template>
-                        </v-list-item>
-                    </template>
-                </template>
-
-                <v-list-item class="drawer-item mt-4">
-                    <template v-slot:prepend>
-                        <v-icon>mdi-translate</v-icon>
-                    </template>
-                    <v-select v-model="locale" :items="availableLocales" item-title="name" item-value="code"
-                        variant="outlined" density="compact" hide-details @update:model-value="changeLocale">
-                    </v-select>
-                </v-list-item>
-            </v-list>
-        </v-navigation-drawer>
-    </div>
-</template>
-
 <script setup lang="ts">
+import { ChevronDown, ExternalLink, Menu as MenuIcon, X } from 'lucide-vue-next';
 import type { DjangoListResponse } from '~/types/api';
 import type { NavigationItem } from '~/types/content';
 
-const { locale, locales, setLocale } = useI18n();
+const { locale, locales } = useI18n();
 const localePath = useLocalePath();
 const switchLocalePath = useSwitchLocalePath();
 
 const drawer = ref(false);
-const scrolled = ref(false);
 
-// Fetch navigation items from API
-const { data: navigationData } = await useApi<DjangoListResponse<NavigationItem>>('/api/navigation-items/', {
-    params: {
-        menu_key: 'header',
-        is_active: true,
-        ordering: 'order'
-    }
-});
-
-// Organize items by parent/children structure
-const navItems = computed(() => {
-    const items = navigationData.value?.results || [];
-    const parents = items.filter(item => !item.parent);
-
-    return parents.map(parent => ({
-        ...parent,
-        children: items.filter(item => item.parent === parent.id)
-    }));
-});
-
-const availableLocales = computed(() =>
-    (locales.value as Array<{ code: string; name: string }>)
+// Navigation items come from the Django backend. The locale header is
+// injected by useApi automatically.
+const { data: navigationData } = await useApi<DjangoListResponse<NavigationItem>>(
+  '/api/navigation-items/',
+  {
+    params: { menu_key: 'header', is_active: true, ordering: 'order' },
+  },
 );
 
-const currentLocale = computed(() => {
-    return locale.value === 'pt-br' ? 'pt' : locale.value.split('-')[0];
+const navItems = computed(() => {
+  const items = navigationData.value?.results || [];
+  const parents = items.filter((item) => !item.parent);
+  return parents.map((parent) => ({
+    ...parent,
+    children: items.filter((item) => item.parent === parent.id),
+  }));
 });
 
-// Helper function to get icons based on URL patterns
-const getIconForUrl = (url: string): string => {
-    if (!url) return 'mdi-link';
-    if (url === '/' || url.includes('home')) return 'mdi-home';
-    if (url.includes('about')) return 'mdi-information';
-    if (url.includes('project')) return 'mdi-folder-multiple';
-    if (url.includes('contact')) return 'mdi-email';
-    return 'mdi-link';
-};
+const availableLocales = computed(
+  () => locales.value as Array<{ code: string; name: string }>,
+);
+
+const currentLocaleLabel = computed(() => {
+  if (locale.value === 'pt-br') return 'PT';
+  return locale.value.split('-')[0]?.toUpperCase() ?? '';
+});
 
 const changeLocale = async (newLocale: string) => {
-    const i18nCookie = useCookie('i18n_redirected');
-    i18nCookie.value = newLocale;
-
-    const newPath = switchLocalePath(newLocale as 'pt-br' | 'en-us');
-
-    if (newPath) {
-        await navigateTo(newPath, { external: true });
-    }
+  const i18nCookie = useCookie('i18n_redirected');
+  i18nCookie.value = newLocale;
+  const newPath = switchLocalePath(newLocale as 'pt-br' | 'en-us');
+  if (newPath) await navigateTo(newPath, { external: true });
 };
 
-onMounted(() => {
-    window.addEventListener('scroll', handleScroll);
-});
+const isExternal = (url: string) => url.startsWith('http');
 
-onUnmounted(() => {
-    window.removeEventListener('scroll', handleScroll);
-});
-
-const handleScroll = () => {
-    scrolled.value = window.scrollY > 50;
+const closeDrawer = () => {
+  drawer.value = false;
 };
+
+// Close drawer on route change
+const route = useRoute();
+watch(() => route.fullPath, () => {
+  drawer.value = false;
+});
 </script>
 
-<style scoped>
-.navbar {
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
+<template>
+  <header
+    class="sticky top-0 z-30 bg-paper/80 backdrop-blur-md border-b border-line color-mode-fade"
+  >
+    <div class="max-w-[1280px] mx-auto px-6 h-14 flex items-center justify-between gap-4">
+      <!-- Brand -->
+      <NuxtLink
+        :to="localePath('/')"
+        class="flex items-center gap-2.5 text-[15px] font-semibold text-ink hover:text-accent transition-colors"
+      >
+        <span
+          class="w-7 h-7 grid place-items-center rounded-md bg-ink text-paper font-mono text-[11px] font-bold"
+          >LC</span
+        >
+        <span class="hidden sm:inline">
+          leonardocosta<span class="text-ink-3">.dev</span>
+        </span>
+      </NuxtLink>
 
-.brand-logo {
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-}
+      <!-- Desktop nav -->
+      <nav class="hidden lg:flex items-center gap-1 text-sm">
+        <template v-for="item in navItems" :key="item.id">
+          <UiDropdown v-if="item.children?.length" align="left">
+            <template #trigger="{ open }">
+              <span
+                class="inline-flex items-center gap-1 px-3 py-1.5 rounded text-ink-2 hover:text-ink hover:bg-card transition-colors cursor-pointer"
+                :class="{ 'text-ink bg-card': open }"
+              >
+                {{ item.label }}
+                <ChevronDown :size="14" :stroke-width="1.8" />
+              </span>
+            </template>
+            <template #menu>
+              <ul class="py-1.5">
+                <li v-for="child in item.children" :key="child.id">
+                  <NuxtLink
+                    :to="isExternal(child.url) ? undefined : localePath(child.url)"
+                    :href="isExternal(child.url) ? child.url : undefined"
+                    :target="isExternal(child.url) ? '_blank' : undefined"
+                    :rel="isExternal(child.url) ? 'noopener noreferrer' : undefined"
+                    class="flex items-center justify-between gap-3 px-4 py-2 text-[14px] text-ink-2 hover:text-ink hover:bg-card-soft transition-colors"
+                    :title="child.title || child.label"
+                  >
+                    {{ child.label }}
+                    <ExternalLink
+                      v-if="isExternal(child.url)"
+                      :size="13"
+                      :stroke-width="1.8"
+                      class="text-ink-3"
+                    />
+                  </NuxtLink>
+                </li>
+              </ul>
+            </template>
+          </UiDropdown>
 
-.brand-name {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1a1a1a;
-    letter-spacing: -0.02em;
-    transition: color 0.2s ease;
-}
+          <NuxtLink
+            v-else-if="!isExternal(item.url)"
+            :to="localePath(item.url)"
+            class="px-3 py-1.5 rounded text-ink-2 hover:text-ink hover:bg-card transition-colors"
+            active-class="text-ink bg-card"
+            :title="item.title || item.label"
+          >
+            {{ item.label }}
+          </NuxtLink>
 
-.brand-logo:hover .brand-name {
-    color: #2563eb;
-}
+          <a
+            v-else
+            :href="item.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="px-3 py-1.5 rounded text-ink-2 hover:text-ink hover:bg-card transition-colors inline-flex items-center gap-1"
+            :title="item.title || item.label"
+          >
+            {{ item.label }}
+            <ExternalLink :size="12" :stroke-width="1.8" />
+          </a>
+        </template>
 
-/* Desktop Navigation */
-.desktop-nav {
-    display: flex;
-    gap: 2rem;
-    align-items: center;
-}
+        <span class="mx-2 h-5 w-px bg-line" aria-hidden="true" />
 
-.nav-link {
-    font-size: 0.9375rem;
-    font-weight: 500;
-    color: #4b5563;
-    text-decoration: none;
-    position: relative;
-    padding: 0.5rem 0;
-    transition: color 0.2s ease;
-}
+        <ThemeToggle />
 
-.nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: #2563eb;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+        <!-- Locale dropdown -->
+        <UiDropdown align="right">
+          <template #trigger>
+            <span
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded font-mono text-[11.5px] tracking-[0.16em] text-ink-2 hover:text-ink hover:bg-card transition-colors uppercase"
+            >
+              {{ currentLocaleLabel }}
+              <ChevronDown :size="12" :stroke-width="1.8" />
+            </span>
+          </template>
+          <template #menu>
+            <ul class="py-1.5 min-w-[140px]">
+              <li v-for="lang in availableLocales" :key="lang.code">
+                <button
+                  type="button"
+                  class="w-full flex items-center justify-between gap-2 px-4 py-2 text-[14px] text-ink-2 hover:text-ink hover:bg-card-soft transition-colors"
+                  :class="{ 'text-ink': lang.code === locale }"
+                  @click="changeLocale(lang.code)"
+                >
+                  {{ lang.name }}
+                  <span
+                    v-if="lang.code === locale"
+                    class="w-1.5 h-1.5 rounded-full bg-accent"
+                  />
+                </button>
+              </li>
+            </ul>
+          </template>
+        </UiDropdown>
+      </nav>
 
-.nav-link:hover {
-    color: #1a1a1a;
-}
+      <!-- Mobile menu button -->
+      <button
+        type="button"
+        class="lg:hidden p-2 rounded text-ink hover:bg-card transition-colors"
+        :aria-label="$t('navbar.openMenu')"
+        @click="drawer = true"
+      >
+        <MenuIcon :size="20" :stroke-width="1.8" />
+      </button>
+    </div>
 
-.nav-link:hover::after,
-.nav-link.router-link-active::after {
-    width: 100%;
-}
+    <!-- Mobile drawer -->
+    <Teleport to="body">
+      <transition
+        enter-active-class="transition-opacity duration-200"
+        leave-active-class="transition-opacity duration-150"
+        enter-from-class="opacity-0"
+        leave-to-class="opacity-0"
+      >
+        <div v-if="drawer" class="fixed inset-0 z-50 bg-ink/50" @click="closeDrawer" />
+      </transition>
+      <transition
+        enter-active-class="transition-transform duration-200 ease-out"
+        leave-active-class="transition-transform duration-150 ease-in"
+        enter-from-class="translate-x-full"
+        leave-to-class="translate-x-full"
+      >
+        <aside
+          v-if="drawer"
+          class="fixed inset-y-0 right-0 z-50 w-[320px] max-w-[85vw] bg-paper border-l border-line color-mode-fade flex flex-col"
+        >
+          <header class="flex items-center justify-between p-5 border-b border-line">
+            <span class="flex items-center gap-2.5 text-[15px] font-semibold">
+              <span
+                class="w-7 h-7 grid place-items-center rounded-md bg-ink text-paper font-mono text-[11px] font-bold"
+                >LC</span
+              >
+              Leonardo Costa
+            </span>
+            <button
+              type="button"
+              class="p-2 rounded text-ink hover:bg-card transition-colors"
+              :aria-label="$t('navbar.closeMenu')"
+              @click="closeDrawer"
+            >
+              <X :size="20" :stroke-width="1.8" />
+            </button>
+          </header>
 
-.nav-link.router-link-active {
-    color: #2563eb;
-    font-weight: 600;
-}
+          <nav class="flex-1 overflow-y-auto px-3 py-4">
+            <ul class="space-y-0.5">
+              <template v-for="item in navItems" :key="item.id">
+                <li v-if="item.children?.length">
+                  <details class="group">
+                    <summary
+                      class="flex items-center justify-between px-4 py-3 rounded-card text-[15px] font-medium text-ink-2 hover:bg-card cursor-pointer list-none"
+                    >
+                      {{ item.label }}
+                      <ChevronDown
+                        :size="16"
+                        :stroke-width="1.8"
+                        class="transition-transform group-open:rotate-180"
+                      />
+                    </summary>
+                    <ul class="pl-4 mt-0.5 space-y-0.5">
+                      <li v-for="child in item.children" :key="child.id">
+                        <NuxtLink
+                          :to="isExternal(child.url) ? undefined : localePath(child.url)"
+                          :href="isExternal(child.url) ? child.url : undefined"
+                          :target="isExternal(child.url) ? '_blank' : undefined"
+                          :rel="isExternal(child.url) ? 'noopener noreferrer' : undefined"
+                          class="flex items-center justify-between gap-2 px-4 py-2.5 rounded-card text-[14px] text-ink-2 hover:bg-card transition-colors"
+                          @click="closeDrawer"
+                        >
+                          {{ child.label }}
+                          <ExternalLink
+                            v-if="isExternal(child.url)"
+                            :size="13"
+                            :stroke-width="1.8"
+                          />
+                        </NuxtLink>
+                      </li>
+                    </ul>
+                  </details>
+                </li>
+                <li v-else>
+                  <NuxtLink
+                    :to="isExternal(item.url) ? undefined : localePath(item.url)"
+                    :href="isExternal(item.url) ? item.url : undefined"
+                    :target="isExternal(item.url) ? '_blank' : undefined"
+                    :rel="isExternal(item.url) ? 'noopener noreferrer' : undefined"
+                    class="flex items-center justify-between px-4 py-3 rounded-card text-[15px] font-medium text-ink-2 hover:bg-card transition-colors"
+                    @click="closeDrawer"
+                  >
+                    {{ item.label }}
+                    <ExternalLink
+                      v-if="isExternal(item.url)"
+                      :size="14"
+                      :stroke-width="1.8"
+                    />
+                  </NuxtLink>
+                </li>
+              </template>
+            </ul>
+          </nav>
 
-/* Navigation Button (for dropdowns) */
-.nav-link-btn {
-    font-size: 0.9375rem;
-    font-weight: 500;
-    color: #4b5563;
-    text-transform: none;
-    letter-spacing: 0;
-    height: auto;
-    padding: 0.5rem 0.75rem;
-    min-width: auto;
-}
-
-.nav-link-btn:hover {
-    background: transparent;
-    color: #1a1a1a;
-}
-
-/* Dropdown Menu */
-.nav-dropdown {
-    min-width: 200px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.dropdown-item {
-    padding: 12px 16px;
-    transition: background 0.2s ease;
-}
-
-.dropdown-item:hover {
-    background: #f9fafb;
-}
-
-/* Language Button */
-.language-btn {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #4b5563;
-    text-transform: none;
-    letter-spacing: 0;
-}
-
-.language-btn:hover {
-    background: #f9fafb;
-}
-
-/* Mobile Drawer */
-.mobile-drawer {
-    background: #ffffff;
-}
-
-.drawer-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.5rem 1rem;
-    border-bottom: 1px solid #f3f4f6;
-}
-
-.drawer-list {
-    padding: 1rem 0;
-}
-
-.drawer-item {
-    margin: 0.25rem 1rem;
-    border-radius: 8px;
-    transition: background 0.2s ease;
-}
-
-.drawer-item:hover {
-    background: #f9fafb;
-}
-
-.drawer-item.router-link-active {
-    background: #eff6ff;
-    color: #2563eb;
-}
-
-.drawer-subitem {
-    padding-left: 48px;
-}
-
-/* Responsive */
-@media (max-width: 960px) {
-    .brand-name {
-        font-size: 1.125rem;
-    }
-}
-</style>
+          <footer class="border-t border-line p-5 space-y-4">
+            <div>
+              <div class="font-mono-rail text-[11px] mb-2">Theme</div>
+              <ThemeToggle />
+            </div>
+            <div>
+              <div class="font-mono-rail text-[11px] mb-2">Language</div>
+              <div class="flex gap-1.5">
+                <button
+                  v-for="lang in availableLocales"
+                  :key="lang.code"
+                  type="button"
+                  class="px-3 py-1.5 rounded-card text-[13px] font-medium ring-hair transition-colors"
+                  :class="
+                    lang.code === locale
+                      ? 'bg-ink text-paper'
+                      : 'bg-card text-ink-2 hover:text-ink'
+                  "
+                  @click="changeLocale(lang.code)"
+                >
+                  {{ lang.name }}
+                </button>
+              </div>
+            </div>
+          </footer>
+        </aside>
+      </transition>
+    </Teleport>
+  </header>
+</template>

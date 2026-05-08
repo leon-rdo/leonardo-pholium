@@ -163,7 +163,13 @@
     "validationEmail": "Please enter a valid email"
   },
   "footer": {
-    "copyright": "© {year} Leonardo. All rights reserved."
+    "copyright": "© {year} Leonardo. All rights reserved.",
+    "label": "Site footer",
+    "social": "Social links"
+  },
+  "navbar": {
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "reactions": {
     "like": "Like",

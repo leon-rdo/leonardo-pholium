@@ -1,63 +1,99 @@
 <script setup lang="ts">
-const { t } = useI18n();
-const currentYear = new Date().getFullYear();
-const { siteName, setRssFeed } = useSeo();
+import { Github, Linkedin, Rss, Twitter } from 'lucide-vue-next';
 
+const { locale } = useI18n();
+const { siteName, setRssFeed } = useSeo();
 setRssFeed({ includeBlog: true });
 
 useSeoMeta({
   ogSiteName: siteName.value,
   twitterCard: 'summary_large_image',
 });
+
+const currentYear = new Date().getFullYear();
+
+// RSS lives under /api/rss/<locale>.xml — that's a Nitro server route,
+// not a Vue page, so we build the href directly (no localePath/NuxtLink).
+const rssHref = computed(() => `/api/rss/${locale.value}.xml`);
 </script>
 
 <template>
+  <!--
+    <v-app> is kept temporarily because legacy pages still render Vuetify
+    components (v-row/v-col/v-btn/v-skeleton-loader). It will be removed in
+    PR 8 once every v-* reference has been migrated to Tailwind primitives.
+    The cream paper background is applied to <body> via tokens.css; v-app's
+    own background is suppressed in main.css so it doesn't override.
+  -->
   <v-app>
-    <div class="app-layout">
+    <div class="min-h-screen flex flex-col bg-paper text-ink color-mode-fade">
       <AppNavbar />
-      <main class="main-content">
+
+      <main class="flex-1">
         <slot />
       </main>
-      <!-- Footer -->
-      <v-container class="footer-container">
-        <v-row>
-          <v-col cols="12" class="text-center">
-            <p class="footer-text">
-              {{ t('footer.copyright', { year: currentYear }) }}
-            </p>
-          </v-col>
-        </v-row>
-      </v-container>
+
+      <footer
+        class="border-t border-line color-mode-fade mt-auto"
+        :aria-label="$t('footer.label')"
+      >
+        <div
+          class="max-w-[1280px] mx-auto px-6 py-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between font-mono text-[12px] text-ink-3"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="w-6 h-6 grid place-items-center rounded-md bg-ink text-paper text-[10px] font-bold"
+              >LC</span
+            >
+            <span>© {{ currentYear }} leonardocosta.dev</span>
+          </div>
+
+          <nav class="flex items-center gap-5" :aria-label="$t('footer.social')">
+            <a
+              href="https://github.com/leonardo-costa"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
+              title="GitHub"
+            >
+              <Github :size="14" :stroke-width="1.8" />
+              <span class="hidden sm:inline">github</span>
+            </a>
+            <a
+              href="https://linkedin.com/in/leonardo-costa"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
+              title="LinkedIn"
+            >
+              <Linkedin :size="14" :stroke-width="1.8" />
+              <span class="hidden sm:inline">linkedin</span>
+            </a>
+            <a
+              :href="rssHref"
+              class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
+              title="RSS"
+            >
+              <Rss :size="14" :stroke-width="1.8" />
+              <span class="hidden sm:inline">rss</span>
+            </a>
+            <a
+              href="https://twitter.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
+              title="X / Twitter"
+            >
+              <Twitter :size="14" :stroke-width="1.8" />
+              <span class="hidden sm:inline">x</span>
+            </a>
+          </nav>
+
+          <div class="text-ink-3">
+            built with nuxt · tailwind
+          </div>
+        </div>
+      </footer>
     </div>
   </v-app>
 </template>
-
-<style scoped>
-.app-layout {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.main-content {
-  flex: 1;
-  padding-top: 72px;
-}
-
-@media (max-width: 960px) {
-  .main-content {
-    padding-top: 64px;
-  }
-}
-
-/* Footer */
-.footer-container {
-  padding: 40px 24px;
-  border-top: 1px solid #f3f4f6;
-}
-
-.footer-text {
-  font-size: 0.875rem;
-  color: #9ca3af;
-}
-</style>

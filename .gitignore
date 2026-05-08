@@ -25,6 +25,8 @@ prod-*.jpg
 style-*.png
 style-*.jpg
 style-*.html
+pr*-*.png
+pr*-*.jpg
 
 # Local env files
 .env
