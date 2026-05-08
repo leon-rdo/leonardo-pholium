@@ -146,7 +146,7 @@ const inputClass =
         <button
           type="submit"
           :disabled="isSubmitting"
-          class="w-full inline-flex items-center justify-center gap-2 bg-accent text-paper font-semibold py-3.5 rounded-input hover:bg-accent-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors glow-blue"
+          class="w-full inline-flex items-center justify-center gap-2 bg-accent text-night-text font-semibold py-3.5 rounded-input hover:bg-accent-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors glow-blue"
         >
           {{ isSubmitting ? t('common.loading') : t('contact.send') }}
           <Send :size="16" :stroke-width="2" />

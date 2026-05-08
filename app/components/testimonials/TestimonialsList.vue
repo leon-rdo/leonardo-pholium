@@ -54,7 +54,7 @@ const initials = (name: string) =>
           <figcaption class="mt-6 flex items-center gap-3">
             <div
               v-if="!item.photo"
-              class="w-10 h-10 rounded-full bg-ink text-paper grid place-items-center font-mono text-[12px] font-bold"
+              class="w-10 h-10 rounded-full bg-night text-night-text grid place-items-center font-mono text-[12px] font-bold"
             >
               {{ initials(item.author_name) }}
             </div>
@@ -90,7 +90,7 @@ const initials = (name: string) =>
           <figcaption class="mt-5 flex items-center gap-3">
             <div
               v-if="!item.photo"
-              class="w-9 h-9 rounded-full bg-ink text-paper grid place-items-center font-mono text-[12px] font-bold"
+              class="w-9 h-9 rounded-full bg-night text-night-text grid place-items-center font-mono text-[12px] font-bold"
             >
               {{ initials(item.author_name) }}
             </div>

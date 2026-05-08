@@ -95,34 +95,34 @@ const authorFirstName = (project: Project<{ skills: true }>): string => {
             format="webp"
             class="absolute inset-0 w-full h-full object-cover"
           />
-          <div class="absolute inset-0 bg-gradient-to-t from-ink/60 via-ink/20 to-transparent" />
+          <div class="absolute inset-0 bg-gradient-to-t from-night/60 via-night/20 to-transparent" />
 
           <Chip variant="blue" class="absolute top-4 left-4">
             ★ {{ $t('projects.featured') }}
           </Chip>
           <div
             v-if="items[0].website_url"
-            class="absolute top-4 right-4 font-mono text-[11.5px] text-paper/80"
+            class="absolute top-4 right-4 font-mono text-[11.5px] text-night-text/80"
           >
             {{ hostname(items[0].website_url) }} ↗
           </div>
 
-          <div class="absolute bottom-5 left-5 right-5 text-paper">
-            <div class="font-mono-rail !text-paper/80">
+          <div class="absolute bottom-5 left-5 right-5 text-night-text">
+            <div class="font-mono-rail !text-night-text/80">
               {{ yearOf(items[0]) }}
               <template v-if="authorFirstName(items[0])"> · {{ authorFirstName(items[0]) }}</template>
             </div>
-            <h3 class="h-display text-3xl sm:text-4xl font-bold mt-1.5 text-paper">
+            <h3 class="h-display text-3xl sm:text-4xl font-bold mt-1.5 text-night-text">
               {{ items[0].title }}
             </h3>
-            <p class="mt-3 text-[14.5px] sm:text-[15px] text-paper/85 leading-[1.65] max-w-[560px]">
+            <p class="mt-3 text-[14.5px] sm:text-[15px] text-night-text/85 leading-[1.65] max-w-[560px]">
               {{ items[0].summary }}
             </p>
             <div class="mt-4 flex flex-wrap gap-1.5">
               <span
                 v-for="skill in items[0].skills.slice(0, 4)"
                 :key="skill.id"
-                class="inline-flex items-center font-mono text-[11px] bg-ink/40 backdrop-blur-sm text-paper/90 border border-white/10 px-2.5 py-0.5 rounded-chip"
+                class="inline-flex items-center font-mono text-[11px] bg-night/40 backdrop-blur-sm text-night-text/90 border border-white/10 px-2.5 py-0.5 rounded-chip"
               >
                 {{ skill.name }}
               </span>
@@ -174,18 +174,18 @@ const authorFirstName = (project: Project<{ skills: true }>): string => {
         </div>
       </Tile>
 
-      <Tile class="px-5 py-5 bg-ink text-paper relative overflow-hidden">
+      <Tile class="px-5 py-5 bg-night text-night-text relative overflow-hidden">
         <div
           aria-hidden="true"
           class="absolute -top-10 -right-10 w-40 h-40 rounded-full"
           style="background: radial-gradient(closest-side, rgba(44, 103, 232, 0.5), transparent 70%)"
         />
         <div class="relative">
-          <div class="font-mono-rail !text-paper/60">{{ $t('projects.techLabel') }}</div>
+          <div class="font-mono-rail !text-night-text/60">{{ $t('projects.techLabel') }}</div>
           <div class="h-display text-xl font-bold mt-1">
             {{ items[0].skills.slice(0, 2).map((s) => s.name).join(' · ') }}
           </div>
-          <div class="text-[12.5px] text-paper/60 mt-1">
+          <div class="text-[12.5px] text-night-text/60 mt-1">
             {{ items[0].skills.length }} {{ $t('projects.toolsCount') }}
           </div>
         </div>
@@ -221,21 +221,21 @@ const authorFirstName = (project: Project<{ skills: true }>): string => {
             format="webp"
             class="absolute inset-0 w-full h-full object-cover"
           />
-          <div class="absolute inset-0 bg-gradient-to-t from-ink/55 via-ink/15 to-transparent" />
+          <div class="absolute inset-0 bg-gradient-to-t from-night/55 via-night/15 to-transparent" />
 
-          <div class="absolute bottom-5 left-5 right-5 text-paper">
-            <div class="font-mono-rail !text-paper/80">
+          <div class="absolute bottom-5 left-5 right-5 text-night-text">
+            <div class="font-mono-rail !text-night-text/80">
               {{ yearOf(project) }}
             </div>
-            <h3 class="h-display text-2xl font-bold mt-1.5 text-paper">{{ project.title }}</h3>
-            <p class="mt-2 text-[14px] text-paper/85 leading-[1.6] line-clamp-2">
+            <h3 class="h-display text-2xl font-bold mt-1.5 text-night-text">{{ project.title }}</h3>
+            <p class="mt-2 text-[14px] text-night-text/85 leading-[1.6] line-clamp-2">
               {{ project.summary }}
             </p>
             <div class="mt-3 flex flex-wrap gap-1.5">
               <span
                 v-for="skill in project.skills.slice(0, 3)"
                 :key="skill.id"
-                class="inline-flex items-center font-mono text-[11px] bg-ink/40 backdrop-blur-sm text-paper/90 border border-white/10 px-2.5 py-0.5 rounded-chip"
+                class="inline-flex items-center font-mono text-[11px] bg-night/40 backdrop-blur-sm text-night-text/90 border border-white/10 px-2.5 py-0.5 rounded-chip"
               >
                 {{ skill.name }}
               </span>

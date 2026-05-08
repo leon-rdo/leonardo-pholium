@@ -37,6 +37,32 @@ const subtitleText = computed(() => blockText('hero_subtitle', t('home.hero.subt
 // Initials shown over the portrait gradient (used as a placeholder when
 // no real portrait image is wired yet).
 const initials = computed(() => blockText('hero_initials', 'LC'));
+
+/**
+ * Portrait image — looked up across a few likely ContentBlock keys so the
+ * admin can pick whichever feels natural ("hero_portrait", "hero_image",
+ * or even the legacy "about_intro" that already had a cover wired). Returns
+ * the first cover/gallery image's `file` (or `thumbnail`) URL, or null
+ * when nothing is attached — in which case the LC initials are shown.
+ */
+const portraitImage = computed(() => {
+  const candidateKeys = ['hero_portrait', 'hero_image', 'about_intro'];
+  for (const key of candidateKeys) {
+    const block = props.contentBlocks.find((b) => b.key === key);
+    if (!block?.images?.length) continue;
+    const cover =
+      block.images.find((img) => img.image_type === 'cover') ||
+      block.images.find((img) => img.image_type === 'gallery') ||
+      block.images[0];
+    if (cover?.file || cover?.thumbnail) return cover;
+  }
+  return null;
+});
+
+const portraitAlt = computed(() => {
+  const img = portraitImage.value;
+  return img?.alt_text || img?.title || `${initials.value} — portrait`;
+});
 </script>
 
 <template>
@@ -112,11 +138,11 @@ const initials = computed(() => blockText('hero_initials', 'LC'));
           :clip="false"
           class="lg:col-span-5 lg:row-span-3 px-3 py-3 fade-up"
         >
-          <!-- the inner card has the gradient + initials -->
+          <!-- the inner card has the gradient + image (or initials placeholder) -->
           <div
             class="relative w-full h-full rounded-tile overflow-hidden ring-hair bg-gradient-to-br from-blob-1/40 via-blob-2/25 to-blob-3/40"
           >
-            <!-- subtle aurora inside the tile -->
+            <!-- subtle aurora inside the tile (rendered behind the image) -->
             <div
               aria-hidden="true"
               class="absolute inset-0 pointer-events-none"
@@ -127,8 +153,21 @@ const initials = computed(() => blockText('hero_initials', 'LC'));
                 filter: blur(12px);
               "
             />
-            <!-- big initials -->
-            <div class="absolute inset-0 grid place-items-center">
+            <!-- Real portrait when present, else big initials placeholder -->
+            <NuxtImg
+              v-if="portraitImage"
+              :src="portraitImage.file || portraitImage.thumbnail || ''"
+              :alt="portraitAlt"
+              :width="portraitImage.width || 800"
+              :height="portraitImage.height || 1000"
+              format="webp"
+              sizes="(max-width: 768px) 100vw, 560px"
+              :placeholder="true"
+              :quality="85"
+              fit="cover"
+              class="absolute inset-0 w-full h-full object-cover"
+            />
+            <div v-else class="absolute inset-0 grid place-items-center">
               <div
                 class="h-display font-extrabold text-ink/15 leading-none text-[140px] sm:text-[180px] lg:text-[200px]"
                 aria-hidden="true"
@@ -136,12 +175,28 @@ const initials = computed(() => blockText('hero_initials', 'LC'));
                 {{ initials }}
               </div>
             </div>
+            <!-- subtle bottom shade so the rail labels stay readable over a real photo -->
+            <div
+              v-if="portraitImage"
+              aria-hidden="true"
+              class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-night/55 via-night/15 to-transparent"
+            />
             <!-- bottom rail -->
             <div class="absolute inset-x-0 bottom-0 px-5 py-5 flex justify-between items-end">
-              <span class="font-mono-rail text-[11px] !text-ink-2">
+              <span
+                :class="[
+                  'font-mono text-[11px] tracking-[0.16em] uppercase',
+                  portraitImage ? 'text-night-text/85' : 'text-ink-2',
+                ]"
+              >
                 {{ $t('home.hero.portraitLabel') }}
               </span>
-              <span class="font-mono-rail text-[11px] !text-ink-2">
+              <span
+                :class="[
+                  'font-mono text-[11px] tracking-[0.16em] uppercase',
+                  portraitImage ? 'text-night-text/85' : 'text-ink-2',
+                ]"
+              >
                 {{ $t('home.hero.location') }}
               </span>
             </div>
@@ -169,8 +224,8 @@ const initials = computed(() => blockText('hero_initials', 'LC'));
             <TerminalLine cmd="stack" :out="$t('home.hero.terminalStack')" />
             <TerminalLine cmd="status">
               <span class="text-status-ok">●</span>
-              <span class="ml-1 text-paper">{{ $t('home.hero.terminalStatus') }}</span>
-              <span class="ml-1 inline-block w-2 h-3.5 align-middle bg-paper animate-pulse" />
+              <span class="ml-1 text-night-text">{{ $t('home.hero.terminalStatus') }}</span>
+              <span class="ml-1 inline-block w-2 h-3.5 align-middle bg-night-text animate-pulse" />
             </TerminalLine>
           </TerminalPanel>
         </div>

@@ -69,7 +69,7 @@ const goToPage = (page: number) => {
         class="inline-flex items-center justify-center min-w-[40px] h-10 px-3 rounded-input text-[14px] font-medium transition-colors"
         :class="
           page === currentPage
-            ? 'bg-accent text-paper cursor-default'
+            ? 'bg-accent text-night-text cursor-default'
             : 'ring-hair bg-card text-ink-2 hover:text-accent hover:ring-1 hover:ring-accent'
         "
         :aria-label="`${$t('common.page')} ${page}`"

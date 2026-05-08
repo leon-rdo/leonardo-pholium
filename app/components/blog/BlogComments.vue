@@ -161,7 +161,7 @@ const inputClass =
         <button
           type="submit"
           :disabled="isSubmitting"
-          class="inline-flex items-center justify-center gap-2 bg-accent text-paper font-semibold px-5 py-2.5 rounded-input hover:bg-accent-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+          class="inline-flex items-center justify-center gap-2 bg-accent text-night-text font-semibold px-5 py-2.5 rounded-input hover:bg-accent-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
         >
           {{ isSubmitting ? $t('common.loading') : $t('blog.sendComment') }}
           <Send :size="14" :stroke-width="2" />
@@ -220,7 +220,7 @@ const inputClass =
                 <button
                   type="submit"
                   :disabled="isSubmitting"
-                  class="inline-flex items-center gap-1.5 bg-accent text-paper text-[13px] font-semibold px-4 py-2 rounded-input hover:bg-accent-2 disabled:opacity-60 transition-colors"
+                  class="inline-flex items-center gap-1.5 bg-accent text-night-text text-[13px] font-semibold px-4 py-2 rounded-input hover:bg-accent-2 disabled:opacity-60 transition-colors"
                 >
                   <Send :size="13" :stroke-width="2" />
                   {{ $t('blog.submitReply', $t('blog.sendComment')) }}

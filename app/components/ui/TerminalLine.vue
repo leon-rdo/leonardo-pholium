@@ -19,7 +19,7 @@ withDefaults(
 );
 
 const toneClass: Record<string, string> = {
-  default: 'text-paper/80',
+  default: 'text-night-text/80',
   success: 'text-status-ok',
   warn: 'text-status-warn',
   accent: 'text-accent',
@@ -28,15 +28,15 @@ const toneClass: Record<string, string> = {
 
 <template>
   <div>
-    <span v-if="prompt" class="text-paper/40">{{ prompt }}</span>
-    <span v-if="cmd" class="text-paper ml-1.5">{{ cmd }}</span>
+    <span v-if="prompt" class="text-night-text/40">{{ prompt }}</span>
+    <span v-if="cmd" class="text-night-text ml-1.5">{{ cmd }}</span>
     <template v-if="out">
-      <span class="text-paper/40 mx-2">→</span>
+      <span class="text-night-text/40 mx-2">→</span>
       <span :class="toneClass[tone]">{{ out }}</span>
     </template>
     <span v-else-if="$slots.default" class="ml-2">
       <slot />
     </span>
-    <span v-if="cursor" class="ml-1 inline-block w-2 h-4 align-middle animate-pulse bg-paper" />
+    <span v-if="cursor" class="ml-1 inline-block w-2 h-4 align-middle animate-pulse bg-night-text" />
   </div>
 </template>

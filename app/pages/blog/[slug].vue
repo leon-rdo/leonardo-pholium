@@ -394,7 +394,7 @@ const copyLink = async () => {
                prose-blockquote:border-l-2 prose-blockquote:border-accent prose-blockquote:bg-card-soft/40 prose-blockquote:rounded-r-card prose-blockquote:py-3 prose-blockquote:px-5
                prose-blockquote:italic prose-blockquote:text-ink-2 prose-blockquote:not-italic
                prose-code:font-mono prose-code:text-[14px] prose-code:bg-card-soft prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden
-               prose-pre:bg-ink prose-pre:text-paper prose-pre:rounded-card
+               prose-pre:bg-night prose-pre:text-night-text prose-pre:rounded-card
                prose-img:rounded-card prose-img:ring-1 prose-img:ring-line
                prose-hr:border-line"
         v-html="post.body"
