@@ -19,6 +19,13 @@ logs
 .idea
 .playwright-mcp
 
+# Design exploration artifacts (mockup screenshots from Playwright + standalone mockup HTML)
+prod-*.png
+prod-*.jpg
+style-*.png
+style-*.jpg
+style-*.html
+
 # Local env files
 .env
 .env.*

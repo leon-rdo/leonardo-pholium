@@ -1,3 +1,4 @@
+import tailwindcss from "@tailwindcss/vite";
 import vuetify, { transformAssetUrls } from "vite-plugin-vuetify";
 
 const siteUrl =
@@ -39,6 +40,9 @@ export default defineNuxtConfig({
   css: ["~/assets/styles/main.css"],
 
   modules: [
+    // Vuetify still in parallel during the redesign-v2 migration — gradually
+    // replaced by Tailwind primitives in app/components/ui/. Will be removed
+    // when the last v-* component is rewritten.
     (_options, nuxt) => {
       nuxt.hooks.hook("vite:extendConfig", (config) => {
         // @ts-expect-error
@@ -46,6 +50,7 @@ export default defineNuxtConfig({
       });
     },
     "@nuxtjs/i18n",
+    "@nuxtjs/color-mode",
     "@nuxt/image",
     "@nuxt/fonts",
     "@nuxtjs/sitemap",
@@ -54,7 +59,17 @@ export default defineNuxtConfig({
     "nuxt-gtag",
   ],
 
+  // @nuxtjs/color-mode — applies `class="dark"` on <html> when dark.
+  // Cookie persisted; respects prefers-color-scheme on first SSR.
+  colorMode: {
+    classSuffix: "",
+    preference: "system",
+    fallback: "light",
+    storageKey: "lc-color-mode",
+  },
+
   vite: {
+    plugins: [tailwindcss()],
     vue: {
       template: {
         transformAssetUrls,
@@ -109,6 +124,14 @@ export default defineNuxtConfig({
         styles: ["normal"],
         display: "swap",
         preload: true,
+      },
+      {
+        name: "JetBrains Mono",
+        provider: "google",
+        weights: [400, 500, 600, 700],
+        styles: ["normal"],
+        display: "swap",
+        preload: false,
       },
     ],
     defaults: {

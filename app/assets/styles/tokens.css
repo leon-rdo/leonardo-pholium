@@ -1,0 +1,87 @@
+/*
+ * Design tokens — redesign-v2.
+ * Light by default; dark mode applied via `.dark` class on <html>
+ * (set by @nuxtjs/color-mode with classSuffix: "").
+ *
+ * Token names are mirrored as Tailwind utilities via the @theme block in
+ * main.css — e.g. `bg-paper`, `text-ink`, `border-line`, `text-accent`.
+ */
+
+:root {
+  /* Surfaces */
+  --color-paper: #f3efe5;     /* warm cream — main background */
+  --color-card: #fbf9f2;      /* slightly raised tile */
+  --color-card-soft: #f8f4e9; /* between paper and card */
+
+  /* Text */
+  --color-ink: #15161b;
+  --color-ink-2: #3f3f46;
+  --color-ink-3: #71717a;
+  --color-ink-4: #a1a1aa;
+
+  /* Lines */
+  --color-line: #ddd5c4;
+  --color-line-2: #c7bfab;
+
+  /* Brand accent — single saturated blue, used sparingly */
+  --color-accent: #2c67e8;
+  --color-accent-2: #1e40af;
+  --color-accent-soft: #dde5fb;
+
+  /* Aurora blobs (radial gradients in hero / featured tiles) */
+  --color-blob-1: #b8ccff; /* blue */
+  --color-blob-2: #ffd1c3; /* peach */
+  --color-blob-3: #c3f0de; /* mint */
+
+  /* Status */
+  --color-status-ok: #22c55e;
+  --color-status-warn: #f59e0b;
+  --color-status-err: #ef4444;
+
+  /* Radii */
+  --radius-tile: 24px;
+  --radius-card: 16px;
+  --radius-input: 8px;
+  --radius-chip: 9999px;
+
+  /* Shadows — hairline-first; reserve blur shadows for floating glass chips */
+  --shadow-hairline: inset 0 0 0 1px var(--color-line);
+  --shadow-glass: 0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 8px 24px rgba(20, 15, 5, 0.04);
+  --shadow-glow-blue: 0 0 0 1px rgba(44, 103, 232, 0.25),
+    0 8px 30px rgba(44, 103, 232, 0.12);
+
+  /* Spacing scale used by section padding */
+  --space-section-sm: 4rem;   /* 64px  — list sections */
+  --space-section-md: 6rem;   /* 96px  — secondary sections */
+  --space-section-lg: 8rem;   /* 128px — primary sections */
+}
+
+.dark {
+  /* Dark mode — accent stays the same; surfaces invert to a near-black ink. */
+  --color-paper: #0e0e12;
+  --color-card: #15161b;
+  --color-card-soft: #1a1b22;
+
+  --color-ink: #f4efe5;
+  --color-ink-2: #c4c4cb;
+  --color-ink-3: #8a8a93;
+  --color-ink-4: #5a5a63;
+
+  --color-line: #2a2a30;
+  --color-line-2: #3a3a42;
+
+  --color-accent: #4d80ef;       /* slightly brighter for contrast on dark */
+  --color-accent-2: #2c67e8;
+  --color-accent-soft: rgba(44, 103, 232, 0.18);
+
+  --color-blob-1: rgba(77, 128, 239, 0.45);
+  --color-blob-2: rgba(255, 163, 130, 0.28);
+  --color-blob-3: rgba(125, 220, 188, 0.28);
+
+  --shadow-hairline: inset 0 0 0 1px var(--color-line);
+  --shadow-glass: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-glow-blue: 0 0 0 1px rgba(77, 128, 239, 0.35),
+    0 8px 30px rgba(77, 128, 239, 0.2);
+}
