@@ -219,7 +219,9 @@
     "ctaButton": "Get in Touch",
     "actionsLabel": "links",
     "techLabel": "main stack",
-    "toolsCount": "tools"
+    "toolsCount": "tools",
+    "label": "work",
+    "filterLabel": "filter"
   },
   "skills": {
     "title": "Skills",

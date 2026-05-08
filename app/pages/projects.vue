@@ -1,336 +1,250 @@
 <script setup lang="ts">
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { ArrowRight, FolderOpen } from 'lucide-vue-next';
 import type { DjangoListResponse } from '~/types/api';
 import type { ContentBlock } from '~/types/content';
 import type { Project, Skill } from '~/types/portfolio';
-import ProjectList from '~/components/projects/ProjectList.vue';
+import ProjectCard from '~/components/projects/ProjectCard.vue';
 import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
+import type { BreadcrumbItem } from '~/composables/useBreadcrumbs';
 
-
-if (import.meta.client) {
-    gsap.registerPlugin(ScrollTrigger);
-}
+if (import.meta.client) gsap.registerPlugin(ScrollTrigger);
 
 const config = useRuntimeConfig();
 const { locale, t } = useI18n();
+const localePath = useLocalePath();
 
-// Fetch content blocks for projects page
+// Page-scoped ContentBlocks
 const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
-    'projects-content-blocks',
-    '/api/content-blocks/',
-    { page_name: 'projects' }
+  'projects-content-blocks',
+  '/api/content-blocks/',
+  { page_name: 'projects' },
 );
+const getContentBlock = (key: string) =>
+  contentBlocks.value?.results?.find((b) => b.key === key);
 
-const getContentBlock = (key: string) => {
-    return contentBlocks.value?.results?.find(block => block.key === key);
-};
-
-// Fetch all projects
-const { data: projects } = await useApi<DjangoListResponse<Project<{ tags: true; skills: true; author: true }>>>('/api/projects/', {
-    params: { expand: 'skills', limit: 100, status: 'published' }
+// All published projects
+const { data: projects } = await useApi<
+  DjangoListResponse<Project<{ tags: true; skills: true; author: true }>>
+>('/api/projects/', {
+  params: { expand: 'skills', limit: 100, status: 'published' },
 });
 
 // Breadcrumbs
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
-    { title: t('nav.home'), to: '/' },
-    { title: t('projects.title'), disabled: true },
+  { title: t('nav.home'), to: '/' },
+  { title: t('projects.title'), disabled: true },
 ]);
 
-// SEO Configuration
+// SEO
 const { setSeoMeta, setStructuredData } = useSeo();
-
 setSeoMeta({
-    title: getContentBlock('seo_title')?.text || t('projects.title'),
-    description: getContentBlock('seo_description')?.text || t('projects.subtitle'),
-    image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-default.jpg`,
-    type: 'website',
+  title: getContentBlock('seo_title')?.text || t('projects.title'),
+  description:
+    getContentBlock('seo_description')?.text || t('projects.subtitle'),
+  image:
+    getContentBlock('seo_image')?.text ||
+    `${config.public.siteUrl}/og-default.jpg`,
+  type: 'website',
 });
 
 const projectsUrl = computed(
-    () => `${config.public.siteUrl}/${locale.value}/projects`
+  () => `${config.public.siteUrl}/${locale.value}/projects`,
 );
 
 watchEffect(() => {
-    const projectResults = projects.value?.results || [];
-    setStructuredData([
-        {
-            '@context': 'https://schema.org',
-            '@type': 'CollectionPage',
-            '@id': `${projectsUrl.value}#collection`,
-            name: getContentBlock('hero_title')?.text || t('projects.title'),
-            description:
-                getContentBlock('hero_subtitle')?.text || t('projects.subtitle'),
-            url: projectsUrl.value,
-            inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
-            isPartOf: {
-                '@type': 'WebSite',
-                '@id': `${config.public.siteUrl}#website`,
-                url: config.public.siteUrl,
-                name: 'Leonardo Costa',
-            },
+  const list = projects.value?.results || [];
+  setStructuredData([
+    {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      '@id': `${projectsUrl.value}#collection`,
+      name: getContentBlock('hero_title')?.text || t('projects.title'),
+      description:
+        getContentBlock('hero_subtitle')?.text || t('projects.subtitle'),
+      url: projectsUrl.value,
+      inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
+      isPartOf: {
+        '@type': 'WebSite',
+        '@id': `${config.public.siteUrl}#website`,
+        url: config.public.siteUrl,
+        name: 'Leonardo Costa',
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListOrder: 'https://schema.org/ItemListOrderDescending',
+      numberOfItems: list.length,
+      itemListElement: list.map((project, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        item: {
+          '@type': 'CreativeWork',
+          '@id': `${config.public.siteUrl}/${locale.value}/projects/${project.slug}`,
+          name: project.title,
+          description: project.summary,
+          url:
+            project.website_url ||
+            `${config.public.siteUrl}/${locale.value}/projects/${project.slug}`,
+          image: project.cover || undefined,
+          dateCreated: project.start_date || undefined,
+          dateModified: project.updated_at,
+          author: {
+            '@type': 'Person',
+            name: 'Leonardo Costa',
+            url: config.public.siteUrl,
+          },
+          keywords: project.skills
+            ?.map((skill: Skill) =>
+              typeof skill === 'object' ? skill.name : '',
+            )
+            .filter(Boolean)
+            .join(', '),
+          ...(project.repo_url && { codeRepository: project.repo_url }),
         },
-        {
-            '@context': 'https://schema.org',
-            '@type': 'ItemList',
-            itemListOrder: 'https://schema.org/ItemListOrderDescending',
-            numberOfItems: projectResults.length,
-            itemListElement: projectResults.map((project, index) => ({
-                '@type': 'ListItem',
-                position: index + 1,
-                item: {
-                    '@type': 'CreativeWork',
-                    '@id': `${config.public.siteUrl}/${locale.value}/projects/${project.slug}`,
-                    name: project.title,
-                    description: project.summary,
-                    url:
-                        project.website_url ||
-                        `${config.public.siteUrl}/${locale.value}/projects/${project.slug}`,
-                    image: project.cover || undefined,
-                    dateCreated: project.start_date || undefined,
-                    dateModified: project.updated_at,
-                    author: {
-                        '@type': 'Person',
-                        name: 'Leonardo Costa',
-                        url: config.public.siteUrl,
-                    },
-                    keywords: project.skills
-                        ?.map((skill: Skill) =>
-                            typeof skill === 'object' ? skill.name : ''
-                        )
-                        .filter(Boolean)
-                        .join(', '),
-                    ...(project.repo_url && {
-                        codeRepository: project.repo_url,
-                    }),
-                },
-            })),
-        },
-    ]);
+      })),
+    },
+  ]);
 });
 
+// Filtering by skill name
 const selectedFilter = ref('all');
+
 const filters = computed(() => {
-    const allSkills = new Set<string>();
-    projects.value?.results?.forEach(project => {
-        project.skills?.forEach((skill: Skill) => {
-            if (typeof skill === 'object' && skill.name) {
-                allSkills.add(skill.name);
-            }
-        });
+  const set = new Set<string>();
+  projects.value?.results?.forEach((project) => {
+    project.skills?.forEach((skill: Skill) => {
+      if (typeof skill === 'object' && skill.name) set.add(skill.name);
     });
-    return ['all', ...Array.from(allSkills)];
+  });
+  return ['all', ...Array.from(set).sort((a, b) => a.localeCompare(b))];
 });
 
 const filteredProjects = computed(() => {
-    if (selectedFilter.value === 'all') {
-        return projects.value?.results || [];
-    }
-    return projects.value?.results?.filter(project =>
-        project.skills?.some((skill: Skill) =>
-            typeof skill === 'object' && skill.name === selectedFilter.value
-        )
-    ) || [];
+  const all = projects.value?.results || [];
+  if (selectedFilter.value === 'all') return all;
+  return all.filter((project) =>
+    project.skills?.some(
+      (skill: Skill) =>
+        typeof skill === 'object' && skill.name === selectedFilter.value,
+    ),
+  );
 });
 
 onMounted(() => {
-    gsap.from('.page-title', {
-        y: 30,
-        opacity: 0,
-        duration: 0.8,
-        ease: 'power2.out'
+  gsap.utils.toArray<HTMLElement>('.fade-up').forEach((element) => {
+    gsap.from(element, {
+      y: 32,
+      opacity: 0,
+      duration: 0.6,
+      ease: 'power2.out',
+      scrollTrigger: { trigger: element, start: 'top 92%', once: true },
     });
-
-    gsap.from('.page-subtitle', {
-        y: 20,
-        opacity: 0,
-        duration: 0.8,
-        delay: 0.2,
-        ease: 'power2.out'
-    });
-
-    gsap.utils.toArray('.fade-up').forEach((element: any) => {
-        gsap.from(element, {
-            y: 40,
-            opacity: 0,
-            duration: 0.8,
-            scrollTrigger: {
-                trigger: element,
-                start: 'top 90%',
-                once: true
-            }
-        });
-    });
+  });
 });
 </script>
 
 <template>
-    <div class="projects-page">
-        <!-- Hero Section -->
-        <v-container class="hero-section">
-            <v-row justify="center">
-                <v-col cols="12" md="10" lg="8" class="text-center">
-                    <Breadcrumbs :items="breadcrumbItems" class="mb-4" />
-                    <h1 class="page-title mb-6">
-                        {{ getContentBlock('hero_title')?.text || t('projects.title') }}
-                    </h1>
-                    <p class="page-subtitle">
-                        {{ getContentBlock('hero_subtitle')?.text || t('projects.subtitle') }}
-                    </p>
-                </v-col>
-            </v-row>
-        </v-container>
+  <div>
+    <!-- Hero -->
+    <section class="relative">
+      <AuroraBg :intensity="0.4" />
+      <div class="relative max-w-[1280px] mx-auto px-6 pt-12 pb-10">
+        <Breadcrumbs :items="breadcrumbItems" class="mb-6" />
+        <SectionLabel index="01" :name="$t('projects.label')" />
+        <h1 class="h-display text-[48px] sm:text-[64px] lg:text-[80px] font-bold mt-3 leading-[1.02]">
+          {{ getContentBlock('hero_title')?.text || $t('projects.title') }}
+        </h1>
+        <p class="mt-6 text-[16px] sm:text-[17px] text-ink-2 leading-[1.65] max-w-[640px]">
+          {{ getContentBlock('hero_subtitle')?.text || $t('projects.subtitle') }}
+        </p>
+      </div>
+    </section>
 
-        <!-- Filters Section -->
-        <v-container class="filters-section">
-            <v-row justify="center">
-                <v-col cols="12" md="10">
-                    <div class="filters-wrapper fade-up">
-                        <v-chip-group v-model="selectedFilter" mandatory color="primary" class="filters-chips">
-                            <v-chip v-for="filter in filters" :key="filter" :value="filter" class="filter-chip">
-                                {{ filter === 'all' ? t('common.all') : filter }}
-                            </v-chip>
-                        </v-chip-group>
-                    </div>
-                </v-col>
-            </v-row>
-        </v-container>
+    <!-- Filters -->
+    <section>
+      <div class="max-w-[1280px] mx-auto px-6 pb-6 flex items-center gap-3 overflow-x-auto">
+        <span class="font-mono-rail shrink-0">{{ $t('projects.filterLabel') }}</span>
+        <div class="flex flex-wrap gap-1.5 fade-up">
+          <button
+            v-for="filter in filters"
+            :key="filter"
+            type="button"
+            :class="[
+              'inline-flex items-center font-mono text-[11.5px] tracking-[0.04em] px-2.5 py-[5px]',
+              'rounded-chip border transition-colors capitalize',
+              selectedFilter === filter
+                ? 'bg-accent-soft text-accent-2 dark:text-accent border-accent/20'
+                : 'bg-card text-ink-2 hover:text-ink hover:bg-card-soft border-line',
+            ]"
+            @click="selectedFilter = filter"
+          >
+            {{ filter === 'all' ? $t('common.all') : filter }}
+          </button>
+        </div>
+      </div>
+    </section>
 
-        <!-- Projects Grid -->
-        <v-container class="projects-section">
-            <ProjectList :featuredOnly="false" :projects="filteredProjects" md-cols="6" lg-cols="4" />
+    <!-- Grid -->
+    <section>
+      <div class="max-w-[1280px] mx-auto px-6 pb-16">
+        <div
+          v-if="filteredProjects.length"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+        >
+          <ProjectCard
+            v-for="(project, idx) in filteredProjects"
+            :key="project.id"
+            :project="project"
+            :index="idx"
+          />
+        </div>
 
-            <v-row v-if="filteredProjects.length === 0">
-                <v-col cols="12" class="text-center py-16">
-                    <v-icon size="80" color="grey-lighten-1">mdi-folder-open-outline</v-icon>
-                    <p class="text-h6 text-grey-darken-1 mt-4">
-                        {{ t('projects.noProjectsFound') }}
-                    </p>
-                </v-col>
-            </v-row>
-        </v-container>
+        <div
+          v-else
+          class="flex flex-col items-center text-center py-16 text-ink-3 fade-up"
+        >
+          <FolderOpen :size="48" :stroke-width="1.4" class="text-ink-4" />
+          <p class="text-[16px] mt-4">{{ $t('projects.noProjectsFound') }}</p>
+        </div>
+      </div>
+    </section>
 
-        <!-- CTA Section -->
-        <v-container class="cta-section">
-            <v-row justify="center">
-                <v-col cols="12" md="8" lg="6" class="text-center fade-up">
-                    <h2 class="cta-title">
-                        {{ getContentBlock('cta_title')?.text || t('projects.ctaTitle') }}
-                    </h2>
-                    <p class="cta-subtitle mb-8">
-                        {{ getContentBlock('cta_subtitle')?.text || t('projects.ctaSubtitle') }}
-                    </p>
-                    <v-btn size="large" color="primary" class="text-none px-8" to="/#contact">
-                        {{ getContentBlock('cta_button')?.text || t('projects.ctaButton') }}
-                        <v-icon end>mdi-arrow-right</v-icon>
-                    </v-btn>
-                </v-col>
-            </v-row>
-        </v-container>
-    </div>
+    <!-- CTA -->
+    <section class="px-6 pb-12">
+      <div
+        class="max-w-[1280px] mx-auto rounded-tile bg-night text-night-text relative overflow-hidden fade-up"
+      >
+        <div
+          aria-hidden="true"
+          class="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full"
+          style="background: radial-gradient(closest-side, rgba(44, 103, 232, 0.4), transparent 70%)"
+        />
+        <div
+          class="relative px-8 sm:px-12 py-14 sm:py-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center"
+        >
+          <div class="md:col-span-8">
+            <SectionLabel index="" :name="$t('home.contact.label')" />
+            <h2 class="h-display text-[32px] sm:text-[44px] font-bold mt-2">
+              {{ getContentBlock('cta_title')?.text || $t('projects.ctaTitle') }}
+            </h2>
+            <p class="mt-4 text-[15.5px] text-night-text/70 leading-[1.65] max-w-[520px]">
+              {{ getContentBlock('cta_subtitle')?.text || $t('projects.ctaSubtitle') }}
+            </p>
+          </div>
+          <div class="md:col-span-4 md:justify-self-end">
+            <NuxtLink
+              :to="localePath('/#contact')"
+              class="inline-flex items-center justify-center gap-2 bg-accent text-night-text font-semibold px-6 py-3.5 rounded-input hover:bg-accent-2 glow-blue transition-colors"
+            >
+              {{ getContentBlock('cta_button')?.text || $t('projects.ctaButton') }}
+              <ArrowRight :size="16" :stroke-width="2" />
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
 </template>
-
-<style scoped>
-.projects-page {
-    background: #fafafa;
-    min-height: 100vh;
-}
-
-/* Hero Section */
-.hero-section {
-    padding: 120px 24px 60px;
-    background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
-}
-
-.page-title {
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    font-weight: 800;
-    color: #1a1a1a;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
-    margin: 0;
-}
-
-.page-subtitle {
-    font-size: clamp(1rem, 2vw, 1.25rem);
-    color: #6b7280;
-    font-weight: 400;
-    line-height: 1.6;
-    max-width: 700px;
-    margin: 0 auto;
-}
-
-/* Filters Section */
-.filters-section {
-    padding: 40px 24px;
-}
-
-.filters-wrapper {
-    display: flex;
-    justify-content: center;
-}
-
-.filters-chips {
-    justify-content: center;
-}
-
-.filter-chip {
-    text-transform: capitalize;
-    font-weight: 600;
-}
-
-/* Projects Section */
-.projects-section {
-    padding: 60px 24px 120px;
-    max-width: 1400px;
-}
-
-/* CTA Section */
-.cta-section {
-    padding: 80px 24px 120px;
-    background: white;
-}
-
-.cta-title {
-    font-size: clamp(1.75rem, 3vw, 2.5rem);
-    font-weight: 800;
-    color: #1a1a1a;
-    letter-spacing: -0.02em;
-    margin-bottom: 16px;
-}
-
-.cta-subtitle {
-    font-size: 1.125rem;
-    color: #6b7280;
-    line-height: 1.6;
-}
-
-/* Responsive */
-@media (max-width: 960px) {
-    .hero-section {
-        padding: 80px 24px 40px;
-    }
-
-    .projects-section {
-        padding: 40px 24px 80px;
-    }
-
-    .cta-section {
-        padding: 60px 24px 80px;
-    }
-}
-
-@media (max-width: 600px) {
-    .hero-section {
-        padding: 60px 20px 30px;
-    }
-
-    .projects-section {
-        padding: 30px 20px 60px;
-    }
-
-    .cta-section {
-        padding: 50px 20px 60px;
-    }
-}
-</style>

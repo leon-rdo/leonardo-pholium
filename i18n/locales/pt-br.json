@@ -219,7 +219,9 @@
     "ctaButton": "Entre em Contato",
     "actionsLabel": "links",
     "techLabel": "stack principal",
-    "toolsCount": "ferramentas"
+    "toolsCount": "ferramentas",
+    "label": "trabalho",
+    "filterLabel": "filtrar"
   },
   "skills": {
     "title": "Habilidades",
