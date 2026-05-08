@@ -96,15 +96,20 @@ const sectionTitle = (s: AboutSection) =>
   getContentBlock(s.key)?.text || t(s.i18nFallback);
 const sectionText = (s: AboutSection) => getContentBlock(s.textKey);
 
-// Quick facts panel (right rail of hero)
-const linkedinUrl = computed(
-  () => homeBlockText('contact_linkedin') || 'https://linkedin.com',
+// Quick facts panel — every value comes from a ContentBlock; if the
+// admin hasn't configured one, the row is hidden (no AI-mocked fallback).
+const linkedinUrl = computed(() => homeBlockText('contact_linkedin'));
+const githubUrl = computed(() => homeBlockText('contact_github'));
+const emailAddress = computed(() => homeBlockText('contact_email'));
+const factTimezone = computed(() => homeBlockText('contact_timezone'));
+const factLanguages = computed(() => homeBlockText('contact_languages'));
+const factOpenFor = computed(() => homeBlockText('contact_open_for'));
+
+const hasAnyFact = computed(
+  () => !!factTimezone.value || !!factLanguages.value || !!factOpenFor.value,
 );
-const githubUrl = computed(
-  () => homeBlockText('contact_github') || 'https://github.com',
-);
-const emailAddress = computed(
-  () => homeBlockText('contact_email') || 'leonardo@leonardocosta.dev',
+const hasAnyLink = computed(
+  () => !!linkedinUrl.value || !!githubUrl.value || !!emailAddress.value,
 );
 
 onMounted(() => {
@@ -140,28 +145,50 @@ onMounted(() => {
           </p>
         </div>
 
-        <!-- Quick facts panel -->
-        <Tile class="lg:col-span-4 px-5 py-5 self-end fade-up">
+        <!-- Quick facts panel — only renders rows that have backend values -->
+        <Tile
+          v-if="hasAnyFact || hasAnyLink"
+          class="lg:col-span-4 px-5 py-5 self-end fade-up"
+        >
           <SectionLabel :name="$t('about.factsLabel')" tone="accent" />
-          <dl class="mt-4 space-y-3 font-mono text-[12.5px]">
-            <div class="flex items-start justify-between gap-3">
-              <dt class="text-ink-3">where</dt>
+          <dl
+            v-if="hasAnyFact"
+            class="mt-4 space-y-3 font-mono text-[12.5px]"
+          >
+            <div
+              v-if="factTimezone"
+              class="flex items-start justify-between gap-3"
+            >
+              <dt class="text-ink-3">{{ $t('home.contact.timezoneLabel') }}</dt>
               <dd class="text-ink inline-flex items-center gap-1.5">
                 <MapPin :size="13" :stroke-width="1.8" />
-                {{ $t('home.contact.timezone') }}
+                {{ factTimezone }}
               </dd>
             </div>
-            <div class="flex items-start justify-between gap-3">
-              <dt class="text-ink-3">languages</dt>
-              <dd class="text-ink">PT-BR · EN-US</dd>
+            <div
+              v-if="factLanguages"
+              class="flex items-start justify-between gap-3"
+            >
+              <dt class="text-ink-3">{{ $t('about.languagesLabel') }}</dt>
+              <dd class="text-ink">{{ factLanguages }}</dd>
             </div>
-            <div class="flex items-start justify-between gap-3">
-              <dt class="text-ink-3">open for</dt>
-              <dd class="text-accent">{{ $t('home.contact.openFor') }}</dd>
+            <div
+              v-if="factOpenFor"
+              class="flex items-start justify-between gap-3"
+            >
+              <dt class="text-ink-3">{{ $t('home.contact.openForLabel') }}</dt>
+              <dd class="text-accent">{{ factOpenFor }}</dd>
             </div>
           </dl>
-          <div class="mt-5 pt-4 border-t border-line space-y-1.5">
+          <div
+            v-if="hasAnyLink"
+            :class="[
+              'space-y-1.5',
+              hasAnyFact ? 'mt-5 pt-4 border-t border-line' : 'mt-2',
+            ]"
+          >
             <a
+              v-if="linkedinUrl"
               :href="linkedinUrl"
               target="_blank"
               rel="noopener noreferrer"
@@ -178,6 +205,7 @@ onMounted(() => {
               />
             </a>
             <a
+              v-if="githubUrl"
               :href="githubUrl"
               target="_blank"
               rel="noopener noreferrer"
@@ -194,6 +222,7 @@ onMounted(() => {
               />
             </a>
             <a
+              v-if="emailAddress"
               :href="`mailto:${emailAddress}`"
               class="flex items-center justify-between gap-3 px-3 py-2 -mx-1 rounded-input hover:bg-card-soft transition-colors group/link"
             >

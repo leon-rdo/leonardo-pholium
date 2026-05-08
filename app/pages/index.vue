@@ -122,15 +122,21 @@ onMounted(() => {
   });
 });
 
-// Contact links from ContentBlocks (with fallbacks)
-const linkedinUrl = computed(
-  () => getContentBlock('contact_linkedin')?.text || 'https://linkedin.com',
+// Contact links and meta — all backend-driven (ContentBlocks). When a key
+// isn't configured we render nothing for it (no AI-mocked placeholders).
+const linkedinUrl = computed(() => getContentBlock('contact_linkedin')?.text);
+const githubUrl = computed(() => getContentBlock('contact_github')?.text);
+const emailAddress = computed(() => getContentBlock('contact_email')?.text);
+const contactTimezone = computed(() => getContentBlock('contact_timezone')?.text);
+const contactOpenFor = computed(() => getContentBlock('contact_open_for')?.text);
+const contactResponse = computed(() => getContentBlock('contact_response')?.text);
+
+const hasAnyContactMeta = computed(
+  () =>
+    !!contactTimezone.value || !!contactOpenFor.value || !!contactResponse.value,
 );
-const githubUrl = computed(
-  () => getContentBlock('contact_github')?.text || 'https://github.com',
-);
-const emailAddress = computed(
-  () => getContentBlock('contact_email')?.text || 'leonardo@leonardocosta.dev',
+const hasAnyContactLink = computed(
+  () => !!linkedinUrl.value || !!githubUrl.value || !!emailAddress.value,
 );
 </script>
 
@@ -238,28 +244,35 @@ const emailAddress = computed(
           </div>
 
           <aside
+            v-if="hasAnyContactMeta || hasAnyContactLink"
             class="md:col-span-5 self-start font-mono text-[12.5px] text-night-text/70 space-y-6"
           >
-            <div>
+            <div v-if="hasAnyContactMeta">
               <div class="font-mono-rail !text-night-text/50 mb-3">
                 {{ $t('home.contact.metaLabel') }}
               </div>
               <div class="grid grid-cols-2 gap-y-3 gap-x-6">
-                <span class="text-night-text/40">// timezone</span>
-                <span>{{ $t('home.contact.timezone') }}</span>
-                <span class="text-night-text/40">// open for</span>
-                <span class="text-accent">{{ $t('home.contact.openFor') }}</span>
-                <span class="text-night-text/40">// response</span>
-                <span>{{ $t('home.contact.response') }}</span>
+                <template v-if="contactTimezone">
+                  <span class="text-night-text/40">// {{ $t('home.contact.timezoneLabel') }}</span>
+                  <span>{{ contactTimezone }}</span>
+                </template>
+                <template v-if="contactOpenFor">
+                  <span class="text-night-text/40">// {{ $t('home.contact.openForLabel') }}</span>
+                  <span class="text-accent">{{ contactOpenFor }}</span>
+                </template>
+                <template v-if="contactResponse">
+                  <span class="text-night-text/40">// {{ $t('home.contact.responseLabel') }}</span>
+                  <span>{{ contactResponse }}</span>
+                </template>
               </div>
             </div>
 
-            <div>
+            <div v-if="hasAnyContactLink">
               <div class="font-mono-rail !text-night-text/50 mb-3">
                 {{ $t('home.contact.linksLabel') }}
               </div>
               <ul class="space-y-2">
-                <li>
+                <li v-if="linkedinUrl">
                   <a
                     :href="linkedinUrl"
                     target="_blank"
@@ -277,7 +290,7 @@ const emailAddress = computed(
                     />
                   </a>
                 </li>
-                <li>
+                <li v-if="githubUrl">
                   <a
                     :href="githubUrl"
                     target="_blank"
@@ -295,7 +308,7 @@ const emailAddress = computed(
                     />
                   </a>
                 </li>
-                <li>
+                <li v-if="emailAddress">
                   <a
                     :href="`mailto:${emailAddress}`"
                     class="flex items-center justify-between gap-3 px-3.5 py-3 rounded-input border border-white/10 hover:bg-white/5 transition-colors group/link text-night-text"

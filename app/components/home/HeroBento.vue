@@ -3,12 +3,27 @@
  * Hero bento — 12-col × 5-row grid that lays out:
  *   - col-7 row-4 : headline + description + CTAs
  *   - col-5 row-3 : portrait (aurora + glass chips)
- *   - col-5 row-1 : terminal whoami.sh
- *   - 4 × col-3 row-1 : stats (years, projects, response, languages)
+ *   - col-5 row-1 : terminal whoami.sh (only if any line is configured)
+ *   - 4 × col-3 row-1 : stats (only the ones with a configured value render)
  *
- * Copy is hydrated from ContentBlocks (`hero_*`) when present, falling back
- * to i18n keys. Stat numbers come from props (or i18n) so they're easy to
- * tweak without a backend round-trip.
+ * Every piece of "content" — copy, stat values, floating chips, terminal
+ * lines — is read from ContentBlocks. Nothing is mocked in the template.
+ *
+ * Recognised ContentBlock keys (page_name="home"):
+ *   hero_badge
+ *   hero_kicker_lead, hero_kicker_mid, hero_kicker_accent, hero_kicker_tail
+ *   hero_subtitle
+ *   hero_initials                  — used when no portrait image is wired
+ *   hero_portrait                  — has `images[]`; first cover image used
+ *                                    (legacy fallback also checks `hero_image`,
+ *                                    `about_intro`)
+ *   hero_portrait_label            — label rendered on the portrait bottom-left
+ *   hero_location                  — bottom-right portrait label
+ *   hero_chip_top, hero_chip_bottom
+ *   hero_terminal_line_1..3        — each line uses the format
+ *                                    "cmd → output" (split on " → ").
+ *                                    A line with just text shows it as out-only.
+ *   hero_stat_1_value, hero_stat_1_label  (1..4)
  */
 import type { ContentBlock } from '~/types/content';
 import { ArrowRight, ArrowUp, Command } from 'lucide-vue-next';
@@ -18,33 +33,70 @@ interface Props {
 }
 const props = defineProps<Props>();
 
-const { t } = useI18n();
 const localePath = useLocalePath();
 
-const blockText = (key: string, fallback?: string) =>
-  props.contentBlocks.find((b) => b.key === key)?.text || fallback;
+const blockText = (key: string) =>
+  props.contentBlocks.find((b) => b.key === key)?.text || '';
 
-// Hero copy
-const badgeText = computed(() => blockText('hero_badge', t('home.hero.badge')));
-const lineKickerLead = computed(() => blockText('hero_kicker_lead', t('home.hero.lineLead')));
-const lineKickerMid = computed(() => blockText('hero_kicker_mid', t('home.hero.lineMid')));
-const lineKickerAccent = computed(() =>
-  blockText('hero_kicker_accent', t('home.hero.lineAccent')),
+// Hero copy (each piece optional; the hero still renders if some are missing).
+const badgeText = computed(() => blockText('hero_badge'));
+const lineKickerLead = computed(() => blockText('hero_kicker_lead'));
+const lineKickerMid = computed(() => blockText('hero_kicker_mid'));
+const lineKickerAccent = computed(() => blockText('hero_kicker_accent'));
+const lineKickerTail = computed(() => blockText('hero_kicker_tail'));
+const subtitleText = computed(() => blockText('hero_subtitle'));
+const initials = computed(() => blockText('hero_initials') || 'LC');
+const portraitLabel = computed(() => blockText('hero_portrait_label'));
+const locationLabel = computed(() => blockText('hero_location'));
+const chipTop = computed(() => blockText('hero_chip_top'));
+const chipBottom = computed(() => blockText('hero_chip_bottom'));
+
+// Has at least one piece of headline copy?
+const hasHeadline = computed(
+  () =>
+    !!lineKickerLead.value ||
+    !!lineKickerMid.value ||
+    !!lineKickerAccent.value ||
+    !!lineKickerTail.value,
 );
-const lineKickerTail = computed(() => blockText('hero_kicker_tail', t('home.hero.lineTail')));
-const subtitleText = computed(() => blockText('hero_subtitle', t('home.hero.subtitle')));
 
-// Initials shown over the portrait gradient (used as a placeholder when
-// no real portrait image is wired yet).
-const initials = computed(() => blockText('hero_initials', 'LC'));
+// Stats — keep only the ones with a configured value.
+const stats = computed(() =>
+  ([1, 2, 3, 4] as const)
+    .map((n) => ({
+      value: blockText(`hero_stat_${n}_value`),
+      label: blockText(`hero_stat_${n}_label`),
+    }))
+    .filter((s) => !!s.value),
+);
 
-/**
- * Portrait image — looked up across a few likely ContentBlock keys so the
- * admin can pick whichever feels natural ("hero_portrait", "hero_image",
- * or even the legacy "about_intro" that already had a cover wired). Returns
- * the first cover/gallery image's `file` (or `thumbnail`) URL, or null
- * when nothing is attached — in which case the LC initials are shown.
- */
+// Terminal — each line is stored as "cmd → output". If there's no arrow,
+// the whole text is treated as the output (cmd hidden).
+interface TerminalLineParsed {
+  cmd?: string;
+  out: string;
+}
+const parseTerminalLine = (raw: string): TerminalLineParsed | null => {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const arrow = trimmed.includes(' → ')
+    ? ' → '
+    : trimmed.includes(' -> ')
+      ? ' -> '
+      : null;
+  if (!arrow) return { out: trimmed };
+  const [cmd, out] = trimmed.split(arrow);
+  return { cmd: cmd.trim(), out: out.trim() };
+};
+const terminalLines = computed(() =>
+  ([1, 2, 3, 4, 5] as const)
+    .map((n) => parseTerminalLine(blockText(`hero_terminal_line_${n}`)))
+    .filter((l): l is TerminalLineParsed => l !== null),
+);
+
+// Portrait image — looked up across a few likely ContentBlock keys so the
+// admin can pick whichever feels natural. Returns the first cover/gallery
+// image's `file` (or `thumbnail`) URL, or null when nothing is attached.
 const portraitImage = computed(() => {
   const candidateKeys = ['hero_portrait', 'hero_image', 'about_intro'];
   for (const key of candidateKeys) {
@@ -79,6 +131,7 @@ const portraitAlt = computed(() => {
         >
           <div>
             <div
+              v-if="badgeText"
               class="font-mono inline-flex items-center gap-2 text-[11.5px] tracking-[0.16em] uppercase mb-7 px-3 py-1 rounded-chip bg-paper ring-hair"
             >
               <span class="relative flex w-2 h-2">
@@ -92,17 +145,23 @@ const portraitAlt = computed(() => {
               </span>
             </div>
 
-            <h1 class="h-display text-[56px] sm:text-[72px] lg:text-[88px] font-bold -ml-[2px]">
-              {{ lineKickerLead }}<br />
-              <span class="text-ink-2 font-medium">{{ lineKickerMid }}</span>
-              <!-- Explicit space so the accent word doesn't jam against the kicker -->
-              {{ ' ' }}<span class="text-accent">{{ lineKickerAccent }}</span><br />
-              {{ lineKickerTail }}
+            <h1
+              v-if="hasHeadline"
+              class="h-display text-[56px] sm:text-[72px] lg:text-[88px] font-bold -ml-[2px]"
+            >
+              <template v-if="lineKickerLead">{{ lineKickerLead }}<br /></template>
+              <span v-if="lineKickerMid" class="text-ink-2 font-medium">{{ lineKickerMid }}</span>
+              <template v-if="lineKickerMid && lineKickerAccent">{{ ' ' }}</template>
+              <span v-if="lineKickerAccent" class="text-accent">{{ lineKickerAccent }}</span>
+              <template v-if="lineKickerTail"><br />{{ lineKickerTail }}</template>
             </h1>
           </div>
 
           <div>
-            <p class="text-[16px] sm:text-[16.5px] leading-[1.65] text-ink-2 max-w-[540px]">
+            <p
+              v-if="subtitleText"
+              class="text-[16px] sm:text-[16.5px] leading-[1.65] text-ink-2 max-w-[540px]"
+            >
               {{ subtitleText }}
             </p>
             <div class="mt-6 flex flex-wrap gap-2.5 items-center">
@@ -124,7 +183,9 @@ const portraitAlt = computed(() => {
               >
                 {{ $t('home.hero.readUses') }}
               </UiButton>
-              <span class="font-mono-rail text-[11px] ml-2 hidden sm:inline-flex items-center gap-1">
+              <span
+                class="font-mono-rail text-[11px] ml-2 hidden sm:inline-flex items-center gap-1"
+              >
                 <Command :size="12" :stroke-width="1.8" />K
               </span>
             </div>
@@ -138,7 +199,6 @@ const portraitAlt = computed(() => {
           :clip="false"
           class="lg:col-span-5 lg:row-span-3 px-3 py-3 fade-up"
         >
-          <!-- the inner card has the gradient + image (or initials placeholder) -->
           <div
             class="relative w-full h-full rounded-tile overflow-hidden ring-hair bg-gradient-to-br from-blob-1/40 via-blob-2/25 to-blob-3/40"
           >
@@ -153,7 +213,6 @@ const portraitAlt = computed(() => {
                 filter: blur(12px);
               "
             />
-            <!-- Real portrait when present, else big initials placeholder -->
             <NuxtImg
               v-if="portraitImage"
               :src="portraitImage.file || portraitImage.thumbnail || ''"
@@ -175,82 +234,83 @@ const portraitAlt = computed(() => {
                 {{ initials }}
               </div>
             </div>
-            <!-- subtle bottom shade so the rail labels stay readable over a real photo -->
+
+            <!-- bottom shade for label readability when an image is rendered -->
             <div
-              v-if="portraitImage"
+              v-if="portraitImage && (portraitLabel || locationLabel)"
               aria-hidden="true"
               class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-night/55 via-night/15 to-transparent"
             />
-            <!-- bottom rail -->
-            <div class="absolute inset-x-0 bottom-0 px-5 py-5 flex justify-between items-end">
-              <span
-                :class="[
-                  'font-mono text-[11px] tracking-[0.16em] uppercase',
-                  portraitImage ? 'text-night-text/85' : 'text-ink-2',
-                ]"
-              >
-                {{ $t('home.hero.portraitLabel') }}
-              </span>
-              <span
-                :class="[
-                  'font-mono text-[11px] tracking-[0.16em] uppercase',
-                  portraitImage ? 'text-night-text/85' : 'text-ink-2',
-                ]"
-              >
-                {{ $t('home.hero.location') }}
-              </span>
-            </div>
-            <!-- floating chip top-right (uptime) -->
             <div
+              v-if="portraitLabel || locationLabel"
+              class="absolute inset-x-0 bottom-0 px-5 py-5 flex justify-between items-end"
+            >
+              <span
+                v-if="portraitLabel"
+                :class="[
+                  'font-mono text-[11px] tracking-[0.16em] uppercase',
+                  portraitImage ? 'text-night-text/85' : 'text-ink-2',
+                ]"
+                >{{ portraitLabel }}</span
+              >
+              <span
+                v-if="locationLabel"
+                :class="[
+                  'font-mono text-[11px] tracking-[0.16em] uppercase',
+                  portraitImage ? 'text-night-text/85' : 'text-ink-2',
+                ]"
+                >{{ locationLabel }}</span
+              >
+            </div>
+
+            <!-- floating chips (only when configured) -->
+            <div
+              v-if="chipTop"
               class="absolute top-4 right-4 glass-cream rounded-chip px-3 py-1.5 font-mono text-[11px] flex items-center gap-1.5"
             >
-              <ArrowUp :size="12" :stroke-width="2.2" class="text-emerald-700 dark:text-emerald-400" />
-              {{ $t('home.hero.uptime') }}
+              <ArrowUp
+                :size="12"
+                :stroke-width="2.2"
+                class="text-emerald-700 dark:text-emerald-400"
+              />
+              {{ chipTop }}
             </div>
-            <!-- floating chip bottom-left (deploy) -->
             <div
+              v-if="chipBottom"
               class="absolute -bottom-3 -left-3 glass-cream rounded-card px-3 py-2 font-mono text-[11px] flex items-center gap-2"
             >
               <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-              {{ $t('home.hero.deploying') }}
+              {{ chipBottom }}
             </div>
           </div>
         </Tile>
 
-        <!-- TERMINAL mini (col-5, row-1) -->
-        <div class="lg:col-span-5 lg:row-span-1 fade-up">
+        <!-- TERMINAL (only if any line is configured) -->
+        <div
+          v-if="terminalLines.length"
+          class="lg:col-span-5 lg:row-span-1 fade-up"
+        >
           <TerminalPanel :title="$t('home.hero.terminalTitle')">
-            <TerminalLine cmd="whoami" :out="$t('home.hero.terminalWhoami')" />
-            <TerminalLine cmd="stack" :out="$t('home.hero.terminalStack')" />
-            <TerminalLine cmd="status">
-              <span class="text-status-ok">●</span>
-              <span class="ml-1 text-night-text">{{ $t('home.hero.terminalStatus') }}</span>
-              <span class="ml-1 inline-block w-2 h-3.5 align-middle bg-night-text animate-pulse" />
-            </TerminalLine>
+            <TerminalLine
+              v-for="(line, idx) in terminalLines"
+              :key="idx"
+              :cmd="line.cmd"
+              :out="line.out"
+            />
           </TerminalPanel>
         </div>
 
-        <!-- STATS row -->
-        <Tile class="lg:col-span-3 lg:row-span-1 px-5 py-5 bg-card fade-up">
-          <div class="font-mono-rail text-[11px] mb-1">{{ $t('home.hero.stats.years') }}</div>
-          <div class="h-display text-[34px] font-bold tabular-nums">
-            3<span class="text-accent">+</span>
+        <!-- STATS row (each tile renders only when its value is configured) -->
+        <Tile
+          v-for="(stat, idx) in stats"
+          :key="idx"
+          class="lg:col-span-3 lg:row-span-1 px-5 py-5 bg-card fade-up"
+        >
+          <div v-if="stat.label" class="font-mono-rail text-[11px] mb-1">
+            {{ stat.label }}
           </div>
-        </Tile>
-        <Tile class="lg:col-span-3 lg:row-span-1 px-5 py-5 bg-card fade-up">
-          <div class="font-mono-rail text-[11px] mb-1">{{ $t('home.hero.stats.projects') }}</div>
-          <div class="h-display text-[34px] font-bold tabular-nums">12</div>
-        </Tile>
-        <Tile class="lg:col-span-3 lg:row-span-1 px-5 py-5 bg-card fade-up">
-          <div class="font-mono-rail text-[11px] mb-1">{{ $t('home.hero.stats.response') }}</div>
           <div class="h-display text-[34px] font-bold tabular-nums">
-            &lt; 24<span class="text-2xl">h</span>
-          </div>
-        </Tile>
-        <Tile class="lg:col-span-3 lg:row-span-1 px-5 py-5 bg-card fade-up">
-          <div class="font-mono-rail text-[11px] mb-1">{{ $t('home.hero.stats.languages') }}</div>
-          <div class="h-display text-[34px] font-bold">
-            PT<span class="text-ink-3">/</span>EN
+            {{ stat.value }}
           </div>
         </Tile>
       </div>

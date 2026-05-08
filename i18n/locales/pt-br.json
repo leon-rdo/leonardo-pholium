@@ -44,114 +44,51 @@
     "seo_title": "Início",
     "seo_description": "Portfólio e Blog Pessoal",
     "hero": {
-      "badge": "disponível · novos projetos",
-      "lineLead": "Backend",
-      "lineMid": "engenheiro construindo",
-      "lineAccent": "APIs",
-      "lineTail": "que aguentam.",
-      "subtitle": "Sou Leonardo. Há mais de 3 anos escrevendo Django REST + PostgreSQL em produção, com passagens pelo Vue/Nuxt. Foco em integrações, filas e bancos que crescem rápido demais.",
       "viewWork": "Ver projetos",
       "readUses": "Ler /uses",
-      "portraitLabel": "retrato · 2026",
-      "location": "belém / br",
-      "uptime": "99,97% uptime",
-      "deploying": "deploying · prod-api · 2.1s",
-      "terminalTitle": "~/leonardo · whoami.sh",
-      "terminalWhoami": "leonardo · backend engineer",
-      "terminalStack": "django · drf · postgres · celery · vue",
-      "terminalStatus": "aceitando freelance · set/26",
-      "stats": {
-        "years": "anos atuando",
-        "projects": "projetos em prod",
-        "response": "tempo de resposta",
-        "languages": "idiomas"
-      }
+      "terminalTitle": "~/leonardo · whoami.sh"
     },
     "now": {
-      "label": "currently",
-      "updatedFallback": "atualizado há 2 dias",
-      "building": {
-        "label": "construindo",
-        "titleFallback": "Plataforma de antecipação",
-        "descriptionFallback": "Backend de antecipação de recebíveis para profissionais de saúde · Parti Digital",
-        "stage": "shipping · v0.4"
-      },
-      "reading": {
-        "label": "lendo",
-        "titleFallback": "Designing Data-Intensive Applications",
-        "subtitleFallback": "Martin Kleppmann · cap. 5/12"
-      },
-      "listening": {
-        "label": "ouvindo",
-        "titleFallback": "Sons of the East",
-        "subtitleFallback": "indie folk · loop 3 semanas"
-      },
-      "learning": {
-        "label": "aprendendo",
-        "titleFallback": "OpenTelemetry + Loki",
-        "subtitleFallback": "trocando logging por traces"
-      },
-      "published": {
-        "label": "publicado",
-        "titleFallback": "Por que parei de mockar Postgres em testes",
-        "excerptFallback": "Estávamos rodando 600 testes em SQLite por velocidade — até a primeira migration mais séria explodir em produção.",
-        "metaFallback": "8 min · 3 dias atrás"
-      },
-      "where": {
-        "label": "onde",
-        "titleFallback": "Belém / PA · Brasil",
-        "subtitleFallback": "UTC-3 · trabalhando em casa"
-      }
+      "label": "agora",
+      "building": { "label": "construindo" },
+      "reading": { "label": "lendo" },
+      "listening": { "label": "ouvindo" },
+      "learning": { "label": "aprendendo" },
+      "published": { "label": "publicado" },
+      "where": { "label": "onde" }
     },
-    "about": {
-      "label": "about",
-      "fallback1": "Sou desenvolvedor há mais de 3 anos, com foco em Django REST e PostgreSQL. A maior parte do meu tempo vai pro backend — APIs, integrações, filas assíncronas — e também tenho rodagem com Vue.js no frontend.",
-      "fallback2": "Trabalhei em CRMs com I.A., sistemas internos de uma empresa de energia solar, e hoje toco uma plataforma de antecipação de recebíveis para profissionais de saúde. Gosto de código que se lê em voz alta e migrations que rodam sem assustar."
-    },
+    "about": { "label": "sobre" },
     "stack": {
       "label": "stack",
-      "title": "Ferramentas, por camada.",
-      "tagline": "sem estrelinhas · só anos",
-      "backend": {
-        "label": "backend",
-        "title": "APIs & dados"
-      },
-      "frontend": {
-        "label": "frontend",
-        "title": "Interface"
-      },
-      "infra": {
-        "label": "infra · ops",
-        "title": "Infraestrutura"
-      }
+      "title": "Stack."
     },
     "work": {
-      "label": "selected work",
+      "label": "trabalho recente",
       "title": "Em produção agora.",
       "allLink": "todos os projetos"
     },
     "experience": {
-      "label": "experience",
+      "label": "experiência",
       "title": "Onde tenho enviado código."
     },
     "education": {
-      "label": "education",
+      "label": "educação",
       "title": "Formação acadêmica."
     },
     "testimonials": {
-      "label": "testimonials",
+      "label": "depoimentos",
       "title": "O que dizem por aí."
     },
     "contact": {
-      "label": "contact",
+      "label": "contato",
       "titleLead": "Tem um backend que precisa",
       "titleAccent": "ser construído?",
-      "subtitle": "APIs, integrações com I.A., uma arquitetura que cresceu rápido demais — manda os detalhes e a gente conversa.",
+      "subtitle": "APIs, integrações com I.A., uma arquitetura que cresceu rápido demais — manda os detalhes.",
       "metaLabel": "meta",
       "linksLabel": "redes",
-      "timezone": "UTC-3 · Belém / PA",
-      "openFor": "freelance + full-time",
-      "response": "menos de 24h"
+      "timezoneLabel": "fuso",
+      "openForLabel": "aberto para",
+      "responseLabel": "resposta"
     }
   },
   "hero": {
@@ -168,11 +105,12 @@
     "whatIDo": "O Que Eu Faço",
     "cta": "Vamos trabalhar juntos?",
     "ctaButton": "Entre em Contato",
-    "label": "about",
+    "label": "sobre",
     "factsLabel": "fatos rápidos",
     "journeyLabel": "jornada",
     "valuesLabel": "valores",
     "workLabel": "o que faço",
+    "languagesLabel": "idiomas",
     "email": "Enviar e-mail"
   },
   "blog": {
