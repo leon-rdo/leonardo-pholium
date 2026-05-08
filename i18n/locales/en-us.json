@@ -39,7 +39,89 @@
   },
   "home": {
     "seo_title": "Home",
-    "seo_description": "Personal Portfolio and Blog"
+    "seo_description": "Personal Portfolio and Blog",
+    "hero": {
+      "badge": "available · new projects",
+      "lineLead": "Backend",
+      "lineMid": "engineer building",
+      "lineAccent": "reliable",
+      "lineTail": "APIs.",
+      "subtitle": "I'm Leonardo. 3+ years shipping Django REST + PostgreSQL in production, with side trips through Vue/Nuxt. I focus on integrations, async queues, and databases that grow fast.",
+      "viewWork": "View work",
+      "readUses": "Read /uses",
+      "portraitLabel": "portrait · 2026",
+      "location": "belém / br",
+      "uptime": "99.97% uptime",
+      "deploying": "deploying · prod-api · 2.1s",
+      "terminalTitle": "~/leonardo · whoami.sh",
+      "terminalWhoami": "leonardo · backend engineer",
+      "terminalStack": "django · drf · postgres · celery · vue",
+      "terminalStatus": "accepting freelance · sept '26",
+      "stats": {
+        "years": "years shipping",
+        "projects": "projects in prod",
+        "response": "response time",
+        "languages": "languages"
+      }
+    },
+    "now": {
+      "label": "currently",
+      "updatedFallback": "updated 2 days ago",
+      "building": {
+        "label": "building",
+        "titleFallback": "Receivables advance platform",
+        "descriptionFallback": "Backend for medical professionals' receivables advance · Parti Digital",
+        "stage": "shipping · v0.4"
+      },
+      "reading": {
+        "label": "reading",
+        "titleFallback": "Designing Data-Intensive Applications",
+        "subtitleFallback": "Martin Kleppmann · ch. 5/12"
+      },
+      "listening": {
+        "label": "listening",
+        "titleFallback": "Sons of the East",
+        "subtitleFallback": "indie folk · 3-week loop"
+      },
+      "learning": {
+        "label": "learning",
+        "titleFallback": "OpenTelemetry + Loki",
+        "subtitleFallback": "swapping basic logging for traces"
+      },
+      "published": {
+        "label": "last published",
+        "titleFallback": "Why I stopped mocking Postgres in tests",
+        "excerptFallback": "We were running 600 tests on SQLite for speed — until the first serious migration blew up in production.",
+        "metaFallback": "8 min · 3 days ago"
+      },
+      "where": {
+        "label": "where",
+        "titleFallback": "Belém / PA · Brazil",
+        "subtitleFallback": "UTC-3 · working from home"
+      }
+    },
+    "about": {
+      "label": "about",
+      "fallback1": "I've been a developer for 3+ years, focused on Django REST and PostgreSQL. Most of my time is on the backend — APIs, integrations, async queues — and I have plenty of mileage on Vue.js too.",
+      "fallback2": "I've worked on AI-driven CRMs, internal systems at a solar energy company, and today I'm running a receivables advance platform for medical professionals. I like code you can read aloud and migrations that don't scare anyone."
+    },
+    "stack": {
+      "label": "stack",
+      "title": "Tools, by layer.",
+      "tagline": "no stars · just years",
+      "backend": {
+        "label": "backend",
+        "title": "APIs & data"
+      },
+      "frontend": {
+        "label": "frontend",
+        "title": "Interface"
+      },
+      "infra": {
+        "label": "infra · ops",
+        "title": "Plumbing"
+      }
+    }
   },
   "hero": {
     "availableForProjects": "Available for new projects",

@@ -2,60 +2,54 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { ContentBlock } from '~/types/content';
-import SkillList from '~/components/skills/SkillList.vue';
+import HeroBento from '~/components/home/HeroBento.vue';
+import NowPanel from '~/components/home/NowPanel.vue';
+import AboutSection from '~/components/home/AboutSection.vue';
+import StackSection from '~/components/home/StackSection.vue';
+// Sections still rendered with Vuetify until PR 4 migrates them.
 import ProjectList from '~/components/projects/ProjectList.vue';
 import ExperienceList from '~/components/experiences/ExperienceList.vue';
 import EducationList from '~/components/educations/EducationList.vue';
-import RecentPosts from '~/components/blog/RecentPosts.vue';
 import ContactForm from '~/components/contact-messages/ContactForm.vue';
 import TestimonialsList from '~/components/testimonials/TestimonialsList.vue';
-import { useContentBlockImages } from '~/composables/useContentBlockImages';
-import ContentBlockImage from '~/components/content-blocks/ContentBlockImage.vue';
-
 
 const localePath = useLocalePath();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const config = useRuntimeConfig();
 
 if (import.meta.client) {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-// Fetch all paginated content blocks
+// Fetch all paginated content blocks for the home page (with images expanded).
 const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
   'home-content-blocks',
   '/api/content-blocks/',
-  { page_name: 'home', expand: 'images' }
+  { page_name: 'home', expand: 'images' },
 );
 
-const getContentBlock = (key: string) => {
-  return contentBlocks.value?.results?.find(block => block.key === key);
-};
+const blocks = computed(() => contentBlocks.value?.results ?? []);
+const getContentBlock = (key: string) => blocks.value.find((b) => b.key === key);
 
-// Image helpers
-const { hasImages, getImageUrl } = useContentBlockImages();
-
-// Hero background URL
-const heroBackgroundUrl = computed(() => 
-  getImageUrl(getContentBlock('hero_background'), 'cover')
-);
-
-// SEO Configuration
-const { locale } = useI18n();
+// SEO
 const { setSeoMeta, setStructuredData } = useSeo();
-
 setSeoMeta({
   title: getContentBlock('seo_title')?.text || t('home.seo_title'),
-  description: getContentBlock('seo_description')?.text || t('home.seo_description'),
-  image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-default.jpg`,
+  description:
+    getContentBlock('seo_description')?.text || t('home.seo_description'),
+  image:
+    getContentBlock('seo_image')?.text ||
+    `${config.public.siteUrl}/og-default.jpg`,
   type: 'website',
   keywords: [
     'Leonardo Costa',
+    'Backend Engineer',
     'Full Stack Developer',
     'Portfolio',
     'Vue',
     'Nuxt',
     'Django',
+    'PostgreSQL',
     'Python',
     'TypeScript',
   ],
@@ -69,11 +63,14 @@ setStructuredData([
     '@type': 'Person',
     '@id': `${config.public.siteUrl}#person`,
     name: getContentBlock('hero_name')?.text || 'Leonardo Costa',
-    jobTitle: getContentBlock('hero_subtitle')?.text || 'Full Stack Developer',
+    jobTitle:
+      getContentBlock('hero_subtitle')?.text || 'Backend Engineer',
     description:
       getContentBlock('seo_description')?.text || t('home.seo_description'),
     url: config.public.siteUrl,
-    image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-default.jpg`,
+    image:
+      getContentBlock('seo_image')?.text ||
+      `${config.public.siteUrl}/og-default.jpg`,
     sameAs: [
       getContentBlock('contact_linkedin')?.text || '',
       getContentBlock('contact_github')?.text || '',
@@ -117,273 +114,125 @@ setStructuredData([
   },
 ]);
 
+// GSAP scroll-trigger fade-ups. The new home components mark fade-up
+// elements with class="fade-up"; the same class is used by the legacy
+// Vuetify sections below — single onMounted handles both.
 onMounted(() => {
-  gsap.from('.hero-title', {
-    y: 30,
-    opacity: 0,
-    duration: 0.8,
-    ease: 'power2.out'
-  });
-
-  gsap.from('.hero-subtitle', {
-    y: 20,
-    opacity: 0,
-    duration: 0.8,
-    delay: 0.2,
-    ease: 'power2.out'
-  });
-
-  gsap.from('.hero-cta', {
-    y: 20,
-    opacity: 0,
-    duration: 0.8,
-    delay: 0.4,
-    ease: 'power2.out'
-  });
-
-  gsap.utils.toArray('.fade-up').forEach((element: any) => {
+  gsap.utils.toArray<HTMLElement>('.fade-up').forEach((element) => {
     gsap.from(element, {
       y: 40,
       opacity: 0,
-      duration: 0.8,
+      duration: 0.7,
+      ease: 'power2.out',
       scrollTrigger: {
         trigger: element,
         start: 'top 90%',
-        once: true
-      }
+        once: true,
+      },
     });
   });
 });
-
-const scrollToSection = (sectionId: string) => {
-  const element = document.getElementById(sectionId);
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth' });
-  }
-};
 </script>
 
 <template>
-  <div class="portfolio-home">
-    <!-- Hero Section -->
-    <div 
-      class="hero-section" 
-      :class="{ 'hero-with-bg': heroBackgroundUrl }"
-      :style="heroBackgroundUrl ? {
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.75)), url(${heroBackgroundUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      } : {}"
-    >
-      <div class="hero-overlay"></div>
-      <v-container>
-        <v-row align="center" justify="center" class="min-h-screen">
-          <v-col cols="12" md="10" lg="8" class="text-center">
-            <div class="hero-badge mb-6 fade-up">
-              <span class="hero-badge-text">{{ getContentBlock('hero_badge')?.text || 'Disponível para novos projetos' }}</span>
-            </div>
+  <div>
+    <!-- New Tailwind sections (PR 3) -->
+    <HeroBento :content-blocks="blocks" />
+    <NowPanel :content-blocks="blocks" />
+    <AboutSection :content-blocks="blocks" />
+    <StackSection :content-blocks="blocks" />
 
-            <h1 class="hero-title mb-6">
-              {{ getContentBlock('hero_greeting')?.text || 'Olá, eu sou' }}
-              <span class="hero-name">{{ getContentBlock('hero_name')?.text || 'Leonardo' }}</span>
-            </h1>
+    <!-- Legacy Vuetify sections — kept until PR 4 migrates them. -->
 
-            <p class="hero-subtitle mb-12">
-              {{ getContentBlock('hero_subtitle')?.text || 'Full Stack Developer & Creative Problem Solver' }}
-            </p>
-
-            <div class="hero-cta d-flex justify-center flex-wrap">
-              <v-btn size="large" flat color="primary" class="text-none px-8 hero-btn ma-2"
-                @click="scrollToSection('projects')">
-                {{ getContentBlock('hero_cta_projects')?.text || 'Ver Projetos' }}
-              </v-btn>
-              <v-btn size="large" variant="outlined" 
-                :color="heroBackgroundUrl ? 'white' : 'grey-darken-2'" 
-                class="text-none px-8 hero-btn-outline ma-2"
-                @click="scrollToSection('contact')">
-                {{ getContentBlock('hero_cta_contact')?.text || 'Entrar em Contato' }}
-              </v-btn>
-            </div>
-          </v-col>
-        </v-row>
-      </v-container>
-    </div>
-
-    <!-- About Section -->
-    <v-container v-if="getContentBlock('about_intro')" class="section-container">
-      <v-row justify="center" align="center">
-        <!-- Profile Image -->
-        <v-col 
-          v-if="hasImages(getContentBlock('about_intro'))" 
-          cols="12" 
-          md="5" 
-          class="fade-up"
-          order="2"
-          order-md="1"
-        >
-          <ContentBlockImage 
-            :content-block="getContentBlock('about_intro')!" 
-            image-type="cover"
-            aspect-ratio="4/5"
-            sizes="(max-width: 960px) 100vw, 500px"
-            class="about-image"
-          />
-        </v-col>
-
-        <!-- About Text -->
-        <v-col 
-          cols="12" 
-          :md="hasImages(getContentBlock('about_intro')) ? 7 : 8"
-          order="1"
-          order-md="2"
-        >
-          <div 
-            class="section-header fade-up mb-8" 
-            :class="{ 
-              'text-center text-md-left': hasImages(getContentBlock('about_intro')),
-              'text-center': !hasImages(getContentBlock('about_intro'))
-            }"
-          >
-            <h2 class="section-title">
-              {{ getContentBlock('about_title')?.text || 'Sobre Mim' }}
-            </h2>
-          </div>
-
-          <div 
-            class="about-content fade-up"
-            :class="{
-              'text-center text-md-left': hasImages(getContentBlock('about_intro')),
-              'mx-auto text-center': !hasImages(getContentBlock('about_intro'))
-            }"
-          >
-            <div v-if="getContentBlock('about_intro')?.kind === 'html'" v-html="getContentBlock('about_intro')?.text" />
-            <p v-else class="about-text">
-              {{ getContentBlock('about_intro')?.text }}
-            </p>
-          </div>
-          
-          <div 
-            class="mt-6 fade-up" 
-            :class="{
-              'text-center text-md-left': hasImages(getContentBlock('about_intro')),
-              'text-center': !hasImages(getContentBlock('about_intro'))
-            }"
-          >
-            <v-btn size="large" variant="outlined" color="grey-darken-2" class="text-none" :to="localePath('/about')">
-              {{ getContentBlock('about_cta')?.text || t('about.title') }}
-              <v-icon end size="20">mdi-arrow-right</v-icon>
-            </v-btn>
-          </div>
-        </v-col>
-      </v-row>
-    </v-container>
-
-    <v-container class="section-container" id="recent-posts">
-      <v-row justify="center">
-        <v-col cols="12" md="8">
-          <div class="section-header fade-up mb-12">
-            <h2 class="section-title">
-              {{ getContentBlock('recent_posts_title')?.text || 'Posts Recentes' }}
-            </h2>
-            <p class="section-subtitle">
-              {{ getContentBlock('recent_posts_subtitle')?.text || 'Últimas novidades do meu blog' }}
-            </p>
-          </div>
-          <RecentPosts />
-        </v-col>
-      </v-row>
-    </v-container>
-
-    <!-- Skills Section -->
-    <v-container class="section-container" id="skills">
-      <v-row>
-        <v-col cols="12">
-          <div class="section-header fade-up mb-16">
-            <h2 class="section-title">
-              {{ getContentBlock('skills_title')?.text || 'Habilidades' }}
-            </h2>
-            <p class="section-subtitle">
-              {{ getContentBlock('skills_subtitle')?.text || 'Tecnologias que domino' }}
-            </p>
-          </div>
-        </v-col>
-      </v-row>
-
-      <SkillList />
-    </v-container>
-
-    <!-- Projects Section -->
+    <!-- Projects -->
     <v-container class="section-container" id="projects">
       <v-row>
         <v-col cols="12">
           <div class="section-header fade-up mb-16">
             <h2 class="section-title">
-              {{ getContentBlock('projects_title')?.text || 'Projetos em Destaque' }}
+              {{ getContentBlock('projects_title')?.text || $t('projects.title') }}
             </h2>
             <p class="section-subtitle">
-              {{ getContentBlock('projects_subtitle')?.text || 'Alguns dos meus trabalhos recentes' }}
+              {{
+                getContentBlock('projects_subtitle')?.text ||
+                $t('projects.subtitle') ||
+                'Some of my recent work'
+              }}
             </p>
           </div>
         </v-col>
       </v-row>
-
-      <ProjectList :featuredOnly="true" />
-
+      <ProjectList :featured-only="true" />
       <v-row class="mt-8">
         <v-col cols="12" class="text-center fade-up">
-          <v-btn size="large" variant="text" color="grey-darken-2" class="text-none" :to="localePath('/projects')">
-            {{ getContentBlock('projects_cta')?.text || 'Ver Todos os Projetos' }}
+          <v-btn
+            size="large"
+            variant="text"
+            color="grey-darken-2"
+            class="text-none"
+            :to="localePath('/projects')"
+          >
+            {{
+              getContentBlock('projects_cta')?.text || $t('common.viewAll')
+            }}
             <v-icon end size="20">mdi-arrow-right</v-icon>
           </v-btn>
         </v-col>
       </v-row>
     </v-container>
 
-    <!-- Experience Section -->
+    <!-- Experience -->
     <v-container class="section-container" id="experience">
       <v-row>
         <v-col cols="12">
           <div class="section-header fade-up mb-16">
             <h2 class="section-title">
-              {{ getContentBlock('experience_title')?.text || 'Experiência' }}
+              {{ getContentBlock('experience_title')?.text || $t('experience.title') }}
             </h2>
             <p class="section-subtitle">
-              {{ getContentBlock('experience_subtitle')?.text || 'Minha trajetória profissional' }}
+              {{
+                getContentBlock('experience_subtitle')?.text ||
+                $t('experience.subtitle') ||
+                ''
+              }}
             </p>
           </div>
         </v-col>
       </v-row>
-
       <ExperienceList />
     </v-container>
 
-    <!-- Education Section -->
+    <!-- Education -->
     <v-container class="section-container" id="education">
       <v-row>
         <v-col cols="12">
           <div class="section-header fade-up mb-16">
             <h2 class="section-title">
-              {{ getContentBlock('education_title')?.text || 'Educação' }}
+              {{ getContentBlock('education_title')?.text || $t('education.title') }}
             </h2>
             <p class="section-subtitle">
-              {{ getContentBlock('education_subtitle')?.text || 'Minha formação acadêmica' }}
+              {{ getContentBlock('education_subtitle')?.text || '' }}
             </p>
           </div>
         </v-col>
       </v-row>
-
       <EducationList />
     </v-container>
 
+    <!-- Testimonials -->
     <v-container class="section-container" id="testimonials">
       <v-row justify="center">
         <v-col cols="12" md="8">
           <div class="section-header fade-up mb-12">
             <h2 class="section-title">
-              {{ getContentBlock('testimonials_title')?.text || 'Depoimentos' }}
+              {{ getContentBlock('testimonials_title')?.text || $t('testimonials.title') }}
             </h2>
             <p class="section-subtitle">
-              {{ getContentBlock('testimonials_subtitle')?.text || 'O que meus clientes dizem' }}
+              {{
+                getContentBlock('testimonials_subtitle')?.text ||
+                $t('testimonials.subtitle') ||
+                ''
+              }}
             </p>
           </div>
           <TestimonialsList />
@@ -391,38 +240,50 @@ const scrollToSection = (sectionId: string) => {
       </v-row>
     </v-container>
 
-    <!-- Contact Section -->
+    <!-- Contact -->
     <v-container class="section-container" id="contact">
       <v-row justify="center">
         <v-col cols="12" md="10" lg="8">
           <div class="contact-wrapper fade-up">
             <div class="contact-header text-center mb-12">
               <h2 class="contact-title">
-                {{ getContentBlock('contact_title')?.text || 'Vamos Conversar?' }}
+                {{ getContentBlock('contact_title')?.text || $t('contact.title') }}
               </h2>
               <p class="contact-subtitle">
-                {{ getContentBlock('contact_subtitle')?.text || 'Estou sempre aberto a novos projetos e oportunidades'
+                {{
+                  getContentBlock('contact_subtitle')?.text || $t('contact.subtitle')
                 }}
               </p>
             </div>
-
-            <!-- Contact Form -->
             <ContactForm />
-
-            <!-- Social Links -->
             <div class="contact-social mt-12">
-              <p class="contact-social-text text-center">{{ t('contact.connectSocial') }}</p>
+              <p class="contact-social-text text-center">
+                {{ $t('contact.connectSocial') }}
+              </p>
               <div class="contact-links">
-                <a :href="getContentBlock('contact_linkedin')?.text || 'https://linkedin.com'" target="_blank"
-                  class="contact-link" title="LinkedIn">
+                <a
+                  :href="getContentBlock('contact_linkedin')?.text || 'https://linkedin.com'"
+                  target="_blank"
+                  class="contact-link"
+                  title="LinkedIn"
+                >
                   <v-icon size="24">mdi-linkedin</v-icon>
                 </a>
-                <a :href="getContentBlock('contact_github')?.text || 'https://github.com'" target="_blank"
-                  class="contact-link" title="GitHub">
+                <a
+                  :href="getContentBlock('contact_github')?.text || 'https://github.com'"
+                  target="_blank"
+                  class="contact-link"
+                  title="GitHub"
+                >
                   <v-icon size="24">mdi-github</v-icon>
                 </a>
-                <a :href="`mailto:${getContentBlock('contact_email')?.text || 'email@example.com'}`"
-                  class="contact-link" title="E-mail">
+                <a
+                  :href="`mailto:${
+                    getContentBlock('contact_email')?.text || 'email@example.com'
+                  }`"
+                  class="contact-link"
+                  title="E-mail"
+                >
                   <v-icon size="24">mdi-email</v-icon>
                 </a>
               </div>
@@ -435,16 +296,15 @@ const scrollToSection = (sectionId: string) => {
 </template>
 
 <style scoped>
-.portfolio-home {
-  background: #fafafa;
-  min-height: 100vh;
-}
-
-/* Typography Base */
+/*
+ * Legacy Vuetify section styles — kept untouched until PR 4. The new
+ * Tailwind sections (Hero, Now, About, Stack) carry their own styling
+ * via tokens, no scoped styles needed.
+ */
 .section-title {
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--color-ink);
   letter-spacing: -0.02em;
   line-height: 1.2;
   margin: 0;
@@ -452,7 +312,7 @@ const scrollToSection = (sectionId: string) => {
 
 .section-subtitle {
   font-size: 1.125rem;
-  color: #6b7280;
+  color: var(--color-ink-3);
   margin-top: 1rem;
   font-weight: 400;
 }
@@ -462,219 +322,56 @@ const scrollToSection = (sectionId: string) => {
 }
 
 .section-container {
-  padding: 120px 24px;
+  padding: 96px 24px;
   max-width: 1200px;
 }
 
-/* Hero Section */
-.hero-section {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
-  transition: all 0.3s ease;
-  position: relative;
-  width: 100%;
-  padding: 0;
+@media (max-width: 960px) {
+  .section-container {
+    padding: 64px 24px;
+  }
 }
 
-.hero-section.hero-with-bg {
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-}
-
-.hero-overlay {
-  backdrop-filter: blur(4px);
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-}
-
-.hero-with-bg .hero-title,
-.hero-with-bg .hero-name,
-.hero-with-bg .hero-subtitle,
-.hero-with-bg .hero-badge-text {
-  color: white;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
-}
-
-.hero-with-bg .hero-badge {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(100px);
-}
-
-.hero-with-bg .hero-btn-outline {
-  border-color: white;
-  color: white;
-}
-
-.hero-with-bg .hero-btn-outline:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: white;
-}
-
-.hero-badge {
-  display: inline-block;
-  padding: 8px 20px;
-  background: #f3f4f6;
-  border-radius: 100px;
-  margin-bottom: 32px;
-}
-
-.hero-badge-text {
-  font-size: 0.875rem;
-  color: #4b5563;
-  font-weight: 500;
-}
-
-.hero-title {
-  font-size: clamp(2.5rem, 6vw, 4.5rem);
-  font-weight: 800;
-  color: #1a1a1a;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  margin: 0;
-}
-
-.hero-name {
-  color: #2563eb;
-  display: block;
-  margin-top: 0.25em;
-}
-
-.hero-subtitle {
-  font-size: clamp(1.125rem, 2vw, 1.5rem);
-  color: #6b7280;
-  font-weight: 400;
-  line-height: 1.6;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.hero-btn {
-  border-radius: 8px;
-  font-weight: 600;
-  letter-spacing: 0;
-  text-transform: none;
-  height: 48px;
-}
-
-.hero-btn-outline {
-  border-radius: 8px;
-  font-weight: 600;
-  letter-spacing: 0;
-  text-transform: none;
-  height: 48px;
-  border: 2px solid #e5e7eb;
-}
-
-.hero-btn-outline:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
-}
-
-/* About Section */
-.about-content {
-  max-width: 700px;
-}
-
-.about-text {
-  font-size: 1.125rem;
-  line-height: 1.8;
-  color: #4b5563;
-}
-
-.about-image {
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
-}
-
-.about-image:hover {
-  transform: translateY(-8px);
-}
-
-.about-image :deep(.content-block-image) {
-  border-radius: 20px;
-}
-
-/* Contact Section */
 .contact-wrapper {
-  padding: 80px 0;
+  width: 100%;
 }
-
 .contact-title {
   font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: 800;
-  color: #1a1a1a;
-  margin-bottom: 16px;
+  font-weight: 700;
+  color: var(--color-ink);
   letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 1rem;
 }
-
 .contact-subtitle {
   font-size: 1.125rem;
-  color: #6b7280;
-  margin-bottom: 48px;
-  line-height: 1.6;
+  color: var(--color-ink-3);
+  font-weight: 400;
 }
-
+.contact-social-text {
+  font-size: 0.95rem;
+  color: var(--color-ink-3);
+  margin-bottom: 1.5rem;
+}
 .contact-links {
   display: flex;
   justify-content: center;
-  gap: 16px;
+  gap: 1rem;
 }
-
 .contact-link {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  background: white;
+  width: 48px;
+  height: 48px;
   border-radius: 12px;
-  color: #6b7280;
-  transition: all 0.3s ease;
-  border: 1px solid #f3f4f6;
-  text-decoration: none;
+  background: var(--color-card);
+  color: var(--color-ink);
+  border: 1px solid var(--color-line);
+  transition: all 0.2s ease;
 }
-
 .contact-link:hover {
-  background: #2563eb;
-  color: white;
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
-  border-color: #2563eb;
-}
-
-/* Responsive */
-@media (max-width: 960px) {
-  .section-container {
-    padding: 80px 24px;
-  }
-
-  .hero-section {
-    padding: 60px 24px;
-  }
-}
-
-@media (max-width: 600px) {
-  .section-container {
-    padding: 60px 20px;
-  }
-
-  .contact-wrapper {
-    padding: 60px 0;
-  }
-}
-
-/* Utilities */
-.min-h-screen {
-  min-height: 100vh;
+  color: var(--color-accent);
+  border-color: var(--color-accent);
 }
 </style>

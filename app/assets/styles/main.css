@@ -9,6 +9,14 @@
 /* Tell Tailwind to opt into class-based dark mode (matches color-mode classSuffix: ""). */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Explicit @source paths — Tailwind v4 auto-scans from the CSS file's
+ * project root, but pinning the Vue/TS sources avoids surprises with HMR
+ * and edge-case extensions (e.g. inside nested folders like home/).
+ */
+@source "../../../app/**/*.{vue,ts,js}";
+@source "../../../server/**/*.{vue,ts,js}";
+
 /* ---------------------------------------------------------------------------
  * @theme — exposes design tokens as Tailwind utility classes.
  * Examples it generates: bg-paper, bg-card, text-ink, text-ink-2, border-line,
