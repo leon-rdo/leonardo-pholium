@@ -6,6 +6,14 @@
 @import "./tokens.css";
 @import "tailwindcss";
 
+/*
+ * Tailwind v4 plugins must be enabled via @plugin in CSS — there's no
+ * tailwind.config.ts plugins[] anymore. Typography is used by the
+ * markdown body in /blog/[slug].vue (prose / prose-stone / prose-invert
+ * + the prose-* customisers).
+ */
+@plugin "@tailwindcss/typography";
+
 /* Tell Tailwind to opt into class-based dark mode (matches color-mode classSuffix: ""). */
 @custom-variant dark (&:where(.dark, .dark *));
 

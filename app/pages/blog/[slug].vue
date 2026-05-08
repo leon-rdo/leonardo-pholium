@@ -378,27 +378,33 @@ const copyLink = async () => {
       </div>
     </section>
 
-    <!-- Body (markdown rendered server-side) -->
-    <article class="px-6">
-      <div
-        class="max-w-[760px] mx-auto fade-up
-               prose prose-stone dark:prose-invert max-w-none
-               text-[17px] leading-[1.78]
-               prose-headings:font-bold prose-headings:tracking-[-0.02em]
-               prose-headings:text-ink prose-headings:scroll-mt-20
-               prose-h2:text-[28px] prose-h2:mt-12 prose-h2:mb-4
-               prose-h3:text-[22px] prose-h3:mt-10 prose-h3:mb-3
-               prose-p:text-ink-2 prose-p:my-5
-               prose-strong:text-ink prose-strong:font-semibold
-               prose-a:text-accent prose-a:no-underline hover:prose-a:text-accent-2 prose-a:underline-offset-4 hover:prose-a:underline
-               prose-blockquote:border-l-2 prose-blockquote:border-accent prose-blockquote:bg-card-soft/40 prose-blockquote:rounded-r-card prose-blockquote:py-3 prose-blockquote:px-5
-               prose-blockquote:italic prose-blockquote:text-ink-2 prose-blockquote:not-italic
-               prose-code:font-mono prose-code:text-[14px] prose-code:bg-card-soft prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden
-               prose-pre:bg-night prose-pre:text-night-text prose-pre:rounded-card
-               prose-img:rounded-card prose-img:ring-1 prose-img:ring-line
-               prose-hr:border-line"
-        v-html="post.body"
-      />
+    <!-- Body (markdown rendered server-side).
+         Outer wrapper handles width + horizontal padding; inner div
+         carries the prose styling. Splitting them avoids the conflict
+         where `max-w-none` (needed inside prose to override Tailwind
+         Typography's default ~65ch width) would also defeat the
+         article's own max-w. -->
+    <article class="px-6 fade-up">
+      <div class="max-w-[760px] mx-auto">
+        <div
+          class="prose prose-stone dark:prose-invert max-w-none
+                 text-[17px] leading-[1.78]
+                 prose-headings:font-bold prose-headings:tracking-[-0.02em]
+                 prose-headings:text-ink prose-headings:scroll-mt-20
+                 prose-h2:text-[28px] prose-h2:mt-12 prose-h2:mb-4
+                 prose-h3:text-[22px] prose-h3:mt-10 prose-h3:mb-3
+                 prose-p:text-ink-2 prose-p:my-5
+                 prose-strong:text-ink prose-strong:font-semibold
+                 prose-a:text-accent prose-a:no-underline hover:prose-a:text-accent-2 prose-a:underline-offset-4 hover:prose-a:underline
+                 prose-blockquote:border-l-2 prose-blockquote:border-accent prose-blockquote:bg-card-soft/40 prose-blockquote:rounded-r-card prose-blockquote:py-3 prose-blockquote:px-5
+                 prose-blockquote:text-ink-2
+                 prose-code:font-mono prose-code:text-[14px] prose-code:bg-card-soft prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden
+                 prose-pre:bg-night prose-pre:text-night-text prose-pre:rounded-card
+                 prose-img:rounded-card prose-img:ring-1 prose-img:ring-line
+                 prose-hr:border-line"
+          v-html="post.body"
+        />
+      </div>
     </article>
 
     <!-- Image gallery -->
