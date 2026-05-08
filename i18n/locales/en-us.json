@@ -164,7 +164,13 @@
     "values": "Values",
     "whatIDo": "What I Do",
     "cta": "Let's work together?",
-    "ctaButton": "Get in Touch"
+    "ctaButton": "Get in Touch",
+    "label": "about",
+    "factsLabel": "quick facts",
+    "journeyLabel": "journey",
+    "valuesLabel": "values",
+    "workLabel": "what I do",
+    "email": "Send email"
   },
   "blog": {
     "title": "Blog",

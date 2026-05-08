@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import type { DjangoListResponse } from '~/types/api';
+import { ArrowRight, Github, Linkedin, Mail, MapPin } from 'lucide-vue-next';
 import type { ContentBlock } from '~/types/content';
 import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
+import EducationList from '~/components/educations/EducationList.vue';
+import type { BreadcrumbItem } from '~/composables/useBreadcrumbs';
 
-if (import.meta.client) {
-  gsap.registerPlugin(ScrollTrigger);
-}
+if (import.meta.client) gsap.registerPlugin(ScrollTrigger);
 
 const localePath = useLocalePath();
 const { locale, t } = useI18n();
@@ -16,33 +16,42 @@ const config = useRuntimeConfig();
 const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
   'about-content-blocks',
   '/api/content-blocks/',
-  { page_name: 'about' }
+  { page_name: 'about' },
 );
 
-const allContentBlocks = computed<DjangoListResponse<ContentBlock> | null>(() => {
-  return contentBlocks.value || null;
-});
+const blocks = computed(() => contentBlocks.value?.results ?? []);
+const getContentBlock = (key: string) => blocks.value.find((b) => b.key === key);
 
-const getContentBlock = (key: string) => {
-  return allContentBlocks.value?.results?.find(block => block.key === key);
-};
+// Pull contact handles from the home ContentBlocks (same backend) so the
+// quick-facts panel doesn't need its own keys.
+const { data: homeBlocks } = await useApiPaginated<ContentBlock>(
+  'about-home-blocks',
+  '/api/content-blocks/',
+  { page_name: 'home' },
+);
+const homeBlockText = (key: string) =>
+  homeBlocks.value?.results?.find((b) => b.key === key)?.text;
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
   { title: t('nav.home'), to: '/' },
-  { title: t('nav.about'), to: '/about', disabled: true },
+  { title: t('nav.about'), disabled: true },
 ]);
 
-// SEO Configuration
+// SEO
 const { setSeoMeta, setStructuredData } = useSeo();
-
 setSeoMeta({
   title: getContentBlock('seo_title')?.text || t('about.title'),
-  description: getContentBlock('seo_description')?.text || t('about.description'),
-  image: getContentBlock('seo_image')?.text || `${config.public.siteUrl}/og-default.jpg`,
+  description:
+    getContentBlock('seo_description')?.text || t('about.description'),
+  image:
+    getContentBlock('seo_image')?.text ||
+    `${config.public.siteUrl}/og-default.jpg`,
   type: 'profile',
 });
 
-const aboutUrl = computed(() => `${config.public.siteUrl}/${locale.value}/about`);
+const aboutUrl = computed(
+  () => `${config.public.siteUrl}/${locale.value}/about`,
+);
 
 setStructuredData([
   {
@@ -63,322 +72,214 @@ setStructuredData([
   },
 ]);
 
+// Each section is rendered only when its title block exists in the backend.
+// The rail label on the side carries the same numbering the home uses.
+interface AboutSection {
+  index: string;
+  key: string;
+  i18nFallback: string;
+  textKey: string;
+  labelKey: string;
+}
+const sections: AboutSection[] = [
+  { index: '01', key: 'intro', i18nFallback: 'about.title', textKey: 'intro', labelKey: 'about.label' },
+  { index: '02', key: 'journey_title', i18nFallback: 'about.myJourney', textKey: 'journey_text', labelKey: 'about.journeyLabel' },
+  { index: '03', key: 'values_title', i18nFallback: 'about.values', textKey: 'values_text', labelKey: 'about.valuesLabel' },
+  { index: '04', key: 'what_i_do_title', i18nFallback: 'about.whatIDo', textKey: 'what_i_do_text', labelKey: 'about.workLabel' },
+];
+
+const visibleSections = computed(() =>
+  sections.filter((s) => getContentBlock(s.key) || s.key === 'intro'),
+);
+
+const sectionTitle = (s: AboutSection) =>
+  getContentBlock(s.key)?.text || t(s.i18nFallback);
+const sectionText = (s: AboutSection) => getContentBlock(s.textKey);
+
+// Quick facts panel (right rail of hero)
+const linkedinUrl = computed(
+  () => homeBlockText('contact_linkedin') || 'https://linkedin.com',
+);
+const githubUrl = computed(
+  () => homeBlockText('contact_github') || 'https://github.com',
+);
+const emailAddress = computed(
+  () => homeBlockText('contact_email') || 'leonardo@leonardocosta.dev',
+);
+
 onMounted(() => {
-  gsap.from('.hero-title', {
-    y: 30,
-    opacity: 0,
-    duration: 0.8,
-    ease: 'power2.out'
-  });
-
-  gsap.from('.hero-line', {
-    scaleX: 0,
-    duration: 1,
-    delay: 0.3,
-    ease: 'power2.out'
-  });
-
-  gsap.utils.toArray('.fade-up').forEach((element: any) => {
+  gsap.utils.toArray<HTMLElement>('.fade-up').forEach((element) => {
     gsap.from(element, {
-      y: 40,
+      y: 36,
       opacity: 0,
-      duration: 0.8,
-      scrollTrigger: {
-        trigger: element,
-        start: 'top 90%',
-        once: true
-      }
+      duration: 0.7,
+      ease: 'power2.out',
+      scrollTrigger: { trigger: element, start: 'top 92%', once: true },
     });
   });
 });
 </script>
 
 <template>
-  <div class="about-page">
-    <!-- Hero Section -->
-    <v-container class="hero-section">
-      <v-row justify="center">
-        <v-col cols="12" md="8" lg="6">
-          <Breadcrumbs :items="breadcrumbItems" class="mb-4" />
-          <div class="hero-content">
-            <h1 class="hero-title">
-              {{ getContentBlock('hero_title')?.text || t('about.title') }}
-            </h1>
-            <div class="hero-line"></div>
-          </div>
-        </v-col>
-      </v-row>
-    </v-container>
+  <div>
+    <!-- Hero -->
+    <section class="relative">
+      <AuroraBg :intensity="0.4" />
+      <div class="relative max-w-[1280px] mx-auto px-6 pt-12 pb-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-8">
+          <Breadcrumbs :items="breadcrumbItems" class="mb-6" />
+          <SectionLabel index="00" :name="$t('about.label')" />
+          <h1 class="h-display text-[48px] sm:text-[72px] lg:text-[88px] font-bold mt-3 leading-[1.0]">
+            {{ getContentBlock('hero_title')?.text || $t('about.title') }}
+          </h1>
+          <p
+            v-if="getContentBlock('hero_subtitle')"
+            class="mt-6 text-[17px] sm:text-[18px] text-ink-2 leading-[1.65] max-w-[640px]"
+          >
+            {{ getContentBlock('hero_subtitle')?.text }}
+          </p>
+        </div>
 
-    <!-- Main Content Section -->
-    <v-container class="content-section">
-      <v-row justify="center">
-        <v-col cols="12">
-          <!-- Introduction -->
-          <div v-if="getContentBlock('intro')" class="content-block fade-up">
-            <div v-if="getContentBlock('intro')?.kind === 'html'" v-html="getContentBlock('intro')?.text"
-              class="content-text" />
-            <p v-else class="content-text">
-              {{ getContentBlock('intro')?.text }}
-            </p>
+        <!-- Quick facts panel -->
+        <Tile class="lg:col-span-4 px-5 py-5 self-end fade-up">
+          <SectionLabel :name="$t('about.factsLabel')" tone="accent" />
+          <dl class="mt-4 space-y-3 font-mono text-[12.5px]">
+            <div class="flex items-start justify-between gap-3">
+              <dt class="text-ink-3">where</dt>
+              <dd class="text-ink inline-flex items-center gap-1.5">
+                <MapPin :size="13" :stroke-width="1.8" />
+                {{ $t('home.contact.timezone') }}
+              </dd>
+            </div>
+            <div class="flex items-start justify-between gap-3">
+              <dt class="text-ink-3">languages</dt>
+              <dd class="text-ink">PT-BR · EN-US</dd>
+            </div>
+            <div class="flex items-start justify-between gap-3">
+              <dt class="text-ink-3">open for</dt>
+              <dd class="text-accent">{{ $t('home.contact.openFor') }}</dd>
+            </div>
+          </dl>
+          <div class="mt-5 pt-4 border-t border-line space-y-1.5">
+            <a
+              :href="linkedinUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center justify-between gap-3 px-3 py-2 -mx-1 rounded-input hover:bg-card-soft transition-colors group/link"
+            >
+              <span class="inline-flex items-center gap-2 text-[13.5px] font-medium text-ink-2 group-hover/link:text-ink">
+                <Linkedin :size="14" :stroke-width="1.8" />
+                LinkedIn
+              </span>
+              <ArrowRight
+                :size="13"
+                :stroke-width="2"
+                class="text-ink-3 group-hover/link:text-accent group-hover/link:translate-x-0.5 transition"
+              />
+            </a>
+            <a
+              :href="githubUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center justify-between gap-3 px-3 py-2 -mx-1 rounded-input hover:bg-card-soft transition-colors group/link"
+            >
+              <span class="inline-flex items-center gap-2 text-[13.5px] font-medium text-ink-2 group-hover/link:text-ink">
+                <Github :size="14" :stroke-width="1.8" />
+                GitHub
+              </span>
+              <ArrowRight
+                :size="13"
+                :stroke-width="2"
+                class="text-ink-3 group-hover/link:text-accent group-hover/link:translate-x-0.5 transition"
+              />
+            </a>
+            <a
+              :href="`mailto:${emailAddress}`"
+              class="flex items-center justify-between gap-3 px-3 py-2 -mx-1 rounded-input hover:bg-card-soft transition-colors group/link"
+            >
+              <span class="inline-flex items-center gap-2 text-[13.5px] font-medium text-ink-2 group-hover/link:text-ink">
+                <Mail :size="14" :stroke-width="1.8" />
+                {{ $t('about.email') }}
+              </span>
+              <ArrowRight
+                :size="13"
+                :stroke-width="2"
+                class="text-ink-3 group-hover/link:text-accent group-hover/link:translate-x-0.5 transition"
+              />
+            </a>
           </div>
+        </Tile>
+      </div>
+    </section>
 
-          <!-- Journey Section -->
-          <div v-if="getContentBlock('journey_title')" class="content-block fade-up">
-            <h2 class="section-subtitle">
-              {{ getContentBlock('journey_title')?.text || t('about.myJourney') }}
+    <!-- Long-form prose: each section is a 3+9 split with section label on the rail -->
+    <section v-for="section in visibleSections" :key="section.key" class="relative">
+      <div class="max-w-[1280px] mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-12 gap-6 fade-up">
+        <div class="md:col-span-3">
+          <SectionLabel :index="section.index" :name="$t(section.labelKey)" />
+        </div>
+        <div class="md:col-span-9 max-w-[760px]">
+          <h2
+            v-if="section.key !== 'intro'"
+            class="h-display text-[28px] sm:text-[32px] font-bold mb-5"
+          >
+            {{ sectionTitle(section) }}
+          </h2>
+          <div
+            v-if="sectionText(section)?.kind === 'html'"
+            class="prose prose-stone dark:prose-invert max-w-none text-[16.5px] leading-[1.75] text-ink-2 [&_p]:mb-4 [&_strong]:text-ink [&_a]:text-accent hover:[&_a]:text-accent-2"
+            v-html="sectionText(section)?.text"
+          />
+          <p v-else-if="sectionText(section)" class="text-[16.5px] leading-[1.75] text-ink-2 whitespace-pre-line">
+            {{ sectionText(section)?.text }}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Education -->
+    <section>
+      <div class="max-w-[1280px] mx-auto px-6 py-10">
+        <header class="mb-4">
+          <SectionLabel index="05" :name="$t('home.education.label')" />
+          <h2 class="h-display text-[36px] sm:text-[40px] font-bold mt-2">
+            {{ $t('home.education.title') }}
+          </h2>
+        </header>
+        <EducationList />
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="px-6 pb-12 pt-6">
+      <div
+        class="max-w-[1280px] mx-auto rounded-tile bg-night text-night-text relative overflow-hidden fade-up"
+      >
+        <div
+          aria-hidden="true"
+          class="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full"
+          style="background: radial-gradient(closest-side, rgba(44, 103, 232, 0.4), transparent 70%)"
+        />
+        <div
+          class="relative px-8 sm:px-12 py-14 sm:py-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center"
+        >
+          <div class="md:col-span-8">
+            <SectionLabel :name="$t('home.contact.label')" />
+            <h2 class="h-display text-[32px] sm:text-[44px] font-bold mt-2">
+              {{ getContentBlock('cta_text')?.text || $t('about.cta') }}
             </h2>
-            <div v-if="getContentBlock('journey_text')?.kind === 'html'" v-html="getContentBlock('journey_text')?.text"
-              class="content-text" />
-            <p v-else-if="getContentBlock('journey_text')" class="content-text">
-              {{ getContentBlock('journey_text')?.text }}
-            </p>
           </div>
-
-          <!-- Values Section -->
-          <div v-if="getContentBlock('values_title')" class="content-block fade-up">
-            <h2 class="section-subtitle">
-              {{ getContentBlock('values_title')?.text || t('about.values') }}
-            </h2>
-            <div v-if="getContentBlock('values_text')?.kind === 'html'" v-html="getContentBlock('values_text')?.text"
-              class="content-text" />
-            <p v-else-if="getContentBlock('values_text')" class="content-text">
-              {{ getContentBlock('values_text')?.text }}
-            </p>
+          <div class="md:col-span-4 md:justify-self-end">
+            <NuxtLink
+              :to="localePath('/#contact')"
+              class="inline-flex items-center justify-center gap-2 bg-accent text-night-text font-semibold px-6 py-3.5 rounded-input hover:bg-accent-2 glow-blue transition-colors"
+            >
+              {{ getContentBlock('cta_button')?.text || $t('about.ctaButton') }}
+              <ArrowRight :size="16" :stroke-width="2" />
+            </NuxtLink>
           </div>
-
-          <!-- What I Do Section -->
-          <div v-if="getContentBlock('what_i_do_title')" class="content-block fade-up">
-            <h2 class="section-subtitle">
-              {{ getContentBlock('what_i_do_title')?.text || t('about.whatIDo') }}
-            </h2>
-            <div v-if="getContentBlock('what_i_do_text')?.kind === 'html'"
-              v-html="getContentBlock('what_i_do_text')?.text" class="content-text" />
-            <p v-else-if="getContentBlock('what_i_do_text')" class="content-text">
-              {{ getContentBlock('what_i_do_text')?.text }}
-            </p>
-          </div>
-
-          <!-- Call to Action -->
-          <div class="cta-section fade-up">
-            <div class="cta-line"></div>
-            <p class="cta-text">
-              {{ getContentBlock('cta_text')?.text || t('about.cta') }}
-            </p>
-            <v-btn size="large" color="primary" class="text-none cta-btn" :to="localePath('/#contact')">
-              {{ getContentBlock('cta_button')?.text || t('about.ctaButton') }}
-              <v-icon end>mdi-arrow-right</v-icon>
-            </v-btn>
-          </div>
-        </v-col>
-      </v-row>
-    </v-container>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
-
-<style scoped>
-.about-page {
-  background: #fafafa;
-  min-height: 100vh;
-}
-
-/* Hero Section */
-.hero-section {
-  padding: 160px 24px 100px;
-  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
-}
-
-.hero-content {
-  text-align: center;
-}
-
-.hero-title {
-  font-size: clamp(3rem, 8vw, 5rem);
-  font-weight: 800;
-  color: #1a1a1a;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  margin: 0 0 40px 0;
-}
-
-.hero-line {
-  width: 80px;
-  height: 4px;
-  background: #2563eb;
-  margin: 0 auto;
-  transform-origin: left;
-}
-
-/* Content Section */
-.content-section {
-  padding: 60px 24px 120px;
-  max-width: 800px;
-}
-
-.content-block {
-  margin-bottom: 80px;
-}
-
-.content-block:last-of-type {
-  margin-bottom: 100px;
-}
-
-.section-subtitle {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  letter-spacing: -0.02em;
-  margin-bottom: 24px;
-  position: relative;
-  padding-left: 20px;
-}
-
-.section-subtitle::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 24px;
-  background: #2563eb;
-  border-radius: 2px;
-}
-
-.content-text {
-  font-size: 1.125rem;
-  line-height: 1.8;
-  color: #1a1a1a;
-  margin: 0;
-}
-
-.content-text :deep(p) {
-  margin-bottom: 20px;
-  line-height: 1.8;
-}
-
-.content-text :deep(p:last-child) {
-  margin-bottom: 0;
-}
-
-.content-text :deep(strong) {
-  color: #1a1a1a;
-  font-weight: 600;
-}
-
-.content-text :deep(a) {
-  color: #2563eb;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.content-text :deep(a:hover) {
-  color: #1d4ed8;
-}
-
-/* Call to Action */
-.cta-section {
-  text-align: center;
-  padding: 60px 0 0;
-  margin-top: 40px;
-}
-
-.cta-line {
-  width: 60px;
-  height: 2px;
-  background: #e5e7eb;
-  margin: 0 auto 32px;
-}
-
-.cta-text {
-  font-size: 1.25rem;
-  color: #6b7280;
-  margin-bottom: 32px;
-  font-weight: 500;
-}
-
-.cta-btn {
-  border-radius: 8px;
-  font-weight: 600;
-  letter-spacing: 0;
-  text-transform: none;
-  height: 48px;
-  padding: 0 32px;
-}
-
-/* Responsive */
-@media (max-width: 960px) {
-  .hero-section {
-    padding: 120px 24px 80px;
-  }
-
-  .content-section {
-    padding: 40px 24px 80px;
-  }
-
-  .content-block {
-    margin-bottom: 60px;
-  }
-
-  .section-subtitle {
-    font-size: 1.25rem;
-  }
-
-  .content-text {
-    font-size: 1rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .hero-section {
-    padding: 100px 20px 60px;
-  }
-
-  .content-section {
-    padding: 30px 20px 60px;
-  }
-
-  .hero-line {
-    width: 60px;
-  }
-
-  .cta-section {
-    padding: 40px 0 0;
-  }
-
-  .cta-text {
-    font-size: 1.125rem;
-  }
-}
-
-/* Dark Mode Support */
-/* @media (prefers-color-scheme: dark) {
-  .about-page {
-    background: #0f172a;
-  }
-
-  .hero-section {
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-  }
-
-  .hero-title {
-    color: #f1f5f9;
-  }
-
-  .section-subtitle {
-    color: #f1f5f9;
-  }
-
-  .content-text {
-    color: #cbd5e1;
-  }
-
-  .content-text :deep(strong) {
-    color: #f1f5f9;
-  }
-
-  .cta-text {
-    color: #94a3b8;
-  }
-} */
-</style>

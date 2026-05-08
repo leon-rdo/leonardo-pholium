@@ -164,7 +164,13 @@
     "values": "Valores",
     "whatIDo": "O Que Eu Faço",
     "cta": "Vamos trabalhar juntos?",
-    "ctaButton": "Entre em Contato"
+    "ctaButton": "Entre em Contato",
+    "label": "about",
+    "factsLabel": "fatos rápidos",
+    "journeyLabel": "jornada",
+    "valuesLabel": "valores",
+    "workLabel": "o que faço",
+    "email": "Enviar e-mail"
   },
   "blog": {
     "title": "Blog",
