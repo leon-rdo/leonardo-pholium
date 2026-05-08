@@ -1,462 +1,180 @@
 <script setup lang="ts">
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { ArrowUpRight, FolderOpen } from 'lucide-vue-next';
 import type { DjangoListResponse } from '~/types/api';
 import type { Category } from '~/types/blog';
 import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
+import type { BreadcrumbItem } from '~/composables/useBreadcrumbs';
 
-if (import.meta.client) {
-    gsap.registerPlugin(ScrollTrigger);
-}
+if (import.meta.client) gsap.registerPlugin(ScrollTrigger);
 
 const localePath = useLocalePath();
 const { t, locale } = useI18n();
 const config = useRuntimeConfig();
 
-// Fetch all categories
-const { data: categories } = await useApi<DjangoListResponse<Category>>('/api/post-categories/', {
-    params: {
-        is_active: true,
-        ordering: 'order',
-        expand: 'images'
-    }
-});
+const { data: categoriesData } = await useApi<DjangoListResponse<Category>>(
+  '/api/post-categories/',
+  {
+    params: { is_active: true, ordering: 'order', expand: 'images' },
+  },
+);
+const categories = computed(() => categoriesData.value?.results ?? []);
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
-    { title: t('nav.home'), to: '/' },
-    { title: t('nav.blog'), to: '/blog' },
-    { title: t('common.categories'), disabled: true },
+  { title: t('nav.home'), to: '/' },
+  { title: t('nav.blog'), to: '/blog' },
+  { title: t('common.categories'), disabled: true },
 ]);
 
-// SEO Configuration
+// SEO
 const { setSeoMeta, setStructuredData } = useSeo();
-
 setSeoMeta({
-    title: t('blog.categories'),
-    description: t('blog.allCategories'),
-    image: `${config.public.siteUrl}/og-default.jpg`,
-    type: 'website',
+  title: t('blog.categories'),
+  description: t('blog.allCategories'),
+  image: `${config.public.siteUrl}/og-default.jpg`,
+  type: 'website',
 });
 
 const categoriesUrl = computed(
-    () => `${config.public.siteUrl}/${locale.value}/blog/category`
+  () => `${config.public.siteUrl}/${locale.value}/blog/category`,
 );
 
 watchEffect(() => {
-    const categoryList = categories.value?.results || [];
-    setStructuredData([
-        {
-            '@context': 'https://schema.org',
-            '@type': 'CollectionPage',
-            '@id': `${categoriesUrl.value}#collection`,
-            name: t('common.categories'),
-            description: t('blog.allCategories'),
-            url: categoriesUrl.value,
-            inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
-            isPartOf: {
-                '@type': 'Blog',
-                '@id': `${config.public.siteUrl}/${locale.value}/blog#blog`,
-            },
-        },
-        {
-            '@context': 'https://schema.org',
-            '@type': 'ItemList',
-            numberOfItems: categoryList.length,
-            itemListElement: categoryList.map((cat, index) => ({
-                '@type': 'ListItem',
-                position: index + 1,
-                url: `${config.public.siteUrl}/${locale.value}/blog/category/${cat.slug}`,
-                name: cat.name,
-            })),
-        },
-    ]);
+  const list = categories.value;
+  setStructuredData([
+    {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      '@id': `${categoriesUrl.value}#collection`,
+      name: t('common.categories'),
+      description: t('blog.allCategories'),
+      url: categoriesUrl.value,
+      inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
+      isPartOf: {
+        '@type': 'Blog',
+        '@id': `${config.public.siteUrl}/${locale.value}/blog#blog`,
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      numberOfItems: list.length,
+      itemListElement: list.map((cat, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        url: `${config.public.siteUrl}/${locale.value}/blog/category/${cat.slug}`,
+        name: cat.name,
+      })),
+    },
+  ]);
 });
 
-const getCategoryIcon = (name: string) => {
-    const iconMap: Record<string, string> = {
-        'tecnologia': 'mdi-code-tags',
-        'desenvolvimento': 'mdi-laptop',
-        'design': 'mdi-palette',
-        'tutorial': 'mdi-book-open-variant',
-        'dicas': 'mdi-lightbulb',
-        'notícias': 'mdi-newspaper',
-        'carreira': 'mdi-briefcase',
-        'web': 'mdi-web',
-        'mobile': 'mdi-cellphone',
-        'devops': 'mdi-server',
-        'ia': 'mdi-robot',
-        'segurança': 'mdi-shield-lock',
-    };
-
-    const lowerName = name.toLowerCase();
-    for (const [key, icon] of Object.entries(iconMap)) {
-        if (lowerName.includes(key)) {
-            return icon;
-        }
-    }
-
-    return 'mdi-folder-outline';
-};
-
 const getCategoryImage = (category: Category) => {
-    const coverImage = category.images?.find(img => img.image_type === 'cover');
-    return coverImage?.thumbnail || coverImage?.file || null;
+  const cover = category.images?.find((img) => img.image_type === 'cover');
+  return cover?.thumbnail || cover?.file || null;
 };
+
+const gradients = [
+  'from-emerald-600/40 via-emerald-700/30 to-emerald-900/40',
+  'from-amber-500/40 via-orange-600/30 to-orange-700/40',
+  'from-blue-600/40 via-indigo-700/30 to-indigo-900/40',
+  'from-rose-500/40 via-rose-700/30 to-rose-900/40',
+  'from-violet-500/40 via-purple-600/30 to-purple-800/40',
+  'from-teal-500/40 via-cyan-600/30 to-cyan-800/40',
+];
 
 onMounted(() => {
-    gsap.from('.page-title', {
-        y: 30,
-        opacity: 0,
-        duration: 0.8,
-        ease: 'power2.out'
+  gsap.utils.toArray<HTMLElement>('.fade-up').forEach((element) => {
+    gsap.from(element, {
+      y: 32,
+      opacity: 0,
+      duration: 0.6,
+      ease: 'power2.out',
+      scrollTrigger: { trigger: element, start: 'top 92%', once: true },
     });
-
-    gsap.from('.page-description', {
-        y: 20,
-        opacity: 0,
-        duration: 0.8,
-        delay: 0.2,
-        ease: 'power2.out'
-    });
-
-    gsap.utils.toArray('.fade-up').forEach((element: any) => {
-        gsap.from(element, {
-            y: 40,
-            opacity: 0,
-            duration: 0.8,
-            scrollTrigger: {
-                trigger: element,
-                start: 'top 90%',
-                once: true
-            }
-        });
-    });
+  });
 });
 </script>
 
 <template>
-    <div class="categories-page">
-        <!-- Hero Section -->
-        <v-container class="hero-section">
-            <v-row justify="center">
-                <v-col cols="12" md="10" lg="8" class="text-center">
-                    <Breadcrumbs :items="breadcrumbItems" />
+  <div>
+    <!-- Hero -->
+    <section class="relative">
+      <AuroraBg :intensity="0.4" />
+      <div class="relative max-w-[1280px] mx-auto px-6 pt-12 pb-10">
+        <Breadcrumbs :items="breadcrumbItems" class="mb-6" />
+        <SectionLabel index="01" :name="$t('blog.categoriesLabel')" />
+        <h1 class="h-display text-[40px] sm:text-[56px] lg:text-[64px] font-bold mt-3 leading-[1.04]">
+          {{ $t('blog.categories') }}
+        </h1>
+        <p class="mt-5 text-[16px] text-ink-2 leading-[1.65] max-w-[640px]">
+          {{ $t('blog.allCategoriesDescription', $t('blog.allCategories')) }}
+        </p>
+      </div>
+    </section>
 
-                    <h1 class="page-title mb-6">{{ t('common.categories') }}</h1>
+    <!-- Categories grid -->
+    <section>
+      <div class="max-w-[1280px] mx-auto px-6 pb-16">
+        <div
+          v-if="categories.length"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+        >
+          <NuxtLink
+            v-for="(category, idx) in categories"
+            :key="category.id"
+            :to="localePath(`/blog/category/${category.slug}`)"
+            class="group fade-up"
+          >
+            <Tile class="px-3 py-3 h-full flex flex-col">
+              <div
+                class="rounded-card overflow-hidden bg-gradient-to-br relative aspect-[16/10]"
+                :class="gradients[idx % gradients.length]"
+              >
+                <NuxtImg
+                  v-if="getCategoryImage(category)"
+                  :src="getCategoryImage(category)!"
+                  :alt="category.name"
+                  :width="600"
+                  :height="375"
+                  format="webp"
+                  class="absolute inset-0 w-full h-full object-cover"
+                />
+              </div>
+              <div class="px-3 sm:px-4 pt-5 pb-3 flex flex-col flex-1">
+                <div class="font-mono-rail">
+                  {{ $t('blog.category') }}
+                </div>
+                <h2
+                  class="text-[20px] font-bold mt-1.5 group-hover:text-accent transition-colors flex items-start gap-2"
+                >
+                  {{ category.name }}
+                  <ArrowUpRight
+                    :size="15"
+                    :stroke-width="2"
+                    class="text-ink-3 group-hover:text-accent group-hover:translate-x-0.5 transition mt-1.5 shrink-0"
+                  />
+                </h2>
+                <p
+                  v-if="category.description"
+                  class="mt-2 text-[14px] text-ink-2 leading-[1.65] flex-1 line-clamp-3"
+                >
+                  {{ category.description }}
+                </p>
+              </div>
+            </Tile>
+          </NuxtLink>
+        </div>
 
-                    <p class="page-description">
-                        {{ t('blog.subtitle') }}
-                    </p>
-                </v-col>
-            </v-row>
-        </v-container>
-
-        <!-- Categories Grid -->
-        <v-container class="categories-section">
-            <v-row>
-                <v-col v-for="category in categories?.results" :key="category.id" cols="12" sm="6" md="4" lg="3"
-                    class="fade-up">
-                    <NuxtLink :to="localePath(`/blog/category/${category.slug}`)" class="category-card-link">
-                        <div class="category-card">
-                            <!-- Category Image or Icon -->
-                            <div class="category-visual" style="height: 160px; display: flex; align-items: stretch;">
-                                <div v-if="getCategoryImage(category)" class="category-image-wrapper"
-                                    style="aspect-ratio: 16 / 9; width: 100%; height: 100%; overflow: hidden; display: flex; align-items: stretch;">
-                                    <NuxtImg :src="getCategoryImage(category)!" class="category-image"
-                                        style="width: 100%; height: 100%; object-fit: cover;" format="webp" />
-                                    <div class="category-overlay" style="position: absolute; inset: 0;">
-                                        <v-icon :icon="getCategoryIcon(category.name)" size="40"
-                                            class="category-icon" />
-                                    </div>
-                                </div>
-                                <div v-else class="category-icon-wrapper"
-                                    style="width: 100%; height: 100%; min-height: 0; display: flex; align-items: center; justify-content: center;">
-                                    <v-icon :icon="getCategoryIcon(category.name)" size="40" class="category-icon" />
-                                </div>
-                            </div>
-
-                            <!-- Category Content -->
-                            <div class="category-content">
-                                <h3 class="category-name">{{ category.name }}</h3>
-
-                                <p v-if="category.description" class="category-description">
-                                    {{ category.description }}
-                                </p>
-
-                                <div class="category-footer">
-                                    <span class="category-link-text">
-                                        {{ t('common.seeMore') }}
-                                        <v-icon size="16" end>mdi-arrow-right</v-icon>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </NuxtLink>
-                </v-col>
-
-                <!-- Empty State -->
-                <v-col v-if="!categories?.results?.length" cols="12" class="text-center py-16">
-                    <v-icon size="80" color="grey-lighten-1">mdi-folder-open-outline</v-icon>
-                    <p class="text-h6 text-grey-darken-1 mt-4">
-                        {{ t('blog.noCategoriesAvailable') }}
-                    </p>
-                </v-col>
-            </v-row>
-        </v-container>
-
-        <!-- Back to Blog -->
-        <v-container class="back-section">
-            <v-row justify="center">
-                <v-col cols="12" class="text-center">
-                    <v-btn size="large" variant="outlined" color="grey-darken-2" class="text-none"
-                        :to="localePath('/blog')">
-                        <v-icon start>mdi-arrow-left</v-icon>
-                        {{ t('common.backToBlog') }}
-                    </v-btn>
-                </v-col>
-            </v-row>
-        </v-container>
-    </div>
+        <div
+          v-else
+          class="flex flex-col items-center text-center py-20 text-ink-3 fade-up"
+        >
+          <FolderOpen :size="48" :stroke-width="1.4" class="text-ink-4" />
+          <p class="text-[16px] mt-4">{{ $t('blog.noCategoriesAvailable') }}</p>
+        </div>
+      </div>
+    </section>
+  </div>
 </template>
-
-<style scoped>
-.categories-page {
-    background: #fafafa;
-    min-height: 100vh;
-}
-
-/* Hero Section */
-.hero-section {
-    padding: 120px 24px 60px;
-    background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
-}
-
-.breadcrumbs {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 0.875rem;
-}
-
-.breadcrumb-link {
-    color: #6b7280;
-    text-decoration: none;
-    transition: color 0.2s ease;
-}
-
-.breadcrumb-link:hover {
-    color: #2563eb;
-}
-
-.breadcrumb-separator {
-    color: #d1d5db;
-}
-
-.breadcrumb-current {
-    color: #1a1a1a;
-    font-weight: 600;
-}
-
-.page-title {
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    font-weight: 800;
-    color: #1a1a1a;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
-}
-
-.page-description {
-    font-size: clamp(1rem, 2vw, 1.25rem);
-    color: #6b7280;
-    line-height: 1.6;
-    max-width: 700px;
-    margin: 0 auto;
-}
-
-/* Categories Section */
-.categories-section {
-    padding: 60px 24px 120px;
-    max-width: 1400px;
-}
-
-/* Category Card */
-.category-card-link {
-    text-decoration: none;
-    display: block;
-    height: 100%;
-}
-
-.category-card {
-    background: white;
-    border-radius: 16px;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid #f3f4f6;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.category-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-    border-color: #2563eb;
-}
-
-/* Category Visual */
-.category-visual {
-    position: relative;
-    overflow: hidden;
-}
-
-.category-image-wrapper {
-    position: relative;
-    background: #f9fafb;
-}
-
-.category-image {
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.category-card:hover .category-image {
-    transform: scale(1.1);
-}
-
-.category-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.9) 0%, rgba(59, 130, 246, 0.9) 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.category-card:hover .category-overlay {
-    opacity: 1;
-}
-
-.category-overlay .category-icon {
-    color: white;
-}
-
-.category-icon-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 48px 24px;
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    transition: all 0.3s ease;
-}
-
-.category-card:hover .category-icon-wrapper {
-    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-}
-
-.category-icon-wrapper .category-icon {
-    color: #2563eb;
-    transition: color 0.3s ease;
-}
-
-.category-card:hover .category-icon-wrapper .category-icon {
-    color: white;
-}
-
-/* Category Content */
-.category-content {
-    padding: 24px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.category-name {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin-bottom: 12px;
-    line-height: 1.3;
-}
-
-.category-description {
-    font-size: 0.9375rem;
-    color: #6b7280;
-    line-height: 1.6;
-    margin-bottom: 16px;
-    flex: 1;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.category-footer {
-    padding-top: 16px;
-    border-top: 1px solid #f3f4f6;
-}
-
-.category-link-text {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.875rem;
-    color: #2563eb;
-    font-weight: 600;
-    transition: gap 0.2s ease;
-}
-
-.category-card:hover .category-link-text {
-    gap: 8px;
-}
-
-/* Back Section */
-.back-section {
-    padding: 0 24px 80px;
-}
-
-/* Responsive */
-@media (max-width: 960px) {
-    .hero-section {
-        padding: 80px 24px 40px;
-    }
-
-    .categories-section {
-        padding: 40px 24px 80px;
-    }
-}
-
-@media (max-width: 600px) {
-    .hero-section {
-        padding: 60px 20px 30px;
-    }
-
-    .categories-section {
-        padding: 30px 20px 60px;
-    }
-
-    .category-content {
-        padding: 20px;
-    }
-
-    .back-section {
-        padding: 0 20px 60px;
-    }
-
-    .category-icon-wrapper {
-        padding: 40px 20px;
-    }
-}
-
-/* Hover Effects */
-@media (hover: hover) {
-    .category-card {
-        cursor: pointer;
-    }
-}
-</style>

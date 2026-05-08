@@ -1,5 +1,8 @@
 {
   "common": {
+    "featured": "Featured",
+    "copied": "copied",
+    "close": "Close",
     "all": "All",
     "loading": "Loading...",
     "error": "Error",
@@ -209,7 +212,13 @@
     "hoursAgo": "{count}h ago",
     "daysAgo": "{count} days ago",
     "showingResults": "Showing {from} to {to} of {total} articles",
-    "noPosts": "No posts available"
+    "noPosts": "No posts available",
+    "label": "writing",
+    "categoriesLabel": "categories",
+    "allCategoriesDescription": "Browse by topic. Every article on the blog lives in one of these categories.",
+    "category": "category",
+    "relatedLabel": "related reading",
+    "noCategoriesAvailable": "No categories available"
   },
   "projects": {
     "title": "My Projects",

@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { FileSearch } from 'lucide-vue-next';
 import type { DjangoListResponse } from '~/types/api';
-import Pagination from '~/components/common/Pagination.vue';
 import type { Post, Category } from '~/types/blog';
+import Pagination from '~/components/common/Pagination.vue';
 import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
-import { formatYearMonthDay } from '~/utils/date';
+import PostCard from '~/components/blog/PostCard.vue';
+import type { BreadcrumbItem } from '~/composables/useBreadcrumbs';
 
-if (import.meta.client) {
-  gsap.registerPlugin(ScrollTrigger);
-}
+if (import.meta.client) gsap.registerPlugin(ScrollTrigger);
 
 const route = useRoute();
 const slug = route.params.slug as string;
@@ -17,25 +17,22 @@ const localePath = useLocalePath();
 const { locale, t } = useI18n();
 const config = useRuntimeConfig();
 
-// Fetch category by slug
-const { data: categories } = await useApi<DjangoListResponse<Category<{ parent: true }>>>('/api/post-categories/', {
-  params: {
-    translations__slug: slug,
-    expand: 'parent,children,images'
-  }
+const { data: categoriesData } = await useApi<
+  DjangoListResponse<Category<{ parent: true }>>
+>('/api/post-categories/', {
+  params: { translations__slug: slug, expand: 'parent,children,images' },
 });
 
-const category = computed(() => categories.value?.results?.[0]);
+const category = computed(() => categoriesData.value?.results?.[0]);
 
 if (!category.value) {
   throw createError({ statusCode: 404, message: t('errors.categoryNotFound') });
 }
 
-// Pagination
 const pagination = usePagination({
   defaultLimit: 12,
   scrollToTop: true,
-  scrollOffset: 100
+  scrollOffset: 100,
 });
 
 const postsParams = computed(() => ({
@@ -43,41 +40,62 @@ const postsParams = computed(() => ({
   expand: 'category,tags,images',
   ordering: '-is_pinned,-published_at',
   page: pagination.currentPage.value,
-  limit: pagination.limit.value
+  limit: pagination.limit.value,
 }));
 
-const { data: posts, pending: isLoading } = await useApi<DjangoListResponse<Post>>('/api/posts/published/', {
+const { data: posts, pending: isLoading } = await useApi<
+  DjangoListResponse<Post>
+>('/api/posts/published/', {
   params: postsParams,
-  watch: [postsParams]
+  watch: [postsParams],
 });
 
-watch(() => posts.value?.count, (count) => {
-  if (count !== undefined) {
-    pagination.setTotalItems(count);
-  }
-}, { immediate: true });
+watch(
+  () => posts.value?.count,
+  (count) => {
+    if (count !== undefined) pagination.setTotalItems(count);
+  },
+  { immediate: true },
+);
 
-// SEO Configuration
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+  { title: t('nav.home'), to: '/' },
+  { title: t('nav.blog'), to: '/blog' },
+  { title: t('common.categories'), to: '/blog/category' },
+  { title: category.value?.name || slug, disabled: true },
+]);
+
+// SEO
 const { setSeoMeta, setStructuredData } = useSeo();
 
-const getCategoryImage = () => {
-  const coverImage = category.value?.images?.find(img => img.image_type === 'cover');
-  return coverImage?.file || coverImage?.thumbnail || `${config.public.siteUrl}/og-default.jpg`;
-};
+const categoryImage = computed(() => {
+  const cover = category.value?.images?.find((img) => img.image_type === 'cover');
+  return (
+    cover?.file ||
+    cover?.thumbnail ||
+    `${config.public.siteUrl}/og-default.jpg`
+  );
+});
 
 setSeoMeta({
-  title: category.value.seo_title || `${category.value.name} | ${t('blog.title')}`,
-  description: category.value.meta_description || category.value.description || t('blog.subtitle'),
-  image: getCategoryImage(),
+  title:
+    category.value?.seo_title ||
+    `${category.value?.name} | ${t('blog.title')}`,
+  description:
+    category.value?.meta_description ||
+    category.value?.description ||
+    t('blog.subtitle'),
+  image: categoryImage.value,
   type: 'website',
 });
 
 const categoryUrl = computed(
-  () => `${config.public.siteUrl}/${locale.value}/blog/category/${category.value?.slug}`
+  () =>
+    `${config.public.siteUrl}/${locale.value}/blog/category/${category.value?.slug}`,
 );
 
 watchEffect(() => {
-  const postResults = posts.value?.results || [];
+  const list = posts.value?.results ?? [];
   setStructuredData([
     {
       '@context': 'https://schema.org',
@@ -96,8 +114,8 @@ watchEffect(() => {
       '@context': 'https://schema.org',
       '@type': 'ItemList',
       itemListOrder: 'https://schema.org/ItemListOrderDescending',
-      numberOfItems: postResults.length,
-      itemListElement: postResults.map((post, index) => ({
+      numberOfItems: list.length,
+      itemListElement: list.map((post, index) => ({
         '@type': 'ListItem',
         position: index + 1,
         url: `${config.public.siteUrl}/${locale.value}/blog/${post.slug}`,
@@ -107,392 +125,89 @@ watchEffect(() => {
   ]);
 });
 
-
+const hasResults = computed(() => (posts.value?.results?.length ?? 0) > 0);
 
 onMounted(() => {
-  gsap.from('.page-title', {
-    y: 30,
-    opacity: 0,
-    duration: 0.8,
-    ease: 'power2.out'
-  });
-
-  gsap.from('.page-description', {
-    y: 20,
-    opacity: 0,
-    duration: 0.8,
-    delay: 0.2,
-    ease: 'power2.out'
-  });
-
-  gsap.utils.toArray('.fade-up').forEach((element: any) => {
+  gsap.utils.toArray<HTMLElement>('.fade-up').forEach((element) => {
     gsap.from(element, {
-      y: 40,
+      y: 32,
       opacity: 0,
-      duration: 0.8,
-      scrollTrigger: {
-        trigger: element,
-        start: 'top 90%',
-        once: true
-      }
+      duration: 0.6,
+      ease: 'power2.out',
+      scrollTrigger: { trigger: element, start: 'top 92%', once: true },
     });
   });
-});
-const breadcrumbItems = computed(() => {
-  const items: BreadcrumbItem[] = [
-    { title: t('nav.home'), to: '/' },
-    { title: t('nav.blog'), to: '/blog' },
-  ];
-
-  if (category.value?.parent && typeof category.value.parent === 'object') {
-    items.push({
-      title: category.value.parent.name,
-      to: `/blog/category/${category.value.parent.slug}`,
-    });
-  }
-
-  items.push({
-    title: category.value?.name || '',
-    disabled: true,
-  });
-
-  return items;
 });
 </script>
 
 <template>
-  <div v-if="category" class="category-page">
-    <!-- Hero Section -->
-    <v-container class="hero-section">
-      <v-row justify="center">
-        <v-col cols="12" md="10" lg="8" class="text-center">
-          <Breadcrumbs :items="breadcrumbItems" />
+  <div>
+    <!-- Hero -->
+    <section class="relative">
+      <AuroraBg :intensity="0.4" />
+      <div class="relative max-w-[1280px] mx-auto px-6 pt-12 pb-10">
+        <Breadcrumbs :items="breadcrumbItems" class="mb-6" />
+        <SectionLabel index="" :name="$t('blog.category')" tone="accent" />
+        <h1
+          class="h-display text-[44px] sm:text-[60px] lg:text-[72px] font-bold mt-3 leading-[1.04]"
+        >
+          {{ category?.name }}
+        </h1>
+        <p
+          v-if="category?.description"
+          class="mt-5 text-[16px] text-ink-2 leading-[1.65] max-w-[640px]"
+        >
+          {{ category.description }}
+        </p>
+        <div
+          v-if="posts?.count !== undefined"
+          class="mt-6 font-mono-rail"
+        >
+          {{ posts.count }} {{ $t('blog.articles') }}
+        </div>
+      </div>
+    </section>
 
-          <h1 class="page-title mb-6">{{ category.name }}</h1>
+    <!-- Posts -->
+    <section>
+      <div class="max-w-[1280px] mx-auto px-6 pb-16">
+        <div v-if="isLoading" class="py-16 text-center text-ink-3 text-sm font-mono">
+          <span class="animate-pulse">{{ $t('common.loading') }}</span>
+        </div>
 
-          <p v-if="category.description" class="page-description">
-            {{ category.description }}
-          </p>
+        <div
+          v-else-if="!hasResults"
+          class="flex flex-col items-center text-center py-20 text-ink-3 fade-up"
+        >
+          <FileSearch :size="48" :stroke-width="1.4" class="text-ink-4" />
+          <p class="text-[16px] mt-4">{{ $t('blog.noPostsFound') }}</p>
+          <NuxtLink
+            :to="localePath('/blog')"
+            class="mt-4 font-mono-rail underline-offset-4 hover:text-accent transition-colors"
+          >
+            {{ $t('common.backToBlog') }} ↗
+          </NuxtLink>
+        </div>
 
-          <v-chip-group v-if="category.children && category.children.length > 0" v-model="category.children" mandatory
-            color="primary" class="filters-chips">
-            <v-chip disabled class="filter-chip-label" variant="text">
-              {{ t('common.related') }}:
-            </v-chip>
-            <v-chip v-for="child in category.children" :key="child.id" :value="child.id.toString()" class="filter-chip"
-              :to="localePath(`/blog/category/${child.slug}`)">
-              {{ child.name }}
-            </v-chip>
-          </v-chip-group>
+        <div
+          v-else
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+        >
+          <PostCard
+            v-for="post in posts?.results"
+            :key="post.id"
+            :post="post"
+          />
+        </div>
 
-          <div class="category-stats">
-            <span class="category-stat">
-              <v-icon size="18">mdi-text-box-multiple</v-icon>
-              {{ posts?.count || 0 }} {{ (posts?.count || 0) === 1 ? t('blog.article') : t('blog.articles') }}
-            </span>
-          </div>
-
-        </v-col>
-      </v-row>
-    </v-container>
-
-    <!-- Posts Grid -->
-    <v-container class="posts-section">
-      <v-row>
-        <v-col v-for="post in posts?.results" :key="post.id" cols="12" md="6" lg="4" class="fade-up">
-          <div class="post-card">
-            <div class="post-image-wrapper">
-              <NuxtLink :to="localePath(`/blog/${post.slug}`)">
-                <NuxtImg :src="getCoverImageThumbnail(post)" class="post-image" :width="800" :height="500"
-                  style="aspect-ratio: 16 / 10; width: 100%; height: auto; object-fit: cover;" />
-              </NuxtLink>
-            </div>
-
-            <div class="post-content">
-              <div class="post-meta">
-                <span class="post-date">{{ formatYearMonthDay(post.published_at, locale) }}</span>
-              </div>
-
-              <NuxtLink :to="localePath(`/blog/${post.slug}`)" class="post-title-link">
-                <h3 class="post-title">{{ post.title }}</h3>
-              </NuxtLink>
-
-              <p class="post-excerpt">{{ post.excerpt }}</p>
-
-              <div class="post-footer">
-                <div class="post-stats">
-                  <span class="post-stat">
-                    <v-icon size="14">mdi-clock-outline</v-icon>
-                    {{ post.reading_time }} min
-                  </span>
-                  <span class="post-stat">
-                    <v-icon size="14">mdi-eye-outline</v-icon>
-                    {{ post.view_count }}
-                  </span>
-                </div>
-
-                <NuxtLink :to="localePath(`/blog/${post.slug}`)" class="read-more">
-                  {{ t('common.readMore') }}
-                  <v-icon size="14" end>mdi-arrow-right</v-icon>
-                </NuxtLink>
-              </div>
-            </div>
-          </div>
-        </v-col>
-
-        <!-- Empty State -->
-        <v-col v-if="!posts?.results?.length" cols="12" class="text-center py-16">
-          <v-icon size="80" color="grey-lighten-1">mdi-text-box-search-outline</v-icon>
-          <p class="text-h6 text-grey-darken-1 mt-4">
-            Nenhum artigo nesta categoria ainda
-          </p>
-        </v-col>
-      </v-row>
-
-      <!-- Pagination -->
-      <Pagination :current-page="pagination.currentPage.value" :total-pages="pagination.totalPages.value"
-        :has-next="pagination.hasNext.value" :has-previous="pagination.hasPrevious.value"
-        @page-change="pagination.goToPage" />
-    </v-container>
-
-    <!-- Back to Blog -->
-    <v-container class="back-section">
-      <v-row justify="center">
-        <v-col cols="12" class="text-center">
-          <v-btn size="large" variant="outlined" color="grey-darken-2" class="text-none" :to="localePath('/blog')">
-            <v-icon start>mdi-arrow-left</v-icon>
-            Voltar para o Blog
-          </v-btn>
-        </v-col>
-      </v-row>
-    </v-container>
+        <Pagination
+          :current-page="pagination.currentPage.value"
+          :total-pages="pagination.totalPages.value"
+          :has-next="pagination.hasNext.value"
+          :has-previous="pagination.hasPrevious.value"
+          @page-change="pagination.goToPage"
+        />
+      </div>
+    </section>
   </div>
 </template>
-
-<style scoped>
-.category-page {
-  background: #fafafa;
-  min-height: 100vh;
-}
-
-/* Hero Section */
-.hero-section {
-  padding: 120px 24px 60px;
-  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
-}
-
-.breadcrumbs {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 0.875rem;
-}
-
-.breadcrumb-link {
-  color: #6b7280;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.breadcrumb-link:hover {
-  color: #2563eb;
-}
-
-.breadcrumb-separator {
-  color: #d1d5db;
-}
-
-.breadcrumb-current {
-  color: #1a1a1a;
-  font-weight: 600;
-}
-
-.page-title {
-  font-size: clamp(2.5rem, 5vw, 4rem);
-  font-weight: 800;
-  color: #1a1a1a;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-}
-
-.page-description {
-  font-size: clamp(1rem, 2vw, 1.25rem);
-  color: #6b7280;
-  line-height: 1.6;
-  max-width: 700px;
-  margin: 0 auto 32px;
-}
-
-.category-stats {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  padding-top: 24px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.category-stat {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.9375rem;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-/* Posts Section */
-.posts-section {
-  padding: 60px 24px 120px;
-  max-width: 1400px;
-}
-
-/* Post Card */
-.post-card {
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid #f3f4f6;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.post-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-  border-color: #e5e7eb;
-}
-
-.post-image-wrapper {
-  position: relative;
-  overflow: hidden;
-  background: #f9fafb;
-}
-
-.post-image {
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.post-card:hover .post-image {
-  transform: scale(1.05);
-}
-
-.post-content {
-  padding: 32px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.post-meta {
-  margin-bottom: 12px;
-}
-
-.post-date {
-  font-size: 0.875rem;
-  color: #9ca3af;
-}
-
-.post-title-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-.post-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin-bottom: 12px;
-  line-height: 1.3;
-  transition: color 0.2s ease;
-}
-
-.post-title-link:hover .post-title {
-  color: #2563eb;
-}
-
-.post-excerpt {
-  font-size: 0.9375rem;
-  color: #6b7280;
-  line-height: 1.6;
-  margin-bottom: 20px;
-  flex: 1;
-  display: -webkit-box;
-  line-clamp: 3;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.post-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 20px;
-  border-top: 1px solid #f3f4f6;
-}
-
-.post-stats {
-  display: flex;
-  gap: 16px;
-}
-
-.post-stat {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.875rem;
-  color: #9ca3af;
-}
-
-.read-more {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.875rem;
-  color: #2563eb;
-  text-decoration: none;
-  font-weight: 600;
-  transition: gap 0.2s ease;
-}
-
-.read-more:hover {
-  gap: 8px;
-}
-
-/* Back Section */
-.back-section {
-  padding: 0 24px 80px;
-}
-
-/* Responsive */
-@media (max-width: 960px) {
-  .hero-section {
-    padding: 80px 24px 40px;
-  }
-
-  .posts-section {
-    padding: 40px 24px 80px;
-  }
-}
-
-@media (max-width: 600px) {
-  .hero-section {
-    padding: 60px 20px 30px;
-  }
-
-  .posts-section {
-    padding: 30px 20px 60px;
-  }
-
-  .post-content {
-    padding: 24px;
-  }
-
-  .back-section {
-    padding: 0 20px 60px;
-  }
-}
-</style>

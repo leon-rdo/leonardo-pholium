@@ -1,5 +1,8 @@
 {
   "common": {
+    "featured": "Destaque",
+    "copied": "copiado",
+    "close": "Fechar",
     "all": "Todos",
     "loading": "Carregando...",
     "error": "Erro",
@@ -209,7 +212,13 @@
     "hoursAgo": "{count}h atrás",
     "daysAgo": "{count} dias atrás",
     "showingResults": "Mostrando {from} a {to} de {total} artigos",
-    "noPosts": "Nenhum post disponível"
+    "noPosts": "Nenhum post disponível",
+    "label": "writing",
+    "categoriesLabel": "categorias",
+    "allCategoriesDescription": "Explore por tema. Todos os artigos do blog estão em alguma destas categorias.",
+    "category": "categoria",
+    "relatedLabel": "leitura relacionada",
+    "noCategoriesAvailable": "Nenhuma categoria disponível"
   },
   "projects": {
     "title": "Meus Projetos",
