@@ -1,183 +1,248 @@
 <script setup lang="ts">
+/**
+ * Featured projects bento grid:
+ *   col-span-8 (featured card with cover + glass label) + col-span-4 (stack stack panel)
+ *   col-span-6 + col-span-6 below for the next two
+ *
+ * Backend contract unchanged: hits /api/projects/ via useApi (DRF expand=skills).
+ * `projects` prop is preserved for the "Projects page" use-case where the list
+ * is provided by the parent.
+ */
 import type { DjangoListResponse } from '~/types/api';
 import type { Project } from '~/types/portfolio';
+import { ArrowUpRight, Github, Globe } from 'lucide-vue-next';
 
 const props = defineProps<{
-    featuredOnly?: boolean;
-    projects?: Project<{ skills: true }>[];
-    cols?: string;
-    mdCols?: string;
-    lgCols?: string;
+  featuredOnly?: boolean;
+  projects?: Project<{ skills: true }>[];
+  limit?: number;
 }>();
 
-// Fetch projects only if not provided as prop
-const { data: fetchedProjects } = props.projects ? { data: ref(null) } : await useApi<DjangoListResponse<Project<{ skills: true }>>>('/api/projects/', {
-    params: {
+const { data: fetchedProjects } = props.projects
+  ? { data: ref(null) }
+  : await useApi<DjangoListResponse<Project<{ skills: true }>>>('/api/projects/', {
+      params: {
         expand: 'skills',
         ...(props.featuredOnly !== false && { featured: true }),
-        limit: 3,
-        status: 'published'
-    }
+        limit: props.limit ?? 3,
+        status: 'published',
+      },
+    });
+
+const items = computed<Project<{ skills: true }>[]>(() => {
+  if (props.projects) return props.projects;
+  return fetchedProjects.value?.results ?? [];
 });
 
-const projects = computed(() => {
-    if (props.projects) {
-        return { results: props.projects };
-    }
-    return fetchedProjects.value;
-});
+// Background gradient palettes per project, picked from a small set so cards
+// don't all blur into the same color when the cover image is missing.
+const gradients = [
+  'from-emerald-600/40 via-emerald-700/30 to-emerald-900/40',
+  'from-amber-500/40 via-orange-600/30 to-orange-700/40',
+  'from-blue-600/40 via-indigo-700/30 to-indigo-900/40',
+  'from-rose-500/40 via-rose-700/30 to-rose-900/40',
+];
+const gradientFor = (idx: number) => gradients[idx % gradients.length];
+
+// `URL` is a JS global, not auto-exposed to Vue templates — extract here.
+const hostname = (raw: string | null | undefined): string => {
+  if (!raw) return '';
+  try {
+    return new URL(raw).hostname;
+  } catch {
+    return raw;
+  }
+};
+
+const yearOf = (project: Project<{ skills: true }>): number =>
+  new Date(project.start_date || project.created_at).getFullYear();
+
+const authorFirstName = (project: Project<{ skills: true }>): string => {
+  const author = project.author;
+  if (author && typeof author === 'object' && 'first_name' in author)
+    return (author as { first_name: string }).first_name;
+  return '';
+};
 </script>
 
 <template>
-    <v-row>
-        <v-col v-for="project in projects?.results" :key="project.id" :cols="props.cols || '12'"
-            :md="props.mdCols || '4'" :lg="props.lgCols || '4'" class="fade-up">
-            <div class="project-card">
-                <div class="project-image-wrapper" style="aspect-ratio: 16 / 10;">
-                    <NuxtImg :src="project.cover || 'https://via.placeholder.com/600x400'" :alt="project.title"
-                        :width="600" :height="375" class="project-image" format="webp" :placeholder="true"
-                        style="width: 100%; height: 100%; object-fit: cover;" />
-                    <div v-if="project.featured" class="featured-badge">
-                        <v-icon size="16">mdi-star</v-icon>
-                        {{ $t('projects.featured') }}
-                    </div>
-                </div>
+  <div v-if="items.length" class="grid grid-cols-1 md:grid-cols-12 gap-3">
+    <!-- Featured (first item) — wide tile -->
+    <Tile
+      v-if="items[0]"
+      variant="card"
+      :ring="true"
+      class="md:col-span-8 px-3 py-3 group fade-up"
+      as="article"
+    >
+      <NuxtLink
+        :to="items[0].website_url"
+        :external="!!items[0].website_url"
+        :target="items[0].website_url ? '_blank' : undefined"
+        :rel="items[0].website_url ? 'noopener noreferrer' : undefined"
+        class="block relative h-full rounded-card overflow-hidden"
+      >
+        <div
+          class="aspect-[16/9] bg-gradient-to-br relative"
+          :class="gradientFor(0)"
+        >
+          <NuxtImg
+            v-if="items[0].cover"
+            :src="items[0].cover"
+            :alt="items[0].title"
+            :width="800"
+            :height="450"
+            format="webp"
+            class="absolute inset-0 w-full h-full object-cover"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-ink/60 via-ink/20 to-transparent" />
 
-                <div class="project-content">
-                    <h3 class="project-title">{{ project.title }}</h3>
-                    <p class="project-description">{{ project.summary }}</p>
+          <Chip variant="blue" class="absolute top-4 left-4">
+            ★ {{ $t('projects.featured') }}
+          </Chip>
+          <div
+            v-if="items[0].website_url"
+            class="absolute top-4 right-4 font-mono text-[11.5px] text-paper/80"
+          >
+            {{ hostname(items[0].website_url) }} ↗
+          </div>
 
-                    <div class="project-tags">
-                        <span v-for="skill in project.skills.slice(0, 4)" :key="skill.id" class="project-tag">
-                            {{ skill.name }}
-                        </span>
-                    </div>
-
-                    <div class="project-links">
-                        <a v-if="project.website_url" :href="project.website_url" target="_blank" class="project-link">
-                            <v-icon size="20">mdi-web</v-icon>
-                            <span>{{ $t('projects.website') }}</span>
-                        </a>
-                        <a v-if="project.repo_url" :href="project.repo_url" target="_blank" class="project-link">
-                            <v-icon size="20">mdi-github</v-icon>
-                            <span>{{ $t('projects.code') }}</span>
-                        </a>
-                    </div>
-                </div>
+          <div class="absolute bottom-5 left-5 right-5 text-paper">
+            <div class="font-mono-rail !text-paper/80">
+              {{ yearOf(items[0]) }}
+              <template v-if="authorFirstName(items[0])"> · {{ authorFirstName(items[0]) }}</template>
             </div>
-        </v-col>
-    </v-row>
+            <h3 class="h-display text-3xl sm:text-4xl font-bold mt-1.5 text-paper">
+              {{ items[0].title }}
+            </h3>
+            <p class="mt-3 text-[14.5px] sm:text-[15px] text-paper/85 leading-[1.65] max-w-[560px]">
+              {{ items[0].summary }}
+            </p>
+            <div class="mt-4 flex flex-wrap gap-1.5">
+              <span
+                v-for="skill in items[0].skills.slice(0, 4)"
+                :key="skill.id"
+                class="inline-flex items-center font-mono text-[11px] bg-ink/40 backdrop-blur-sm text-paper/90 border border-white/10 px-2.5 py-0.5 rounded-chip"
+              >
+                {{ skill.name }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </NuxtLink>
+    </Tile>
+
+    <!-- Right column for the featured: actions / external links -->
+    <div v-if="items[0]" class="md:col-span-4 flex flex-col gap-3 fade-up">
+      <Tile class="px-5 py-5 grow flex flex-col">
+        <SectionLabel :name="$t('projects.actionsLabel')" tone="accent" />
+        <div class="mt-3 space-y-2 flex-1">
+          <a
+            v-if="items[0].website_url"
+            :href="items[0].website_url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center justify-between gap-3 px-3.5 py-3 rounded-input ring-hair bg-paper hover:bg-card-soft transition-colors group/link"
+          >
+            <span class="inline-flex items-center gap-2.5 font-medium">
+              <Globe :size="16" :stroke-width="1.8" />
+              {{ $t('projects.website') }}
+            </span>
+            <ArrowUpRight
+              :size="14"
+              :stroke-width="2"
+              class="text-ink-3 group-hover/link:text-accent group-hover/link:translate-x-0.5 transition"
+            />
+          </a>
+          <a
+            v-if="items[0].repo_url"
+            :href="items[0].repo_url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center justify-between gap-3 px-3.5 py-3 rounded-input ring-hair bg-paper hover:bg-card-soft transition-colors group/link"
+          >
+            <span class="inline-flex items-center gap-2.5 font-medium">
+              <Github :size="16" :stroke-width="1.8" />
+              {{ $t('projects.code') }}
+            </span>
+            <ArrowUpRight
+              :size="14"
+              :stroke-width="2"
+              class="text-ink-3 group-hover/link:text-accent group-hover/link:translate-x-0.5 transition"
+            />
+          </a>
+        </div>
+      </Tile>
+
+      <Tile class="px-5 py-5 bg-ink text-paper relative overflow-hidden">
+        <div
+          aria-hidden="true"
+          class="absolute -top-10 -right-10 w-40 h-40 rounded-full"
+          style="background: radial-gradient(closest-side, rgba(44, 103, 232, 0.5), transparent 70%)"
+        />
+        <div class="relative">
+          <div class="font-mono-rail !text-paper/60">{{ $t('projects.techLabel') }}</div>
+          <div class="h-display text-xl font-bold mt-1">
+            {{ items[0].skills.slice(0, 2).map((s) => s.name).join(' · ') }}
+          </div>
+          <div class="text-[12.5px] text-paper/60 mt-1">
+            {{ items[0].skills.length }} {{ $t('projects.toolsCount') }}
+          </div>
+        </div>
+      </Tile>
+    </div>
+
+    <!-- Items 2 & 3 — wide cards side by side -->
+    <Tile
+      v-for="(project, idx) in items.slice(1)"
+      :key="project.id"
+      variant="card"
+      :ring="true"
+      class="md:col-span-6 px-3 py-3 group fade-up"
+      as="article"
+    >
+      <NuxtLink
+        :to="project.website_url"
+        :external="!!project.website_url"
+        :target="project.website_url ? '_blank' : undefined"
+        :rel="project.website_url ? 'noopener noreferrer' : undefined"
+        class="block relative h-full rounded-card overflow-hidden"
+      >
+        <div
+          class="aspect-[16/9] bg-gradient-to-br relative"
+          :class="gradientFor(idx + 1)"
+        >
+          <NuxtImg
+            v-if="project.cover"
+            :src="project.cover"
+            :alt="project.title"
+            :width="600"
+            :height="375"
+            format="webp"
+            class="absolute inset-0 w-full h-full object-cover"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-ink/55 via-ink/15 to-transparent" />
+
+          <div class="absolute bottom-5 left-5 right-5 text-paper">
+            <div class="font-mono-rail !text-paper/80">
+              {{ yearOf(project) }}
+            </div>
+            <h3 class="h-display text-2xl font-bold mt-1.5 text-paper">{{ project.title }}</h3>
+            <p class="mt-2 text-[14px] text-paper/85 leading-[1.6] line-clamp-2">
+              {{ project.summary }}
+            </p>
+            <div class="mt-3 flex flex-wrap gap-1.5">
+              <span
+                v-for="skill in project.skills.slice(0, 3)"
+                :key="skill.id"
+                class="inline-flex items-center font-mono text-[11px] bg-ink/40 backdrop-blur-sm text-paper/90 border border-white/10 px-2.5 py-0.5 rounded-chip"
+              >
+                {{ skill.name }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </NuxtLink>
+    </Tile>
+  </div>
 </template>
-
-<style scoped>
-.project-card {
-    background: white;
-    border-radius: 16px;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid #f3f4f6;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.project-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-    border-color: #e5e7eb;
-}
-
-.project-image-wrapper {
-    position: relative;
-    overflow: hidden;
-    background: #f9fafb;
-}
-
-.project-image {
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.project-card:hover .project-image {
-    transform: scale(1.05);
-}
-
-.featured-badge {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    background: rgba(37, 99, 235, 0.95);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    backdrop-filter: blur(8px);
-}
-
-.project-content {
-    padding: 32px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.project-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin-bottom: 12px;
-}
-
-.project-description {
-    font-size: 0.9375rem;
-    color: #6b7280;
-    line-height: 1.6;
-    margin-bottom: 20px;
-    flex: 1;
-}
-
-.project-tags {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-}
-
-.project-tag {
-    font-size: 0.75rem;
-    padding: 6px 12px;
-    background: #f3f4f6;
-    color: #4b5563;
-    border-radius: 6px;
-    font-weight: 500;
-}
-
-.project-links {
-    display: flex;
-    gap: 16px;
-}
-
-.project-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.875rem;
-    color: #6b7280;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s ease;
-}
-
-.project-link:hover {
-    color: #2563eb;
-}
-
-@media (max-width: 600px) {
-    .project-content {
-        padding: 24px;
-    }
-}
-</style>

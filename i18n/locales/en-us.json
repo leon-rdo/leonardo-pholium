@@ -121,6 +121,34 @@
         "label": "infra · ops",
         "title": "Plumbing"
       }
+    },
+    "work": {
+      "label": "selected work",
+      "title": "In production right now.",
+      "allLink": "all projects"
+    },
+    "experience": {
+      "label": "experience",
+      "title": "Where I've been shipping."
+    },
+    "education": {
+      "label": "education",
+      "title": "Academic background."
+    },
+    "testimonials": {
+      "label": "testimonials",
+      "title": "What people say."
+    },
+    "contact": {
+      "label": "contact",
+      "titleLead": "Got a backend that needs",
+      "titleAccent": "building?",
+      "subtitle": "APIs, AI integrations, an architecture that grew too fast — send the details and let's talk.",
+      "metaLabel": "meta",
+      "linksLabel": "links",
+      "timezone": "UTC-3 · Belém / PA",
+      "openFor": "freelance + full-time",
+      "response": "under 24h"
     }
   },
   "hero": {
@@ -188,7 +216,10 @@
     "viewAllProjects": "View All Projects",
     "ctaTitle": "Like what you see?",
     "ctaSubtitle": "Let's work together on your next project",
-    "ctaButton": "Get in Touch"
+    "ctaButton": "Get in Touch",
+    "actionsLabel": "links",
+    "techLabel": "main stack",
+    "toolsCount": "tools"
   },
   "skills": {
     "title": "Skills",

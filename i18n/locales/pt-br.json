@@ -121,6 +121,34 @@
         "label": "infra · ops",
         "title": "Infraestrutura"
       }
+    },
+    "work": {
+      "label": "selected work",
+      "title": "Em produção agora.",
+      "allLink": "todos os projetos"
+    },
+    "experience": {
+      "label": "experience",
+      "title": "Onde tenho enviado código."
+    },
+    "education": {
+      "label": "education",
+      "title": "Formação acadêmica."
+    },
+    "testimonials": {
+      "label": "testimonials",
+      "title": "O que dizem por aí."
+    },
+    "contact": {
+      "label": "contact",
+      "titleLead": "Tem um backend que precisa",
+      "titleAccent": "ser construído?",
+      "subtitle": "APIs, integrações com I.A., uma arquitetura que cresceu rápido demais — manda os detalhes e a gente conversa.",
+      "metaLabel": "meta",
+      "linksLabel": "redes",
+      "timezone": "UTC-3 · Belém / PA",
+      "openFor": "freelance + full-time",
+      "response": "menos de 24h"
     }
   },
   "hero": {
@@ -188,7 +216,10 @@
     "viewAllProjects": "Ver Todos os Projetos",
     "ctaTitle": "Gostou do que viu?",
     "ctaSubtitle": "Vamos trabalhar juntos no seu próximo projeto",
-    "ctaButton": "Entre em Contato"
+    "ctaButton": "Entre em Contato",
+    "actionsLabel": "links",
+    "techLabel": "stack principal",
+    "toolsCount": "ferramentas"
   },
   "skills": {
     "title": "Habilidades",

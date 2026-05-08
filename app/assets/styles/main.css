@@ -47,6 +47,10 @@
   --color-status-warn: var(--color-status-warn);
   --color-status-err: var(--color-status-err);
 
+  --color-night: var(--color-night);
+  --color-night-text: var(--color-night-text);
+  --color-night-input: var(--color-night-input);
+
   --radius-tile: var(--radius-tile);
   --radius-card: var(--radius-card);
   --radius-input: var(--radius-input);

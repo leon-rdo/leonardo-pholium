@@ -13,6 +13,15 @@
   --color-card: #fbf9f2;      /* slightly raised tile */
   --color-card-soft: #f8f4e9; /* between paper and card */
 
+  /*
+   * "Night" — deep ink that intentionally does NOT flip in dark mode.
+   * Used by sections that should always feel dark (the contact CTA tile).
+   * Defined in :root and not overridden by .dark, so the value carries.
+   */
+  --color-night: #0e0e12;
+  --color-night-text: #f4efe5;
+  --color-night-input: #1c1c22; /* form field bg inside the night CTA */
+
   /* Text */
   --color-ink: #15161b;
   --color-ink-2: #3f3f46;
