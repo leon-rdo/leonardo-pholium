@@ -1,8 +1,18 @@
 <script setup lang="ts">
 /**
- * Experience timeline — single Tile that holds a dense, divided list of
- * roles. Multiple positions at the same company are grouped under one row;
- * descriptions truncate past 200 chars with an inline read-more toggle.
+ * Experience timeline — vertical rail with connecting line + per-entry dot.
+ *
+ *   <date col>   <rail>   <content card>
+ *      jul/25      ●      Backend Engineer · Parti Digital  [current]
+ *      → atual     │      BELÉM — PA
+ *      6 meses     │      Description...
+ *                  │
+ *      jul/24      ●      Backend Engineer · FebraCIS
+ *
+ * The rail is composed in flex-col inside each <li>: a short top stub +
+ * the dot + a flex-1 bottom stub. First entry hides the top stub, last
+ * entry hides the bottom stub, which naturally clips the line to the
+ * first/last dots without extra positioning math.
  *
  * Backend contract unchanged: /api/experiences/ paginated; "see more"
  * walks `next` URL on demand.
@@ -10,7 +20,7 @@
 import type { DjangoListResponse } from '~/types/api';
 import type { Experience } from '~/types/portfolio';
 import { formatShortMonthYearOrPresent } from '~/utils/date';
-import { ChevronDown, ChevronUp } from 'lucide-vue-next';
+import { ChevronDown, ChevronUp, MapPin } from 'lucide-vue-next';
 
 const { locale, t } = useI18n();
 const config = useRuntimeConfig();
@@ -183,123 +193,197 @@ useHead({
 
 <template>
   <div>
-    <Tile v-if="groupedExperiences.length" class="px-1 sm:px-2 py-1 sm:py-2 fade-up">
-      <ol class="divide-y divide-line">
-        <li
-          v-for="group in groupedExperiences"
-          :key="group.company"
-          class="px-4 sm:px-6 py-6 hover:bg-paper/50 transition-colors rounded-card"
-        >
-          <header class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-6">
-            <!-- Date column -->
-            <div class="md:col-span-3">
-              <div class="font-mono text-[12.5px] text-ink-2">
-                {{ formatShortMonthYearOrPresent(group.startDate, locale, t('common.present')) }}
-                <span class="text-ink-4 mx-1">—</span>
-                <template v-if="group.isCurrent">
-                  <span class="text-accent">{{ t('common.present') }}</span>
+    <ol v-if="groupedExperiences.length" class="relative fade-up">
+      <li
+        v-for="(group, idx) in groupedExperiences"
+        :key="group.company"
+        class="group/row"
+      >
+        <div class="flex gap-4 sm:gap-6">
+          <!-- Date column (desktop) -->
+          <div class="hidden md:block shrink-0 w-[136px] text-right pt-7">
+            <div class="font-mono text-[12.5px] text-ink-2 tabular-nums">
+              {{ formatShortMonthYearOrPresent(group.startDate, locale, t('common.present')) }}
+            </div>
+            <div class="font-mono text-[12.5px] mt-0.5 tabular-nums">
+              <template v-if="group.isCurrent">
+                <span class="text-accent">→ {{ t('common.present') }}</span>
+              </template>
+              <template v-else>
+                <span class="text-ink-2"
+                  >→
+                  {{
+                    formatShortMonthYearOrPresent(
+                      group.endDate,
+                      locale,
+                      t('common.present'),
+                    )
+                  }}</span
+                >
+              </template>
+            </div>
+            <div class="font-mono text-[11px] text-ink-3 mt-2 tracking-[0.08em]">
+              {{ group.totalDuration }}
+            </div>
+          </div>
+
+          <!-- Timeline rail with dot -->
+          <div class="relative shrink-0 w-5 flex flex-col items-center">
+            <!-- top stub (hidden on first item — clips the line at the topmost dot) -->
+            <div
+              class="w-px h-7"
+              :class="idx === 0 ? '' : 'bg-line'"
+              aria-hidden="true"
+            />
+            <!-- the dot itself -->
+            <div class="relative w-3 h-3 z-10">
+              <span
+                v-if="group.isCurrent"
+                aria-hidden="true"
+                class="absolute inset-0 rounded-full bg-accent/40 animate-ping"
+              />
+              <span
+                class="relative block w-3 h-3 rounded-full ring-4 ring-paper transition-colors"
+                :class="group.isCurrent ? 'bg-accent' : 'bg-line-2'"
+              />
+            </div>
+            <!-- bottom stub (flex-1; hidden on last item) -->
+            <div
+              class="w-px flex-1 min-h-[2rem]"
+              :class="idx === groupedExperiences.length - 1 ? '' : 'bg-line'"
+              aria-hidden="true"
+            />
+          </div>
+
+          <!-- Content -->
+          <article
+            class="flex-1 min-w-0 py-6 pl-1 sm:pl-2 pr-3 sm:pr-4 transition-colors group-hover/row:bg-card-soft/40 rounded-card"
+          >
+            <!-- Mobile date line (only visible <md) -->
+            <div
+              class="md:hidden font-mono text-[11.5px] text-ink-3 mb-2 tabular-nums"
+            >
+              {{
+                formatShortMonthYearOrPresent(
+                  group.startDate,
+                  locale,
+                  t('common.present'),
+                )
+              }}
+              <span class="text-ink-4 mx-1">—</span>
+              <template v-if="group.isCurrent">
+                <span class="text-accent">{{ t('common.present') }}</span>
+              </template>
+              <template v-else>
+                {{
+                  formatShortMonthYearOrPresent(
+                    group.endDate,
+                    locale,
+                    t('common.present'),
+                  )
+                }}
+              </template>
+              <span class="text-ink-4 mx-1">·</span>
+              {{ group.totalDuration }}
+            </div>
+
+            <!-- Title -->
+            <h3
+              class="text-[17px] sm:text-[18px] font-semibold flex items-center gap-2 flex-wrap"
+            >
+              <span>{{ group.positions[0].role }}</span>
+              <span class="text-ink-3 font-normal" aria-hidden="true">·</span>
+              <span class="text-ink-2 font-medium">{{ group.company }}</span>
+              <Chip
+                v-if="group.isCurrent"
+                variant="blue"
+                class="!text-[10.5px]"
+              >
+                {{ t('common.current') }}
+              </Chip>
+            </h3>
+
+            <p
+              v-if="group.location"
+              class="mt-1.5 inline-flex items-center gap-1 font-mono text-[11.5px] text-ink-3 uppercase tracking-[0.12em]"
+            >
+              <MapPin :size="11" :stroke-width="1.8" />
+              {{ group.location }}
+            </p>
+
+            <!-- Sub-positions (when more than one at the same company) -->
+            <ul
+              v-if="group.positions.length > 1"
+              class="mt-3 pl-3.5 border-l-2 border-line space-y-2"
+            >
+              <li
+                v-for="position in group.positions.slice(1)"
+                :key="position.id"
+                class="text-[14px] text-ink-2 leading-snug"
+              >
+                <span class="font-medium">{{ position.role }}</span>
+                <span class="font-mono text-[11.5px] text-ink-3 ml-2 tabular-nums">
+                  {{
+                    formatShortMonthYearOrPresent(
+                      position.start_date,
+                      locale,
+                      t('common.present'),
+                    )
+                  }}
+                  —
+                  {{
+                    position.current
+                      ? t('common.present')
+                      : formatShortMonthYearOrPresent(
+                          position.end_date,
+                          locale,
+                          t('common.present'),
+                        )
+                  }}
+                </span>
+              </li>
+            </ul>
+
+            <!-- Description (most recent position) -->
+            <div v-if="group.positions[0].description" class="mt-3">
+              <p
+                class="text-[14.5px] text-ink-2 leading-[1.7] whitespace-pre-wrap"
+              >
+                <template
+                  v-if="
+                    !isExpanded(group.positions[0].id) &&
+                    shouldShowReadMore(group.positions[0].description)
+                  "
+                >
+                  {{ getTruncatedText(group.positions[0].description) }}
                 </template>
                 <template v-else>
-                  {{ formatShortMonthYearOrPresent(group.endDate, locale, t('common.present')) }}
+                  {{ group.positions[0].description }}
                 </template>
-              </div>
-              <div class="font-mono text-[11.5px] text-ink-3 mt-0.5">
-                ({{ group.totalDuration }})
-              </div>
-            </div>
-
-            <!-- Company / role column -->
-            <div class="md:col-span-7">
-              <h3 class="text-[17px] sm:text-[18px] font-semibold flex items-center gap-2 flex-wrap">
-                <span>{{ group.positions[0].role }}</span>
-                <span class="text-ink-3 font-normal">·</span>
-                <span class="text-ink-2 font-medium">{{ group.company }}</span>
-                <Chip v-if="group.isCurrent" variant="blue" class="!text-[10.5px]">
-                  {{ t('common.current') }}
-                </Chip>
-              </h3>
-              <p
-                v-if="group.location"
-                class="font-mono text-[11.5px] text-ink-3 mt-1.5 uppercase tracking-[0.12em]"
-              >
-                {{ group.location }}
               </p>
-
-              <!-- Positions list (only shown when more than one) -->
-              <div v-if="group.positions.length > 1" class="mt-3 pl-3 border-l border-line">
-                <div
-                  v-for="(position, idx) in group.positions.slice(1)"
-                  :key="position.id"
-                  class="text-[14px] text-ink-2"
-                  :class="idx > 0 ? 'mt-2' : ''"
-                >
-                  <span class="font-medium">{{ position.role }}</span>
-                  <span class="font-mono text-[11.5px] text-ink-3 ml-2">
-                    {{
-                      formatShortMonthYearOrPresent(
-                        position.start_date,
-                        locale,
-                        t('common.present'),
-                      )
-                    }}
-                    —
-                    {{
-                      position.current
-                        ? t('common.present')
-                        : formatShortMonthYearOrPresent(
-                            position.end_date,
-                            locale,
-                            t('common.present'),
-                          )
-                    }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Description (most recent position) -->
-              <div v-if="group.positions[0].description" class="mt-3">
-                <p
-                  class="text-[14.5px] text-ink-2 leading-[1.7] whitespace-pre-wrap"
-                >
-                  <template
-                    v-if="
-                      !isExpanded(group.positions[0].id) &&
-                      shouldShowReadMore(group.positions[0].description)
-                    "
-                  >
-                    {{ getTruncatedText(group.positions[0].description) }}
-                  </template>
-                  <template v-else>
-                    {{ group.positions[0].description }}
-                  </template>
-                </p>
-                <button
-                  v-if="shouldShowReadMore(group.positions[0].description)"
-                  type="button"
-                  class="mt-2 inline-flex items-center gap-1 text-[13px] font-medium text-accent hover:text-accent-2 transition-colors"
-                  :aria-expanded="isExpanded(group.positions[0].id)"
-                  @click="toggleExpanded(group.positions[0].id)"
-                >
-                  {{
-                    isExpanded(group.positions[0].id)
-                      ? t('common.readLess')
-                      : t('common.readMore')
-                  }}
-                  <component
-                    :is="isExpanded(group.positions[0].id) ? ChevronUp : ChevronDown"
-                    :size="14"
-                    :stroke-width="2"
-                  />
-                </button>
-              </div>
+              <button
+                v-if="shouldShowReadMore(group.positions[0].description)"
+                type="button"
+                class="mt-2 inline-flex items-center gap-1 text-[13px] font-medium text-accent hover:text-accent-2 transition-colors"
+                :aria-expanded="isExpanded(group.positions[0].id)"
+                @click="toggleExpanded(group.positions[0].id)"
+              >
+                {{
+                  isExpanded(group.positions[0].id)
+                    ? t('common.readLess')
+                    : t('common.readMore')
+                }}
+                <component
+                  :is="isExpanded(group.positions[0].id) ? ChevronUp : ChevronDown"
+                  :size="14"
+                  :stroke-width="2"
+                />
+              </button>
             </div>
-
-            <!-- Tags column (always empty for now — backend has no tags on Experience) -->
-            <div class="md:col-span-2 flex md:justify-end items-start" />
-          </header>
-        </li>
-      </ol>
-    </Tile>
+          </article>
+        </div>
+      </li>
+    </ol>
 
     <div v-if="showButton" class="mt-8 flex justify-center fade-up">
       <UiButton variant="secondary" size="md" @click="handleToggle">
