@@ -90,7 +90,10 @@ export default defineNuxtConfig({
       cookieKey: "i18n_redirected",
       redirectOn: "root",
       alwaysRedirect: false,
-      fallbackLocale: "en-us",
+      // Fall back to the default locale so a no-Accept-Language crawler (and
+      // x-default) both resolve to /pt-br. Real visitors are still redirected
+      // by their browser language.
+      fallbackLocale: "pt-br",
     },
   },
 
@@ -98,7 +101,8 @@ export default defineNuxtConfig({
   site: {
     url: siteUrl,
     name: "Leonardo Costa",
-    description: "Full Stack Developer & Creative Problem Solver",
+    description:
+      "Desenvolvedor backend com mais de 3 anos em Django REST, PostgreSQL e integrações com I.A.",
     defaultLocale: "pt-br",
     indexable: isProduction,
   },
@@ -168,11 +172,23 @@ export default defineNuxtConfig({
       name: "Leonardo Costa",
       url: siteUrl,
       image: `${siteUrl}/og-default.jpg`,
-      jobTitle: "Full Stack Developer",
-      description: "Full Stack Developer & Creative Problem Solver",
+      jobTitle: "Backend Developer",
+      description:
+        "Desenvolvedor backend com mais de 3 anos em Django REST, PostgreSQL e integrações com I.A.",
       sameAs: [
-        "https://github.com/leonardo-costa",
-        "https://www.linkedin.com/in/leonardo-costa",
+        "https://github.com/leon-rdo",
+        "https://www.linkedin.com/in/leonrdo-costa/",
+      ],
+      knowsAbout: [
+        "Django",
+        "Django REST Framework",
+        "Python",
+        "PostgreSQL",
+        "Vue.js",
+        "Nuxt",
+        "TypeScript",
+        "Backend Engineering",
+        "API Design",
       ],
     },
   },

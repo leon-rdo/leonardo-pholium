@@ -29,7 +29,7 @@ const blocks = computed(() => contentBlocks.value?.results ?? []);
 const getContentBlock = (key: string) => blocks.value.find((b) => b.key === key);
 
 // SEO
-const { setSeoMeta, setStructuredData } = useSeo();
+const { setSeoMeta } = useSeo();
 setSeoMeta({
   title: getContentBlock('seo_title')?.text || t('home.seo_title'),
   description:
@@ -52,62 +52,21 @@ setSeoMeta({
   ],
 });
 
-const homeUrl = computed(() => `${config.public.siteUrl}/${locale.value}`);
-
-setStructuredData([
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Person',
-    '@id': `${config.public.siteUrl}#person`,
-    name: getContentBlock('hero_name')?.text || 'Leonardo Costa',
-    jobTitle: getContentBlock('hero_subtitle')?.text || 'Backend Engineer',
-    description:
-      getContentBlock('seo_description')?.text || t('home.seo_description'),
-    url: config.public.siteUrl,
-    image:
-      getContentBlock('seo_image')?.text ||
-      `${config.public.siteUrl}/og-default.jpg`,
-    sameAs: [
-      getContentBlock('contact_linkedin')?.text || '',
-      getContentBlock('contact_github')?.text || '',
-    ].filter(Boolean),
-    knowsAbout: [
-      'Web Development',
-      'Full Stack Engineering',
-      'Vue.js',
-      'Nuxt',
-      'Django',
-      'TypeScript',
-      'Python',
+// Structured data: the site-wide Person (#identity) and WebSite nodes are
+// emitted once by nuxt-schema-org from `schemaOrg.identity` in nuxt.config.
+// Here we only augment those existing nodes (merged by @id) — promoting the
+// home WebPage to a ProfilePage and attaching the blog SearchAction to the
+// WebSite — instead of redefining Person/WebSite (which previously produced
+// duplicate, conflicting entities).
+useSchemaOrg([
+  defineWebPage({ '@type': 'ProfilePage' }),
+  defineWebSite({
+    potentialAction: [
+      defineSearchAction({
+        target: `${config.public.siteUrl}/${locale.value}/blog?search={search_term_string}`,
+      }),
     ],
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    '@id': `${config.public.siteUrl}#website`,
-    url: config.public.siteUrl,
-    name: 'Leonardo Costa',
-    description:
-      getContentBlock('seo_description')?.text || t('home.seo_description'),
-    inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
-    publisher: { '@id': `${config.public.siteUrl}#person` },
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: `${config.public.siteUrl}/${locale.value}/blog?search={search_term_string}`,
-      },
-      'query-input': 'required name=search_term_string',
-    },
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'ProfilePage',
-    '@id': `${homeUrl.value}#profile`,
-    url: homeUrl.value,
-    mainEntity: { '@id': `${config.public.siteUrl}#person` },
-    inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
-  },
+  }),
 ]);
 
 onMounted(() => {

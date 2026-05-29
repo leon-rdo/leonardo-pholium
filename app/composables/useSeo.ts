@@ -66,12 +66,14 @@ export const useSeo = () => {
     () => siteSettings.value?.site_name || "Leonardo Costa"
   );
   const defaultTitle = computed(
-    () => siteSettings.value?.default_title || "Portfolio | Leonardo Costa"
+    () =>
+      siteSettings.value?.default_title ||
+      "Leonardo Costa — Desenvolvedor Backend Django, Python e PostgreSQL"
   );
   const defaultDescription = computed(
     () =>
       siteSettings.value?.default_description ||
-      "Full Stack Developer & Creative Problem Solver"
+      "Desenvolvedor backend com mais de 3 anos em Django REST, PostgreSQL e integrações com I.A. Construo APIs, sistemas com Vue.js/Next.js e arquiteturas com filas assíncronas."
   );
   const defaultImage = computed(() => {
     if (siteSettings.value?.default_image) {
@@ -138,8 +140,17 @@ export const useSeo = () => {
     const fullUrl = url || `${baseUrl}${currentPath}`;
     const ogImage = normalizeOgImage(image);
 
+    // Append the brand name, but avoid duplicating it when the page title
+    // already contains it (backend `seo_title` blocks sometimes embed the
+    // full "Leonardo Costa — …" string, which would otherwise render
+    // "… | Leonardo Costa | Leonardo Costa").
+    const brand = siteName.value;
+    const titleHasBrand =
+      !!title && title.toLowerCase().includes(brand.toLowerCase());
     const fullTitle = title
-      ? `${title} | ${siteName.value}`
+      ? titleHasBrand
+        ? title
+        : `${title} | ${brand}`
       : defaultTitle.value;
 
     // Canonical — strip volatile query params (pagination, search) to prevent dup content
