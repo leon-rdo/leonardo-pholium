@@ -29,6 +29,26 @@ if (!category.value) {
   throw createError({ statusCode: 404, message: t('errors.categoryNotFound') });
 }
 
+// Fetch translated slug for hreflang (slugs differ per language). Querying
+// by `translations__slug` won't work cross-locale — must fetch by id.
+const otherLocale = locale.value === 'pt-br' ? 'en-us' : 'pt-br';
+const categoryId = category.value.id;
+const { data: altCategoryData } = await useAsyncData(
+  `category-alt-slug-${otherLocale}-${categoryId}`,
+  () =>
+    $fetch<Pick<Category, 'id' | 'slug'>>(
+      `/api/post-categories/${categoryId}/`,
+      {
+        baseURL: config.public.apiBase,
+        headers: { 'Accept-Language': otherLocale },
+      },
+    ).catch(() => null),
+);
+
+const altCategorySlug = computed(
+  () => altCategoryData.value?.slug || category.value?.slug,
+);
+
 const pagination = usePagination({
   defaultLimit: 12,
   scrollToTop: true,
@@ -87,6 +107,10 @@ setSeoMeta({
     t('blog.subtitle'),
   image: categoryImage.value,
   type: 'website',
+  alternateLanguages: [
+    { locale: locale.value, path: `/blog/category/${category.value!.slug}` },
+    { locale: otherLocale, path: `/blog/category/${altCategorySlug.value}` },
+  ],
 });
 
 const categoryUrl = computed(

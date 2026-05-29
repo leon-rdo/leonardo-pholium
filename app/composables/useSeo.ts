@@ -6,6 +6,13 @@ interface OgImageInput {
   type?: string;
 }
 
+interface AlternateLanguage {
+  /** locale code, e.g. "pt-br" or "en-us" */
+  locale: string;
+  /** path WITHOUT the locale prefix and including leading "/", e.g. "/blog/equipe-..." */
+  path: string;
+}
+
 interface SeoMetaInput {
   title?: string;
   description?: string;
@@ -23,6 +30,13 @@ interface SeoMetaInput {
   nofollow?: boolean;
   canonicalUrl?: string;
   keywords?: string[];
+  /**
+   * Explicit hreflang alternates. When supplied, overrides the default
+   * `useSwitchLocalePath`-based output. Required for routes with
+   * locale-dependent slugs (e.g. blog posts, categories), where the slug
+   * differs per language and switchLocalePath would otherwise emit a 404.
+   */
+  alternateLanguages?: AlternateLanguage[];
   robots?: {
     index?: boolean;
     follow?: boolean;
@@ -218,7 +232,7 @@ export const useSeo = () => {
       },
       link: [
         { rel: "canonical", href: canonical },
-        ...getHreflangLinks(currentPath),
+        ...getHreflangLinks(currentPath, input.alternateLanguages),
       ],
       meta: [
         { name: "robots", content: robotsContent.join(", ") },
@@ -229,11 +243,41 @@ export const useSeo = () => {
   };
 
   /**
-   * Generate hreflang links for all locales (+ x-default → default locale)
+   * Generate hreflang links for all locales (+ x-default → default locale).
+   *
+   * If `explicit` is provided, use those URLs verbatim (required for routes
+   * with locale-dependent slugs). Otherwise fall back to `useSwitchLocalePath`,
+   * which only works for routes that share a slug across languages.
    */
-  const getHreflangLinks = (_path: string) => {
+  const getHreflangLinks = (
+    _path: string,
+    explicit?: AlternateLanguage[]
+  ) => {
     const baseUrl = config.public.siteUrl || "https://leonardocosta.dev";
     const links: Array<{ rel: string; hreflang: string; href: string }> = [];
+
+    if (explicit?.length) {
+      explicit.forEach((alt) => {
+        links.push({
+          rel: "alternate",
+          hreflang: getLanguageTag(alt.locale),
+          href: `${baseUrl}/${alt.locale}${alt.path}`,
+        });
+      });
+
+      const defaultLocaleCode = (defaultLocale as string) || "pt-br";
+      const defaultEntry =
+        explicit.find((alt) => alt.locale === defaultLocaleCode) ||
+        explicit[0];
+      if (defaultEntry) {
+        links.push({
+          rel: "alternate",
+          hreflang: "x-default",
+          href: `${baseUrl}/${defaultEntry.locale}${defaultEntry.path}`,
+        });
+      }
+      return links;
+    }
 
     availableLocales.forEach((loc) => {
       const localePath = switchLocalePath(loc.code);

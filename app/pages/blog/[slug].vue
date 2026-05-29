@@ -40,6 +40,29 @@ if (!post.value) {
   throw createError({ statusCode: 404, message: t('errors.post_not_found') });
 }
 
+// Fetch the same post by id in the alternate locale to get the translated slug,
+// so hreflang points to a real URL (slugs differ per language). Querying by
+// `translations__slug` won't work cross-locale, because Django filters that
+// against the active language's translation only.
+const otherLocale = locale.value === 'pt-br' ? 'en-us' : 'pt-br';
+const postId = post.value.id;
+const { data: altPost } = await useAsyncData(
+  `post-alt-slug-${otherLocale}-${postId}`,
+  () =>
+    $fetch<Pick<Post, 'id' | 'slug'>>(`/api/posts/${postId}/`, {
+      baseURL: config.public.apiBase,
+      headers: { 'Accept-Language': otherLocale },
+    }).catch(() => null),
+);
+
+const altSlug = computed(() => altPost.value?.slug || post.value?.slug);
+
+if (!altPost.value && import.meta.server) {
+  console.warn(
+    `[blog] alt-locale slug fetch failed for post id=${postId} (${otherLocale}); falling back to current slug for hreflang`,
+  );
+}
+
 const localViewCount = ref(post.value.view_count);
 const { viewCounted } = usePostViewTracking(
   computed(() => post.value?.id || 0),
@@ -157,6 +180,10 @@ setSeoMeta({
   keywords: post.value.tags
     ?.map((tag) => (typeof tag === 'object' ? tag.name : ''))
     .filter(Boolean) as string[] | undefined,
+  alternateLanguages: [
+    { locale: locale.value, path: `/blog/${post.value.slug}` },
+    { locale: otherLocale, path: `/blog/${altSlug.value}` },
+  ],
   article: {
     publishedTime: post.value.published_at || undefined,
     modifiedTime: post.value.updated_at,
