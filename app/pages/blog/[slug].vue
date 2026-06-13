@@ -305,7 +305,7 @@ const copyLink = async () => {
             {{ getCategoryName(post.category) }}
           </NuxtLink>
           <span v-if="getCategoryName(post.category)" class="text-ink-4">·</span>
-          <span>{{ formatYearMonthDay(post.published_at, locale) }}</span>
+          <time :datetime="post.published_at">{{ formatYearMonthDay(post.published_at, locale) }}</time>
         </div>
 
         <!-- Title + excerpt -->

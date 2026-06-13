@@ -68,7 +68,7 @@ const postHref = computed(() => localePath(`/blog/${props.post.slug}`));
         <div class="font-mono-rail flex items-center gap-2 flex-wrap">
           <span v-if="categoryName" class="text-accent">{{ categoryName }}</span>
           <span v-if="categoryName" class="text-ink-4">·</span>
-          <span>{{ formatYearMonthDay(post.published_at, locale) }}</span>
+          <time :datetime="post.published_at">{{ formatYearMonthDay(post.published_at, locale) }}</time>
         </div>
         <NuxtLink :to="postHref" class="block">
           <h2
@@ -129,7 +129,7 @@ const postHref = computed(() => localePath(`/blog/${props.post.slug}`));
         <div class="font-mono-rail flex items-center gap-2 flex-wrap">
           <span v-if="categoryName" class="text-accent">{{ categoryName }}</span>
           <span v-if="categoryName" class="text-ink-4">·</span>
-          <span>{{ formatYearMonthDay(post.published_at, locale) }}</span>
+          <time :datetime="post.published_at">{{ formatYearMonthDay(post.published_at, locale) }}</time>
         </div>
         <NuxtLink :to="postHref" class="block">
           <h3

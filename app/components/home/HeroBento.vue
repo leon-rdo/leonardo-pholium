@@ -149,11 +149,11 @@ const portraitAlt = computed(() => {
               v-if="hasHeadline"
               class="h-display text-[56px] sm:text-[72px] lg:text-[88px] font-bold -ml-[2px]"
             >
-              <template v-if="lineKickerLead">{{ lineKickerLead }}<br /></template>
+<template v-if="lineKickerLead">{{ lineKickerLead }}{{ ' ' }}<br /></template>
               <span v-if="lineKickerMid" class="text-ink-2 font-medium">{{ lineKickerMid }}</span>
               <template v-if="lineKickerMid && lineKickerAccent">{{ ' ' }}</template>
               <span v-if="lineKickerAccent" class="text-accent">{{ lineKickerAccent }}</span>
-              <template v-if="lineKickerTail"><br />{{ lineKickerTail }}</template>
+              <template v-if="lineKickerTail"><br />{{ ' ' }}{{ lineKickerTail }}</template>
             </h1>
           </div>
 
