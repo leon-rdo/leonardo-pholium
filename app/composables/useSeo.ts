@@ -388,7 +388,15 @@ function stripVolatileQuery(url: string): string {
     const volatile = ["page", "limit", "search", "q", "sort", "ordering"];
     volatile.forEach((key) => parsed.searchParams.delete(key));
     const qs = parsed.searchParams.toString();
-    return `${parsed.origin}${parsed.pathname}${qs ? `?${qs}` : ""}`;
+    // Normalize the trailing slash so `/pt-br/blog/` and `/pt-br/blog` don't
+    // emit two self-referential canonicals (Google would treat them as
+    // duplicates with conflicting canonicals). The sitemap uses the
+    // no-trailing-slash form, so canonicals must match it.
+    const pathname =
+      parsed.pathname.length > 1
+        ? parsed.pathname.replace(/\/+$/, "")
+        : parsed.pathname;
+    return `${parsed.origin}${pathname}${qs ? `?${qs}` : ""}`;
   } catch {
     return url;
   }
