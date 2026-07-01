@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Github, Linkedin, Rss, Twitter } from 'lucide-vue-next';
+import type { ContentBlock } from '~/types/content';
 
 const { locale } = useI18n();
 const { siteName, setRssFeed } = useSeo();
@@ -15,6 +16,25 @@ const currentYear = new Date().getFullYear();
 // RSS lives under /api/rss/<locale>.xml — that's a Nitro server route,
 // not a Vue page, so we build the href directly (no localePath/NuxtLink).
 const rssHref = computed(() => `/api/rss/${locale.value}.xml`);
+
+// Footer social links are backend-driven (ContentBlocks), never hardcoded —
+// hardcoded handles drift from the real accounts and pollute the identity
+// signals. Shares the `home-content-blocks` fetch key with the home page.
+const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
+  'home-content-blocks',
+  '/api/content-blocks/',
+  { page_name: 'home', expand: 'images' },
+);
+const blockText = (key: string) =>
+  contentBlocks.value?.results?.find((b) => b.key === key)?.text || '';
+
+const githubUrl = computed(() => blockText('contact_github'));
+const linkedinUrl = computed(() => blockText('contact_linkedin'));
+// No X/Twitter ContentBlock exists yet; render the link only once one is
+// configured (either key), so we never ship a placeholder that 404s.
+const twitterUrl = computed(
+  () => blockText('contact_twitter') || blockText('contact_x'),
+);
 </script>
 
 <template>
@@ -42,7 +62,8 @@ const rssHref = computed(() => `/api/rss/${locale.value}.xml`);
 
         <nav class="flex items-center gap-5" :aria-label="$t('footer.social')">
           <a
-            href="https://github.com/leonardo-costa"
+            v-if="githubUrl"
+            :href="githubUrl"
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
@@ -52,7 +73,8 @@ const rssHref = computed(() => `/api/rss/${locale.value}.xml`);
             <span class="hidden sm:inline">github</span>
           </a>
           <a
-            href="https://linkedin.com/in/leonardo-costa"
+            v-if="linkedinUrl"
+            :href="linkedinUrl"
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
@@ -70,7 +92,8 @@ const rssHref = computed(() => `/api/rss/${locale.value}.xml`);
             <span class="hidden sm:inline">rss</span>
           </a>
           <a
-            href="https://twitter.com/"
+            v-if="twitterUrl"
+            :href="twitterUrl"
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
