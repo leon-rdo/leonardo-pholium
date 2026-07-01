@@ -59,7 +59,12 @@ setSeoMeta({
 // WebSite — instead of redefining Person/WebSite (which previously produced
 // duplicate, conflicting entities).
 useSchemaOrg([
-  defineWebPage({ '@type': 'ProfilePage' }),
+  // ProfilePage must declare the entity it is about; Google rejects the rich
+  // result without `mainEntity`. Point it at the site-wide Person (#identity).
+  defineWebPage({
+    '@type': 'ProfilePage',
+    mainEntity: { '@id': `${config.public.siteUrl}/#identity` },
+  }),
   defineWebSite({
     potentialAction: [
       defineSearchAction({
