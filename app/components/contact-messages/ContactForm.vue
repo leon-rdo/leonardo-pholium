@@ -8,6 +8,7 @@ import { Send, AlertCircle, CheckCircle2 } from 'lucide-vue-next';
 
 const config = useRuntimeConfig();
 const { locale, t } = useI18n();
+const { trackEvent } = useAnalytics();
 
 const form = ref({ name: '', email: '', subject: '', message: '' });
 const isSubmitting = ref(false);
@@ -41,6 +42,7 @@ const submitForm = async () => {
       body: form.value,
     });
     submitted.value = true;
+    trackEvent('contact_form_submit');
     resetForm();
     setTimeout(() => (submitted.value = false), 5000);
   } catch (err: any) {

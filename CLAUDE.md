@@ -32,7 +32,7 @@ There are no lint/test scripts. Type checking happens through Nuxt's generated `
 
 - `NUXT_PUBLIC_API_BASE` — Django backend URL (required for any data; sitemap and RSS gracefully degrade if unset)
 - `NUXT_PUBLIC_SITE_URL` — public origin used for canonical/OG/sitemap (defaults to `https://leonardocosta.dev`)
-- `NUXT_PUBLIC_GTAG_ID` — GA4 measurement ID; gtag is **disabled unless this is set AND `NODE_ENV=production`**
+- `NUXT_PUBLIC_GTM_ID` — Google Tag Manager container ID (e.g. `GTM-MTTS5WZC`); the GTM snippet is **injected only when this is set AND `NODE_ENV=production`**. GA4 (`G-Q4GRSTKYEF`) lives inside the GTM container — do not add gtag.js directly or page views double-count.
 - `NUXT_PUBLIC_TWITTER_HANDLE` — optional, drives Twitter Card meta
 
 ## Architecture notes that span files

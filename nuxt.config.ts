@@ -3,6 +3,8 @@ import tailwindcss from "@tailwindcss/vite";
 const siteUrl =
   process.env.NUXT_PUBLIC_SITE_URL || "https://leonardocosta.dev";
 const isProduction = process.env.NODE_ENV === "production";
+const gtmId = process.env.NUXT_PUBLIC_GTM_ID || "";
+const gtmEnabled = isProduction && !!gtmId;
 
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
@@ -42,7 +44,6 @@ export default defineNuxtConfig({
     "@nuxtjs/sitemap",
     "@nuxtjs/robots",
     "nuxt-schema-org",
-    "nuxt-gtag",
   ],
 
   // Auto-import primitives from app/components/ui/ without the `Ui` path
@@ -197,19 +198,6 @@ export default defineNuxtConfig({
   // supply explicit og:image URLs from the backend (cover image) with
   // /og-default.jpg as a fallback — we don't need runtime image generation.
 
-  // nuxt-gtag — Google Analytics 4 with automatic SPA page_view tracking.
-  // ID is sourced from NUXT_PUBLIC_GTAG_ID so it can be omitted in dev/staging.
-  // Loading is skipped entirely when the id is empty, so there is no hit to
-  // Core Web Vitals in environments without an analytics target.
-  gtag: {
-    id: process.env.NUXT_PUBLIC_GTAG_ID || "",
-    loadingStrategy: "async",
-    initCommands: [
-      ["config", process.env.NUXT_PUBLIC_GTAG_ID || "", { anonymize_ip: true }],
-    ],
-    enabled: isProduction && !!process.env.NUXT_PUBLIC_GTAG_ID,
-  },
-
   // @nuxt/image — format/quality defaults
   image: {
     format: ["avif", "webp"],
@@ -234,6 +222,31 @@ export default defineNuxtConfig({
       },
       charset: "utf-8",
       viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
+      // Google Tag Manager — GA4 lives inside the container (GTM-MTTS5WZC),
+      // so there is no direct gtag.js here; loading both would double-count.
+      // SPA route changes are tracked by GA4 Enhanced Measurement (history
+      // events). Disabled outside production / when NUXT_PUBLIC_GTM_ID is
+      // unset so dev traffic never reaches analytics.
+      script: gtmEnabled
+        ? [
+            {
+              innerHTML:
+                `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});` +
+                `var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';` +
+                `j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})` +
+                `(window,document,'script','dataLayer','${gtmId}');`,
+              tagPosition: "head",
+            },
+          ]
+        : [],
+      noscript: gtmEnabled
+        ? [
+            {
+              innerHTML: `<iframe src="https://www.googletagmanager.com/ns.html?id=${gtmId}" height="0" width="0" style="display:none;visibility:hidden"></iframe>`,
+              tagPosition: "bodyOpen",
+            },
+          ]
+        : [],
       link: [
         { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
         { rel: "manifest", href: "/site.webmanifest" },
