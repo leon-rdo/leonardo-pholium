@@ -64,10 +64,10 @@ setStructuredData([
       .slice(0, 300),
     url: aboutUrl.value,
     inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
-    mainEntity: { '@id': `${config.public.siteUrl}#person` },
+    mainEntity: { '@id': `${config.public.siteUrl}/#identity` },
     isPartOf: {
       '@type': 'WebSite',
-      '@id': `${config.public.siteUrl}#website`,
+      '@id': `${config.public.siteUrl}/#website`,
     },
   },
 ]);

@@ -67,7 +67,7 @@ watchEffect(() => {
       inLanguage: locale.value === 'pt-br' ? 'pt-BR' : 'en-US',
       isPartOf: {
         '@type': 'WebSite',
-        '@id': `${config.public.siteUrl}#website`,
+        '@id': `${config.public.siteUrl}/#website`,
         url: config.public.siteUrl,
         name: 'Leonardo Costa',
       },
@@ -77,17 +77,18 @@ watchEffect(() => {
       '@type': 'ItemList',
       itemListOrder: 'https://schema.org/ItemListOrderDescending',
       numberOfItems: list.length,
+      // No /projects/{slug} detail pages exist — @id/url must not advertise
+      // URLs that 404. Anchor each item to the list page instead; url only
+      // when the project has a real external site.
       itemListElement: list.map((project, index) => ({
         '@type': 'ListItem',
         position: index + 1,
         item: {
           '@type': 'CreativeWork',
-          '@id': `${config.public.siteUrl}/${locale.value}/projects/${project.slug}`,
+          '@id': `${projectsUrl.value}#project-${project.id}`,
           name: project.title,
           description: project.summary,
-          url:
-            project.website_url ||
-            `${config.public.siteUrl}/${locale.value}/projects/${project.slug}`,
+          ...(project.website_url && { url: project.website_url }),
           image: project.cover || undefined,
           dateCreated: project.start_date || undefined,
           dateModified: project.updated_at,

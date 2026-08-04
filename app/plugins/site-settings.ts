@@ -1,9 +1,13 @@
-export default defineNuxtPlugin(async (nuxtApp) => {
+export default defineNuxtPlugin(async () => {
   const config = useRuntimeConfig();
 
-  // Get locale from cookie or default
+  // Derive the locale from the URL prefix (/pt-br/…, /en-us/…) — cookie-less
+  // visitors (crawlers, first-time social fetchers) on /en-us pages must get
+  // en-us defaults, and the i18n_redirected cookie can't tell us that.
+  const path = useRequestURL().pathname;
   const i18nCookie = useCookie("i18n_redirected");
-  const locale = i18nCookie.value || "pt-br";
+  const localeFromPath = path.match(/^\/(pt-br|en-us)(\/|$)/)?.[1];
+  const locale = localeFromPath || i18nCookie.value || "pt-br";
 
   // Fetch site settings once at app initialization
   try {
@@ -26,7 +30,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       site_name: "Leonardo Costa",
       default_title: "Portfolio | Leonardo Costa",
       default_description: "Full Stack Developer",
-      default_image: `${config.public.apiBase}/static/og-default.jpg`,
+      default_image: `${config.public.siteUrl}/og-default.jpg`,
     };
   }
 });

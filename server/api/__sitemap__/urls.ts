@@ -220,12 +220,15 @@ function getStaticPages(): SitemapUrl[] {
 
   const urls: SitemapUrl[] = [];
   staticPaths.forEach(({ path, priority, changefreq }) => {
+    // Home is emitted as /{locale} (no trailing slash) — the canonical
+    // strips trailing slashes, and sitemap loc must match the canonical.
+    const suffix = path === "/" ? "" : path;
     LOCALES.forEach((locale) => {
       urls.push({
-        loc: `/${locale}${path === "/" ? "/" : path}`,
+        loc: `/${locale}${suffix}`,
         priority,
         changefreq,
-        alternatives: alternativesFor(path === "/" ? "/" : path),
+        alternatives: alternativesFor(suffix),
       });
     });
   });

@@ -250,6 +250,11 @@
     "404": "Page not found",
     "postNotFound": "Post not found",
     "categoryNotFound": "Category not found",
-    "post_not_found": "Post not found"
+    "post_not_found": "Post not found",
+    "genericTitle": "Something went wrong",
+    "notFoundDescription": "The page you are looking for does not exist or was moved.",
+    "genericDescription": "An unexpected error occurred. Please try again shortly.",
+    "backHome": "Back to home",
+    "goToBlog": "Browse the blog"
   }
 }

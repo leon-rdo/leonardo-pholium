@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import type { LocationQueryRaw } from 'vue-router';
 
 const props = defineProps<{
   currentPage: number;
@@ -12,6 +13,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   'page-change': [page: number];
 }>();
+
+const route = useRoute();
 
 const maxVisible = computed(() => props.maxVisiblePages || 7);
 
@@ -39,7 +42,17 @@ const visiblePages = computed<(number | '…')[]>(() => {
   return pages;
 });
 
-const goToPage = (page: number) => {
+// Real hrefs (page 1 drops the param) so crawlers can follow pagination —
+// buttons here would make every page past 1 undiscoverable outside the
+// sitemap. Click still emits so parents keep their scroll behavior.
+const linkFor = (page: number) => {
+  const query: LocationQueryRaw = { ...route.query };
+  if (page === 1) delete query.page;
+  else query.page = String(page);
+  return { query };
+};
+
+const onNavigate = (page: number) => {
   if (page >= 1 && page <= props.totalPages && page !== props.currentPage) {
     emit('page-change', page);
   }
@@ -52,32 +65,42 @@ const goToPage = (page: number) => {
     class="flex items-center justify-center gap-1.5 py-10 flex-wrap"
     :aria-label="$t('common.page')"
   >
-    <button
-      type="button"
-      class="inline-flex items-center justify-center min-w-[40px] h-10 px-3 rounded-input ring-hair bg-card text-ink-2 text-[14px] font-medium transition-colors hover:text-accent hover:ring-1 hover:ring-accent disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-ink-2 disabled:hover:ring-0"
-      :disabled="!hasPrevious"
+    <NuxtLink
+      v-if="hasPrevious"
+      :to="linkFor(currentPage - 1)"
+      class="inline-flex items-center justify-center min-w-[40px] h-10 px-3 rounded-input ring-hair bg-card text-ink-2 text-[14px] font-medium transition-colors hover:text-accent hover:ring-1 hover:ring-accent"
       :aria-label="$t('common.previousPage')"
-      @click="goToPage(currentPage - 1)"
+      @click="onNavigate(currentPage - 1)"
     >
       <ChevronLeft :size="18" :stroke-width="2" />
-    </button>
+    </NuxtLink>
+    <span
+      v-else
+      class="inline-flex items-center justify-center min-w-[40px] h-10 px-3 rounded-input ring-hair bg-card text-ink-2 text-[14px] font-medium opacity-40 cursor-not-allowed"
+      :aria-label="$t('common.previousPage')"
+      aria-disabled="true"
+    >
+      <ChevronLeft :size="18" :stroke-width="2" />
+    </span>
 
     <template v-for="(page, index) in visiblePages" :key="`page-${index}`">
-      <button
-        v-if="typeof page === 'number'"
-        type="button"
-        class="inline-flex items-center justify-center min-w-[40px] h-10 px-3 rounded-input text-[14px] font-medium transition-colors"
-        :class="
-          page === currentPage
-            ? 'bg-accent text-night-text cursor-default'
-            : 'ring-hair bg-card text-ink-2 hover:text-accent hover:ring-1 hover:ring-accent'
-        "
+      <NuxtLink
+        v-if="typeof page === 'number' && page !== currentPage"
+        :to="linkFor(page)"
+        class="inline-flex items-center justify-center min-w-[40px] h-10 px-3 rounded-input text-[14px] font-medium transition-colors ring-hair bg-card text-ink-2 hover:text-accent hover:ring-1 hover:ring-accent"
         :aria-label="`${$t('common.page')} ${page}`"
-        :aria-current="page === currentPage ? 'page' : undefined"
-        @click="goToPage(page as number)"
+        @click="onNavigate(page)"
       >
         {{ page }}
-      </button>
+      </NuxtLink>
+      <span
+        v-else-if="typeof page === 'number'"
+        class="inline-flex items-center justify-center min-w-[40px] h-10 px-3 rounded-input text-[14px] font-medium bg-accent text-night-text cursor-default"
+        :aria-label="`${$t('common.page')} ${page}`"
+        aria-current="page"
+      >
+        {{ page }}
+      </span>
       <span
         v-else
         class="inline-flex items-center justify-center min-w-[40px] h-10 text-ink-3 select-none"
@@ -87,14 +110,22 @@ const goToPage = (page: number) => {
       </span>
     </template>
 
-    <button
-      type="button"
-      class="inline-flex items-center justify-center min-w-[40px] h-10 px-3 rounded-input ring-hair bg-card text-ink-2 text-[14px] font-medium transition-colors hover:text-accent hover:ring-1 hover:ring-accent disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-ink-2 disabled:hover:ring-0"
-      :disabled="!hasNext"
+    <NuxtLink
+      v-if="hasNext"
+      :to="linkFor(currentPage + 1)"
+      class="inline-flex items-center justify-center min-w-[40px] h-10 px-3 rounded-input ring-hair bg-card text-ink-2 text-[14px] font-medium transition-colors hover:text-accent hover:ring-1 hover:ring-accent"
       :aria-label="$t('common.nextPage')"
-      @click="goToPage(currentPage + 1)"
+      @click="onNavigate(currentPage + 1)"
     >
       <ChevronRight :size="18" :stroke-width="2" />
-    </button>
+    </NuxtLink>
+    <span
+      v-else
+      class="inline-flex items-center justify-center min-w-[40px] h-10 px-3 rounded-input ring-hair bg-card text-ink-2 text-[14px] font-medium opacity-40 cursor-not-allowed"
+      :aria-label="$t('common.nextPage')"
+      aria-disabled="true"
+    >
+      <ChevronRight :size="18" :stroke-width="2" />
+    </span>
   </nav>
 </template>

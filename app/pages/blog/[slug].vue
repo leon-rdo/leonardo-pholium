@@ -13,7 +13,6 @@ import {
 } from 'lucide-vue-next';
 import type { DjangoListResponse } from '~/types/api';
 import type { Post, Category } from '~/types/blog';
-import type { Image } from '~/types/core';
 import type { BreadcrumbItem } from '~/composables/useBreadcrumbs';
 import BlogComments from '~/components/blog/BlogComments.vue';
 import BlogImageGallery from '~/components/blog/BlogImageGallery.vue';
@@ -28,11 +27,15 @@ const route = useRoute();
 const config = useRuntimeConfig();
 const slug = route.params.slug as string;
 
-// Post by slug
+// Post by slug — images come expanded on the post itself; a separate
+// /api/images/?content_type= query needed a ContentType id the frontend
+// doesn't know (config.public.postContentType was never defined).
 const { data: posts } = await useApi<
-  DjangoListResponse<Post<{ category: true; author: true; tags: true }>>
+  DjangoListResponse<
+    Post<{ category: true; author: true; tags: true; images: true }>
+  >
 >('/api/posts/', {
-  params: { translations__slug: slug, expand: 'category,series,tags' },
+  params: { translations__slug: slug, expand: 'category,series,tags,images' },
 });
 
 const post = computed(() => posts.value?.results?.[0]);
@@ -74,16 +77,7 @@ watch(viewCounted, (counted) => {
 });
 
 // Images attached to the post (cover + gallery)
-const { data: imagesData } = await useApi<DjangoListResponse<Image>>(
-  '/api/images/',
-  {
-    params: {
-      content_type: config.public.postContentType,
-      object_id: post.value.id,
-    },
-  },
-);
-const postImages = computed(() => imagesData.value?.results || []);
+const postImages = computed(() => post.value?.images || []);
 const coverImage = computed(() =>
   postImages.value.find((img) => img.image_type === 'cover'),
 );
@@ -93,14 +87,15 @@ const galleryImages = computed(() =>
     .sort((a, b) => a.order - b.order),
 );
 
-// Related posts
+// Related posts — images expanded inline so thumbnails render during SSR
+// (they were previously fetched in onMounted and invisible to crawlers).
 const { data: relatedPostsData } = await useApi<
-  DjangoListResponse<Post<{ category: true }>>
+  DjangoListResponse<Post<{ category: true; images: true }>>
 >('/api/posts/published/', {
   params: {
     category: post.value.category?.id,
     limit: 4,
-    expand: 'category',
+    expand: 'category,images',
   },
 });
 const filteredRelatedPosts = computed(
@@ -109,25 +104,8 @@ const filteredRelatedPosts = computed(
       ?.filter((p) => p.id !== post.value?.id)
       .slice(0, 3) || [],
 );
-const relatedPostsImages = ref<Record<number, Image[]>>({});
 
-onMounted(async () => {
-  if (filteredRelatedPosts.value.length > 0) {
-    const promises = filteredRelatedPosts.value.map(async (rp) => {
-      const { data } = await useApi<DjangoListResponse<Image>>('/api/images/', {
-        params: {
-          content_type: config.public.postContentType,
-          object_id: rp.id,
-        },
-      });
-      return { postId: rp.id, images: data.value?.results || [] };
-    });
-    const results = await Promise.all(promises);
-    results.forEach(({ postId, images }) => {
-      relatedPostsImages.value[postId] = images;
-    });
-  }
-
+onMounted(() => {
   gsap.utils.toArray<HTMLElement>('.fade-up').forEach((element) => {
     gsap.from(element, {
       y: 32,
@@ -146,7 +124,8 @@ const getCoverImageUrl = () =>
   `${config.public.siteUrl}/og-default.jpg`;
 
 const getRelatedPostCoverImage = (postId: number) => {
-  const images = relatedPostsImages.value[postId] || [];
+  const images =
+    filteredRelatedPosts.value.find((p) => p.id === postId)?.images || [];
   const cover = images.find((img) => img.image_type === 'cover');
   return cover?.thumbnail || cover?.file || '';
 };
@@ -207,7 +186,7 @@ setStructuredData([
     '@id': `${postUrl}#article`,
     isPartOf: {
       '@type': 'WebSite',
-      '@id': `${config.public.siteUrl}#website`,
+      '@id': `${config.public.siteUrl}/#website`,
     },
     headline: post.value.title,
     alternativeHeadline: post.value.seo_title || undefined,
@@ -220,8 +199,8 @@ setStructuredData([
     },
     datePublished: post.value.published_at,
     dateModified: post.value.updated_at || post.value.published_at,
-    author: { '@id': `${config.public.siteUrl}#person` },
-    publisher: { '@id': `${config.public.siteUrl}#person` },
+    author: { '@id': `${config.public.siteUrl}/#identity` },
+    publisher: { '@id': `${config.public.siteUrl}/#identity` },
     mainEntityOfPage: { '@type': 'WebPage', '@id': postUrl },
     timeRequired: `PT${post.value.reading_time || 5}M`,
     wordCount: getWordCount(post.value.body || ''),
@@ -265,6 +244,10 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
 });
 
 // Share helpers
+const { trackEvent } = useAnalytics();
+const trackShare = (method: string) =>
+  trackEvent('post_share', { share_method: method, content_id: slug });
+
 const sharePost = (platform: 'twitter' | 'facebook' | 'linkedin' | 'whatsapp') => {
   const url = window.location.href;
   const title = post.value?.title || '';
@@ -274,12 +257,16 @@ const sharePost = (platform: 'twitter' | 'facebook' | 'linkedin' | 'whatsapp') =
     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
     whatsapp: `https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}`,
   };
-  if (urls[platform]) window.open(urls[platform], '_blank', 'width=600,height=400');
+  if (urls[platform]) {
+    trackShare(platform);
+    window.open(urls[platform], '_blank', 'width=600,height=400');
+  }
 };
 
 const linkCopied = ref(false);
 const copyLink = async () => {
   await navigator.clipboard.writeText(window.location.href);
+  trackShare('copy_link');
   linkCopied.value = true;
   setTimeout(() => (linkCopied.value = false), 2200);
 };

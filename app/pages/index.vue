@@ -28,12 +28,14 @@ const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
 const blocks = computed(() => contentBlocks.value?.results ?? []);
 const getContentBlock = (key: string) => blocks.value.find((b) => b.key === key);
 
-// SEO
-const { setSeoMeta } = useSeo();
+// SEO — fall back to the rich site-wide defaults ("Leonardo Costa —
+// Desenvolvedor Backend…"), not the nav labels ("Início"/"Home"), which
+// made the home page title the weakest string on the site.
+const { setSeoMeta, defaultTitle, defaultDescription } = useSeo();
 setSeoMeta({
-  title: getContentBlock('seo_title')?.text || t('home.seo_title'),
+  title: getContentBlock('seo_title')?.text || defaultTitle.value,
   description:
-    getContentBlock('seo_description')?.text || t('home.seo_description'),
+    getContentBlock('seo_description')?.text || defaultDescription.value,
   image:
     getContentBlock('seo_image')?.text ||
     `${config.public.siteUrl}/og-default.jpg`,

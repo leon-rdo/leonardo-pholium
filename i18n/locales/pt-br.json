@@ -250,6 +250,11 @@
     "404": "Página não encontrada",
     "postNotFound": "Post não encontrado",
     "categoryNotFound": "Categoria não encontrada",
-    "post_not_found": "Artigo não encontrado"
+    "post_not_found": "Artigo não encontrado",
+    "genericTitle": "Algo deu errado",
+    "notFoundDescription": "A página que você procura não existe ou foi movida.",
+    "genericDescription": "Ocorreu um erro inesperado. Tente novamente em instantes.",
+    "backHome": "Voltar ao início",
+    "goToBlog": "Ver o blog"
   }
 }

@@ -137,7 +137,9 @@ export const useSeo = () => {
 
     const baseUrl = config.public.siteUrl || "https://leonardocosta.dev";
     const currentPath = route.path;
-    const fullUrl = url || `${baseUrl}${currentPath}`;
+    // fullPath (with query) — stripVolatileQuery removes the volatile params
+    // but must see ?page= so paginated pages can self-canonicalize.
+    const fullUrl = url || `${baseUrl}${route.fullPath}`;
     const ogImage = normalizeOgImage(image);
 
     // Append the brand name, but avoid duplicating it when the page title
@@ -153,7 +155,9 @@ export const useSeo = () => {
         : `${title} | ${brand}`
       : defaultTitle.value;
 
-    // Canonical — strip volatile query params (pagination, search) to prevent dup content
+    // Canonical — strip volatile query params (search, sort) to prevent dup
+    // content. `page` is kept: paginated pages are server-rendered with their
+    // own content, so they must self-canonicalize or Google drops pages 2+.
     const canonical = canonicalUrl || stripVolatileQuery(fullUrl);
 
     // Robots directives
@@ -190,7 +194,9 @@ export const useSeo = () => {
       ogDescription: description || defaultDescription.value,
       ogImage: ogImage.url,
       ogImageAlt: ogImage.alt || title || siteName.value,
-      ogUrl: fullUrl,
+      // og:url must match the canonical, or shares of ?search=/?sort= URLs
+      // register as distinct objects on social platforms.
+      ogUrl: canonical,
       ogType: type,
       ogSiteName: siteName.value,
       ogLocale: locale.value === "pt-br" ? "pt_BR" : "en_US",
@@ -319,7 +325,10 @@ export const useSeo = () => {
   const setStructuredData = (data: unknown | unknown[]) => {
     const items = Array.isArray(data) ? data : [data];
     useHead({
-      script: items.map((item) => ({
+      // Keyed so callers inside watchEffect replace their previous script
+      // instead of appending a duplicate JSON-LD block on every re-run.
+      script: items.map((item, i) => ({
+        key: `ld-${(item as Record<string, unknown>)?.["@type"] ?? "data"}-${i}`,
         type: "application/ld+json",
         innerHTML: JSON.stringify(item),
       })),
@@ -385,8 +394,11 @@ export const useSeo = () => {
 function stripVolatileQuery(url: string): string {
   try {
     const parsed = new URL(url);
-    const volatile = ["page", "limit", "search", "q", "sort", "ordering"];
+    const volatile = ["limit", "search", "q", "sort", "ordering"];
     volatile.forEach((key) => parsed.searchParams.delete(key));
+    if (parsed.searchParams.get("page") === "1") {
+      parsed.searchParams.delete("page");
+    }
     const qs = parsed.searchParams.toString();
     // Normalize the trailing slash so `/pt-br/blog/` and `/pt-br/blog` don't
     // emit two self-referential canonicals (Google would treat them as

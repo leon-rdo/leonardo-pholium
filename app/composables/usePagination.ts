@@ -117,10 +117,10 @@ export const usePagination = (
     updateUrl(1);
   };
 
-  // Initialize on mount
-  onMounted(() => {
-    initializeFromQuery();
-  });
+  // Initialize synchronously so SSR renders the requested page — with this
+  // in onMounted, /blog?page=3 would server-render page 1 and only swap to
+  // page 3 after hydration, which crawlers never see.
+  initializeFromQuery();
 
   // Watch for external query changes
   watch(

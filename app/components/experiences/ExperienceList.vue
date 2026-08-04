@@ -165,6 +165,8 @@ const groupedExperiences = computed<GroupedExperience[]>(() => {
   );
 });
 
+// OrganizationRole (not a nameless Person) is the schema.org shape for
+// "held role X at org Y from date A to B".
 const structuredData = computed(() => ({
   '@context': 'https://schema.org',
   '@type': 'ItemList',
@@ -172,21 +174,25 @@ const structuredData = computed(() => ({
     '@type': 'ListItem',
     position: index + 1,
     item: {
-      '@type': 'Organization',
-      name: exp.company,
-      employee: {
-        '@type': 'Person',
-        jobTitle: exp.role,
-        startDate: exp.start_date,
-        endDate: exp.current ? undefined : exp.end_date,
-      },
+      '@type': 'OrganizationRole',
+      roleName: exp.role,
+      startDate: exp.start_date,
+      ...(exp.current ? {} : { endDate: exp.end_date }),
+      worksFor: { '@type': 'Organization', name: exp.company },
+      member: { '@id': `${config.public.siteUrl}/#identity` },
     },
   })),
 }));
 
 useHead({
   script: [
-    { type: 'application/ld+json', innerHTML: JSON.stringify(structuredData.value) },
+    {
+      key: 'ld-experiences',
+      type: 'application/ld+json',
+      // Function form keeps it reactive — a plain JSON.stringify here froze
+      // the first (empty) render into the head.
+      innerHTML: () => JSON.stringify(structuredData.value),
+    },
   ],
 });
 </script>
