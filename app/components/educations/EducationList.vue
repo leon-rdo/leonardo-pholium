@@ -88,8 +88,10 @@ const isCurrent = (edu: Education) => !edu.end_date;
 
 const calculateDuration = (startDate: string | null, endDate: string | null) => {
   if (!startDate) return '';
-  const start = new Date(startDate);
-  const end = endDate ? new Date(endDate) : new Date();
+  // Parse as local midnight — see ExperienceList.calculateDuration: UTC parse
+  // + local getMonth() makes server and client disagree about the month.
+  const start = new Date(startDate + 'T00:00:00');
+  const end = endDate ? new Date(endDate + 'T00:00:00') : new Date();
   const months =
     (end.getFullYear() - start.getFullYear()) * 12 +
     (end.getMonth() - start.getMonth());

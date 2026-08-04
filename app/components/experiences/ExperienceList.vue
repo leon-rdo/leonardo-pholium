@@ -100,8 +100,12 @@ const calculateDuration = (
   endDate: string | null,
   isCurrent: boolean,
 ) => {
-  const start = new Date(startDate);
-  const end = isCurrent ? new Date() : new Date(endDate || new Date());
+  // Date-only strings must be parsed as *local* midnight: new Date('2025-12-01')
+  // is UTC midnight, and reading .getMonth() in a UTC-negative browser lands in
+  // the previous month — the server (UTC) and client then disagree ("8 meses"
+  // vs "9 meses"), which is a hydration mismatch.
+  const start = new Date(startDate + 'T00:00:00');
+  const end = isCurrent || !endDate ? new Date() : new Date(endDate + 'T00:00:00');
   const months =
     (end.getFullYear() - start.getFullYear()) * 12 +
     (end.getMonth() - start.getMonth());
