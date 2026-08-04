@@ -2,7 +2,7 @@
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'dark';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     variant?: ButtonVariant;
     size?: ButtonSize;
@@ -22,6 +22,12 @@ withDefaults(
     type: 'button',
   },
 );
+
+// `:is` with a plain string only resolves globally registered components —
+// "NuxtLink" isn't one, so it rendered an inert unknown element
+// (<nuxtlink>) and hero CTAs didn't navigate at all.
+const NuxtLink = resolveComponent('NuxtLink');
+const tag = computed(() => (props.as === 'NuxtLink' ? NuxtLink : props.as));
 
 const variants: Record<ButtonVariant, string> = {
   primary:
@@ -43,7 +49,7 @@ const sizes: Record<ButtonSize, string> = {
 
 <template>
   <component
-    :is="as"
+    :is="tag"
     :type="as === 'button' ? type : undefined"
     :href="href"
     :to="to"

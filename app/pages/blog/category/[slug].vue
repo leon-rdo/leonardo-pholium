@@ -49,6 +49,14 @@ const altCategorySlug = computed(
   () => altCategoryData.value?.slug || category.value?.slug,
 );
 
+// Teach the header language switcher the translated slug — switchLocalePath
+// otherwise keeps the current slug and the switched URL 404s.
+const setI18nParams = useSetI18nParams();
+setI18nParams({
+  [locale.value]: { slug: route.params.slug as string },
+  [otherLocale]: { slug: altCategorySlug.value },
+});
+
 const pagination = usePagination({
   defaultLimit: 12,
   scrollToTop: true,

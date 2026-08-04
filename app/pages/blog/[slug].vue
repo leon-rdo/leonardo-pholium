@@ -60,6 +60,14 @@ const { data: altPost } = await useAsyncData(
 
 const altSlug = computed(() => altPost.value?.slug || post.value?.slug);
 
+// Teach the header language switcher the translated slug — switchLocalePath
+// otherwise keeps the current slug and /en-us/blog/<pt-slug> 404s.
+const setI18nParams = useSetI18nParams();
+setI18nParams({
+  [locale.value]: { slug },
+  [otherLocale]: { slug: altSlug.value },
+});
+
 if (!altPost.value && import.meta.server) {
   console.warn(
     `[blog] alt-locale slug fetch failed for post id=${postId} (${otherLocale}); falling back to current slug for hreflang`,

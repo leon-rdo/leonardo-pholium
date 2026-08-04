@@ -26,7 +26,7 @@
  *   hero_stat_1_value, hero_stat_1_label  (1..4)
  */
 import type { ContentBlock } from '~/types/content';
-import { ArrowRight, ArrowUp, Command } from 'lucide-vue-next';
+import { ArrowRight, ArrowUp } from 'lucide-vue-next';
 
 interface Props {
   contentBlocks: ContentBlock[];
@@ -181,13 +181,8 @@ const portraitAlt = computed(() => {
                 variant="secondary"
                 size="md"
               >
-                {{ $t('home.hero.readUses') }}
+                {{ $t('home.hero.aboutMe') }}
               </UiButton>
-              <span
-                class="font-mono-rail text-[11px] ml-2 hidden sm:inline-flex items-center gap-1"
-              >
-                <Command :size="12" :stroke-width="1.8" />K
-              </span>
             </div>
           </div>
         </Tile>

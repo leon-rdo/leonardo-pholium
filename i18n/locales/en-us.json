@@ -45,7 +45,7 @@
     "seo_description": "Personal Portfolio and Blog",
     "hero": {
       "viewWork": "View work",
-      "readUses": "Read /uses",
+      "aboutMe": "About me",
       "terminalTitle": "~/leonardo · whoami.sh"
     },
     "now": {
