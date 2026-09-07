@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight, Github, Linkedin, Mail, MapPin } from 'lucide-vue-next';
 import type { ContentBlock } from '~/types/content';
 import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
 import EducationList from '~/components/educations/EducationList.vue';
 import type { BreadcrumbItem } from '~/composables/useBreadcrumbs';
 
-if (import.meta.client) gsap.registerPlugin(ScrollTrigger);
 
 const localePath = useLocalePath();
 const { locale, t } = useI18n();
@@ -112,17 +109,7 @@ const hasAnyLink = computed(
   () => !!linkedinUrl.value || !!githubUrl.value || !!emailAddress.value,
 );
 
-onMounted(() => {
-  gsap.utils.toArray<HTMLElement>('.fade-up').forEach((element) => {
-    gsap.from(element, {
-      y: 36,
-      opacity: 0,
-      duration: 0.7,
-      ease: 'power2.out',
-      scrollTrigger: { trigger: element, start: 'top 92%', once: true },
-    });
-  });
-});
+useFadeUp({ y: 36, duration: 0.7 });
 </script>
 
 <template>

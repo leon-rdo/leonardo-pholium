@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Search, FileSearch } from 'lucide-vue-next';
 import type { DjangoListResponse } from '~/types/api';
 import type { ContentBlock } from '~/types/content';
@@ -10,7 +8,6 @@ import Pagination from '~/components/common/Pagination.vue';
 import PostCard from '~/components/blog/PostCard.vue';
 import type { BreadcrumbItem } from '~/composables/useBreadcrumbs';
 
-if (import.meta.client) gsap.registerPlugin(ScrollTrigger);
 
 const localePath = useLocalePath();
 const { locale, t } = useI18n();
@@ -168,17 +165,7 @@ const showingTo = computed(() =>
   ),
 );
 
-onMounted(() => {
-  gsap.utils.toArray<HTMLElement>('.fade-up').forEach((element) => {
-    gsap.from(element, {
-      y: 32,
-      opacity: 0,
-      duration: 0.6,
-      ease: 'power2.out',
-      scrollTrigger: { trigger: element, start: 'top 92%', once: true },
-    });
-  });
-});
+useFadeUp();
 </script>
 
 <template>

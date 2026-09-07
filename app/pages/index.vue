@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight, ArrowUpRight, Github, Linkedin, Mail } from 'lucide-vue-next';
 import type { ContentBlock } from '~/types/content';
 import HeroBento from '~/components/home/HeroBento.vue';
@@ -17,7 +15,6 @@ const localePath = useLocalePath();
 const { t, locale } = useI18n();
 const config = useRuntimeConfig();
 
-if (import.meta.client) gsap.registerPlugin(ScrollTrigger);
 
 const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
   'home-content-blocks',
@@ -76,17 +73,7 @@ useSchemaOrg([
   }),
 ]);
 
-onMounted(() => {
-  gsap.utils.toArray<HTMLElement>('.fade-up').forEach((element) => {
-    gsap.from(element, {
-      y: 40,
-      opacity: 0,
-      duration: 0.7,
-      ease: 'power2.out',
-      scrollTrigger: { trigger: element, start: 'top 90%', once: true },
-    });
-  });
-});
+useFadeUp({ y: 40, duration: 0.7, start: 'top 90%' });
 
 // Contact links and meta — all backend-driven (ContentBlocks). When a key
 // isn't configured we render nothing for it (no AI-mocked placeholders).

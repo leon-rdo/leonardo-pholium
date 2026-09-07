@@ -124,6 +124,26 @@ body {
   border-radius: 4px;
 }
 
+/*
+ * Respect prefers-reduced-motion globally: kill smooth scrolling and collapse
+ * transitions/animations. GSAP entrance animations are disabled separately in
+ * the page scripts (a CSS rule can't stop a JS tween from setting opacity: 0).
+ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ---------------------------------------------------------------------------
  * Reusable utility classes that don't fit cleanly into @theme.
  * ------------------------------------------------------------------------- */

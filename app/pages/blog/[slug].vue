@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -19,7 +17,6 @@ import BlogImageGallery from '~/components/blog/BlogImageGallery.vue';
 import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
 import { formatYearMonthDay } from '~/utils/date';
 
-if (import.meta.client) gsap.registerPlugin(ScrollTrigger);
 
 const localePath = useLocalePath();
 const { locale, t } = useI18n();
@@ -113,17 +110,7 @@ const filteredRelatedPosts = computed(
       .slice(0, 3) || [],
 );
 
-onMounted(() => {
-  gsap.utils.toArray<HTMLElement>('.fade-up').forEach((element) => {
-    gsap.from(element, {
-      y: 32,
-      opacity: 0,
-      duration: 0.6,
-      ease: 'power2.out',
-      scrollTrigger: { trigger: element, start: 'top 92%', once: true },
-    });
-  });
-});
+useFadeUp();
 
 // Helpers
 const getCoverImageUrl = () =>

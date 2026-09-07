@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { FileSearch } from 'lucide-vue-next';
 import type { DjangoListResponse } from '~/types/api';
 import type { Post, Category } from '~/types/blog';
@@ -9,7 +7,6 @@ import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
 import PostCard from '~/components/blog/PostCard.vue';
 import type { BreadcrumbItem } from '~/composables/useBreadcrumbs';
 
-if (import.meta.client) gsap.registerPlugin(ScrollTrigger);
 
 const route = useRoute();
 const slug = route.params.slug as string;
@@ -159,17 +156,7 @@ watchEffect(() => {
 
 const hasResults = computed(() => (posts.value?.results?.length ?? 0) > 0);
 
-onMounted(() => {
-  gsap.utils.toArray<HTMLElement>('.fade-up').forEach((element) => {
-    gsap.from(element, {
-      y: 32,
-      opacity: 0,
-      duration: 0.6,
-      ease: 'power2.out',
-      scrollTrigger: { trigger: element, start: 'top 92%', once: true },
-    });
-  });
-});
+useFadeUp();
 </script>
 
 <template>

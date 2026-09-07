@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowUpRight, FolderOpen } from 'lucide-vue-next';
 import type { DjangoListResponse } from '~/types/api';
 import type { Category } from '~/types/blog';
 import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
 import type { BreadcrumbItem } from '~/composables/useBreadcrumbs';
 
-if (import.meta.client) gsap.registerPlugin(ScrollTrigger);
 
 const localePath = useLocalePath();
 const { t, locale } = useI18n();
@@ -84,17 +81,7 @@ const gradients = [
   'from-teal-500/40 via-cyan-600/30 to-cyan-800/40',
 ];
 
-onMounted(() => {
-  gsap.utils.toArray<HTMLElement>('.fade-up').forEach((element) => {
-    gsap.from(element, {
-      y: 32,
-      opacity: 0,
-      duration: 0.6,
-      ease: 'power2.out',
-      scrollTrigger: { trigger: element, start: 'top 92%', once: true },
-    });
-  });
-});
+useFadeUp();
 </script>
 
 <template>
