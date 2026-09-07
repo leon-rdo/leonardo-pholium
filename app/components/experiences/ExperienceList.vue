@@ -374,7 +374,7 @@ useHead({
               <button
                 v-if="shouldShowReadMore(group.positions[0].description)"
                 type="button"
-                class="mt-2 inline-flex items-center gap-1 text-[13px] font-medium text-accent hover:text-accent-2 transition-colors"
+                class="mt-2 inline-flex items-center gap-1 min-h-[24px] py-1 text-[13px] font-medium text-accent hover:text-accent-2 transition-colors"
                 :aria-expanded="isExpanded(group.positions[0].id)"
                 @click="toggleExpanded(group.positions[0].id)"
               >

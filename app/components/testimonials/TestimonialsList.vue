@@ -61,7 +61,7 @@ const initials = (name: string) =>
             <NuxtImg
               v-else
               :src="item.photo"
-              :alt="`Foto de ${item.author_name}`"
+              :alt="$t('a11y.authorPhoto', { name: item.author_name })"
               :width="40"
               :height="40"
               format="webp"
@@ -97,7 +97,7 @@ const initials = (name: string) =>
             <NuxtImg
               v-else
               :src="item.photo"
-              :alt="`Foto de ${item.author_name}`"
+              :alt="$t('a11y.authorPhoto', { name: item.author_name })"
               :width="36"
               :height="36"
               format="webp"

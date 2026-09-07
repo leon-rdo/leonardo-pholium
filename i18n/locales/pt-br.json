@@ -50,14 +50,28 @@
     },
     "now": {
       "label": "agora",
-      "building": { "label": "construindo" },
-      "reading": { "label": "lendo" },
-      "listening": { "label": "ouvindo" },
-      "learning": { "label": "aprendendo" },
-      "published": { "label": "publicado" },
-      "where": { "label": "onde" }
+      "building": {
+        "label": "construindo"
+      },
+      "reading": {
+        "label": "lendo"
+      },
+      "listening": {
+        "label": "ouvindo"
+      },
+      "learning": {
+        "label": "aprendendo"
+      },
+      "published": {
+        "label": "publicado"
+      },
+      "where": {
+        "label": "onde"
+      }
     },
-    "about": { "label": "sobre" },
+    "about": {
+      "label": "sobre"
+    },
     "stack": {
       "label": "stack",
       "title": "Stack."
@@ -155,8 +169,7 @@
     "categoriesLabel": "categorias",
     "allCategoriesDescription": "Explore por tema. Todos os artigos do blog estão em alguma destas categorias.",
     "category": "categoria",
-    "relatedLabel": "leitura relacionada",
-    "noCategoriesAvailable": "Nenhuma categoria disponível"
+    "relatedLabel": "leitura relacionada"
   },
   "projects": {
     "title": "Meus Projetos",
@@ -196,7 +209,8 @@
     "subtitle": "O que meus clientes dizem",
     "previous": "Depoimento anterior",
     "next": "Próximo depoimento",
-    "goTo": "Ir para depoimento {number}"
+    "goTo": "Ir para depoimento {number}",
+    "empty": "Nenhum depoimento por enquanto."
   },
   "contact": {
     "title": "Vamos Conversar?",
@@ -237,7 +251,8 @@
   },
   "navbar": {
     "openMenu": "Abrir menu",
-    "closeMenu": "Fechar menu"
+    "closeMenu": "Fechar menu",
+    "menuLabel": "Menu de navegação"
   },
   "reactions": {
     "like": "Curtir",
@@ -256,5 +271,14 @@
     "genericDescription": "Ocorreu um erro inesperado. Tente novamente em instantes.",
     "backHome": "Voltar ao início",
     "goToBlog": "Ver o blog"
+  },
+  "a11y": {
+    "skipToContent": "Pular para o conteúdo",
+    "themeLabel": "Tema",
+    "themeLight": "Tema claro",
+    "themeSystem": "Tema do sistema",
+    "themeDark": "Tema escuro",
+    "languageLabel": "Idioma",
+    "authorPhoto": "Foto de {name}"
   }
 }

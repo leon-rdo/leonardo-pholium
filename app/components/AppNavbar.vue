@@ -54,6 +54,60 @@ const route = useRoute();
 watch(() => route.fullPath, () => {
   drawer.value = false;
 });
+
+/*
+ * Drawer accessibility (WCAG 2.1.2 / 2.4.3 / 4.1.2). The panel is a modal
+ * dialog, so while it is open it must: trap Tab inside itself, close on
+ * Escape, prevent the page behind it from scrolling, and hand focus back to
+ * the button that opened it. None of that is free with a plain v-if panel.
+ */
+const drawerPanel = ref<HTMLElement | null>(null);
+const menuButton = ref<HTMLElement | null>(null);
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input, select, textarea, summary, [tabindex]:not([tabindex="-1"])';
+
+const onDrawerKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeDrawer();
+    return;
+  }
+  if (event.key !== 'Tab' || !drawerPanel.value) return;
+
+  const nodes = Array.from(
+    drawerPanel.value.querySelectorAll<HTMLElement>(FOCUSABLE),
+  ).filter((el) => el.offsetParent !== null);
+  if (!nodes.length) return;
+
+  const first = nodes[0]!;
+  const last = nodes[nodes.length - 1]!;
+  const active = document.activeElement;
+
+  if (event.shiftKey && active === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault();
+    first.focus();
+  }
+};
+
+watch(drawer, async (isOpen) => {
+  if (!import.meta.client) return;
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+  if (isOpen) {
+    await nextTick();
+    const nodes = drawerPanel.value?.querySelectorAll<HTMLElement>(FOCUSABLE);
+    nodes?.[0]?.focus();
+  } else {
+    menuButton.value?.focus();
+  }
+});
+
+onBeforeUnmount(() => {
+  if (import.meta.client) document.body.style.overflow = '';
+});
 </script>
 
 <template>
@@ -140,7 +194,7 @@ watch(() => route.fullPath, () => {
         <ThemeToggle />
 
         <!-- Locale dropdown -->
-        <UiDropdown align="right">
+        <UiDropdown align="right" :label="$t('a11y.languageLabel')">
           <template #trigger>
             <span
               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded font-mono text-[11.5px] tracking-[0.16em] text-ink-2 hover:text-ink hover:bg-card transition-colors uppercase"
@@ -154,7 +208,8 @@ watch(() => route.fullPath, () => {
               <li v-for="lang in availableLocales" :key="lang.code">
                 <button
                   type="button"
-                  class="w-full flex items-center justify-between gap-2 px-4 py-2 text-[14px] text-ink-2 hover:text-ink hover:bg-card-soft transition-colors"
+                  :aria-current="lang.code === locale ? 'true' : undefined"
+                  class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-[14px] text-ink-2 hover:text-ink hover:bg-card-soft transition-colors"
                   :class="{ 'text-ink': lang.code === locale }"
                   @click="changeLocale(lang.code)"
                 >
@@ -172,9 +227,13 @@ watch(() => route.fullPath, () => {
 
       <!-- Mobile menu button -->
       <button
+        ref="menuButton"
         type="button"
-        class="lg:hidden p-2 rounded text-ink hover:bg-card transition-colors"
+        class="lg:hidden inline-flex items-center justify-center w-11 h-11 rounded text-ink hover:bg-card transition-colors"
         :aria-label="$t('navbar.openMenu')"
+        :aria-expanded="drawer"
+        aria-haspopup="dialog"
+        aria-controls="mobile-drawer"
         @click="drawer = true"
       >
         <MenuIcon :size="20" :stroke-width="1.8" />
@@ -189,7 +248,12 @@ watch(() => route.fullPath, () => {
         enter-from-class="opacity-0"
         leave-to-class="opacity-0"
       >
-        <div v-if="drawer" class="fixed inset-0 z-50 bg-ink/50" @click="closeDrawer" />
+        <div
+          v-if="drawer"
+          aria-hidden="true"
+          class="fixed inset-0 z-50 bg-ink/50"
+          @click="closeDrawer"
+        />
       </transition>
       <transition
         enter-active-class="transition-transform duration-200 ease-out"
@@ -199,7 +263,13 @@ watch(() => route.fullPath, () => {
       >
         <aside
           v-if="drawer"
+          id="mobile-drawer"
+          ref="drawerPanel"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="$t('navbar.menuLabel')"
           class="fixed inset-y-0 right-0 z-50 w-[320px] max-w-[85vw] bg-paper border-l border-line color-mode-fade flex flex-col"
+          @keydown="onDrawerKeydown"
         >
           <header class="flex items-center justify-between p-5 border-b border-line">
             <span class="flex items-center gap-2.5 text-[15px] font-semibold">
@@ -211,7 +281,7 @@ watch(() => route.fullPath, () => {
             </span>
             <button
               type="button"
-              class="p-2 rounded text-ink hover:bg-card transition-colors"
+              class="inline-flex items-center justify-center w-11 h-11 -mr-2 rounded text-ink hover:bg-card transition-colors"
               :aria-label="$t('navbar.closeMenu')"
               @click="closeDrawer"
             >
@@ -278,17 +348,18 @@ watch(() => route.fullPath, () => {
 
           <footer class="border-t border-line p-5 space-y-4">
             <div>
-              <div class="font-mono-rail text-[11px] mb-2">Theme</div>
+              <div class="font-mono-rail text-[11px] mb-2">{{ $t('a11y.themeLabel') }}</div>
               <ThemeToggle />
             </div>
             <div>
-              <div class="font-mono-rail text-[11px] mb-2">Language</div>
+              <div class="font-mono-rail text-[11px] mb-2">{{ $t('a11y.languageLabel') }}</div>
               <div class="flex gap-1.5">
                 <button
                   v-for="lang in availableLocales"
                   :key="lang.code"
                   type="button"
-                  class="px-3 py-1.5 rounded-card text-[13px] font-medium ring-hair transition-colors"
+                  :aria-current="lang.code === locale ? 'true' : undefined"
+                  class="px-3 py-2.5 rounded-card text-[13px] font-medium ring-hair transition-colors"
                   :class="
                     lang.code === locale
                       ? 'bg-ink text-paper'

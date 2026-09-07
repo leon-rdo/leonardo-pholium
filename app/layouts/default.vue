@@ -39,9 +39,20 @@ const twitterUrl = computed(
 
 <template>
   <div class="min-h-screen flex flex-col bg-paper text-ink color-mode-fade">
+    <!--
+      Bypass block (WCAG 2.4.1). Visually hidden until focused, then pinned
+      over the sticky navbar so the first Tab on any page can jump the header.
+    -->
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:px-4 focus:py-2.5 focus:rounded-input focus:bg-accent focus:text-accent-fg focus:text-[14px] focus:font-semibold focus:shadow-lg"
+    >
+      {{ $t('a11y.skipToContent') }}
+    </a>
+
     <AppNavbar />
 
-    <main class="flex-1">
+    <main id="main" tabindex="-1" class="flex-1 focus:outline-none">
       <slot />
     </main>
 
@@ -60,13 +71,13 @@ const twitterUrl = computed(
           <span>© {{ currentYear }} leonardocosta.dev</span>
         </div>
 
-        <nav class="flex items-center gap-5" :aria-label="$t('footer.social')">
+        <nav class="flex items-center gap-1 sm:gap-5 -ml-3 sm:ml-0" :aria-label="$t('footer.social')">
           <a
             v-if="githubUrl"
             :href="githubUrl"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
+            class="inline-flex items-center justify-center gap-1.5 min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 sm:py-1 hover:text-ink transition-colors"
             title="GitHub"
           >
             <Github :size="14" :stroke-width="1.8" />
@@ -77,7 +88,7 @@ const twitterUrl = computed(
             :href="linkedinUrl"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
+            class="inline-flex items-center justify-center gap-1.5 min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 sm:py-1 hover:text-ink transition-colors"
             title="LinkedIn"
           >
             <Linkedin :size="14" :stroke-width="1.8" />
@@ -85,7 +96,7 @@ const twitterUrl = computed(
           </a>
           <a
             :href="rssHref"
-            class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
+            class="inline-flex items-center justify-center gap-1.5 min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 sm:py-1 hover:text-ink transition-colors"
             title="RSS"
           >
             <Rss :size="14" :stroke-width="1.8" />
@@ -96,7 +107,7 @@ const twitterUrl = computed(
             :href="twitterUrl"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 hover:text-ink transition-colors"
+            class="inline-flex items-center justify-center gap-1.5 min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 sm:py-1 hover:text-ink transition-colors"
             title="X / Twitter"
           >
             <Twitter :size="14" :stroke-width="1.8" />

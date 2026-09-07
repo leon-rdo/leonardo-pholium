@@ -50,14 +50,28 @@
     },
     "now": {
       "label": "currently",
-      "building": { "label": "building" },
-      "reading": { "label": "reading" },
-      "listening": { "label": "listening" },
-      "learning": { "label": "learning" },
-      "published": { "label": "last published" },
-      "where": { "label": "where" }
+      "building": {
+        "label": "building"
+      },
+      "reading": {
+        "label": "reading"
+      },
+      "listening": {
+        "label": "listening"
+      },
+      "learning": {
+        "label": "learning"
+      },
+      "published": {
+        "label": "last published"
+      },
+      "where": {
+        "label": "where"
+      }
     },
-    "about": { "label": "about" },
+    "about": {
+      "label": "about"
+    },
     "stack": {
       "label": "stack",
       "title": "Stack."
@@ -155,8 +169,7 @@
     "categoriesLabel": "categories",
     "allCategoriesDescription": "Browse by topic. Every article on the blog lives in one of these categories.",
     "category": "category",
-    "relatedLabel": "related reading",
-    "noCategoriesAvailable": "No categories available"
+    "relatedLabel": "related reading"
   },
   "projects": {
     "title": "My Projects",
@@ -196,7 +209,8 @@
     "subtitle": "What my clients say",
     "previous": "Previous testimonial",
     "next": "Next testimonial",
-    "goTo": "Go to testimonial {number}"
+    "goTo": "Go to testimonial {number}",
+    "empty": "No testimonials yet."
   },
   "contact": {
     "title": "Let's Talk?",
@@ -237,7 +251,8 @@
   },
   "navbar": {
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "menuLabel": "Navigation menu"
   },
   "reactions": {
     "like": "Like",
@@ -256,5 +271,14 @@
     "genericDescription": "An unexpected error occurred. Please try again shortly.",
     "backHome": "Back to home",
     "goToBlog": "Browse the blog"
+  },
+  "a11y": {
+    "skipToContent": "Skip to content",
+    "themeLabel": "Theme",
+    "themeLight": "Light theme",
+    "themeSystem": "System theme",
+    "themeDark": "Dark theme",
+    "languageLabel": "Language",
+    "authorPhoto": "Photo of {name}"
   }
 }

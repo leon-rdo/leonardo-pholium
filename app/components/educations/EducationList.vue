@@ -244,7 +244,7 @@ const calculateDuration = (startDate: string | null, endDate: string | null) => 
               <button
                 v-if="shouldShowReadMore(edu.description)"
                 type="button"
-                class="mt-2 inline-flex items-center gap-1 text-[13px] font-medium text-accent hover:text-accent-2 transition-colors"
+                class="mt-2 inline-flex items-center gap-1 min-h-[24px] py-1 text-[13px] font-medium text-accent hover:text-accent-2 transition-colors"
                 :aria-expanded="isExpanded(edu.id)"
                 @click="toggleExpanded(edu.id)"
               >
