@@ -219,6 +219,10 @@ const portraitAlt = computed(() => {
               :placeholder="true"
               :quality="85"
               fit="cover"
+              preload
+              loading="eager"
+              fetchpriority="high"
+              decoding="async"
               class="absolute inset-0 w-full h-full object-cover"
             />
             <div v-else class="absolute inset-0 grid place-items-center">

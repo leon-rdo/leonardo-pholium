@@ -65,6 +65,8 @@ const initials = (name: string) =>
               :width="40"
               :height="40"
               format="webp"
+              loading="lazy"
+              decoding="async"
               class="w-10 h-10 rounded-full object-cover"
             />
             <div>
@@ -101,6 +103,8 @@ const initials = (name: string) =>
               :width="36"
               :height="36"
               format="webp"
+              loading="lazy"
+              decoding="async"
               class="w-9 h-9 rounded-full object-cover"
             />
             <div>

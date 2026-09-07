@@ -126,6 +126,8 @@ useFadeUp();
                   :width="600"
                   :height="375"
                   format="webp"
+                  loading="lazy"
+                  decoding="async"
                   class="absolute inset-0 w-full h-full object-cover"
                 />
               </div>

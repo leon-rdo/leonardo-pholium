@@ -373,6 +373,10 @@ const copyLink = async () => {
             :height="coverImage.height || 675"
             sizes="(max-width: 800px) 100vw, 1100px"
             format="webp"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            preload
             :placeholder="true"
             :quality="80"
             class="w-full h-auto object-cover aspect-video"
@@ -472,6 +476,8 @@ const copyLink = async () => {
                   :width="600"
                   :height="375"
                   format="webp"
+                  loading="lazy"
+                  decoding="async"
                   class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                 />
               </div>

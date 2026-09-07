@@ -55,6 +55,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
           :width="image.width || 600"
           :height="image.height || 450"
           format="webp"
+          loading="lazy"
+          decoding="async"
           sizes="(max-width: 600px) 100vw, 400px"
           class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
@@ -120,6 +122,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
               :width="currentImage?.width || 1600"
               :height="currentImage?.height || 1000"
               format="webp"
+              loading="lazy"
+              decoding="async"
               :placeholder="true"
               :quality="90"
               class="max-w-full max-h-[80vh] object-contain rounded-card"

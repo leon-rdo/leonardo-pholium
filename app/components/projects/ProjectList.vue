@@ -93,6 +93,8 @@ const authorFirstName = (project: Project<{ skills: true }>): string => {
             :width="800"
             :height="450"
             format="webp"
+            loading="lazy"
+            decoding="async"
             class="absolute inset-0 w-full h-full object-cover"
           />
           <div class="absolute inset-0 scrim-night" />
@@ -219,6 +221,8 @@ const authorFirstName = (project: Project<{ skills: true }>): string => {
             :width="600"
             :height="375"
             format="webp"
+            loading="lazy"
+            decoding="async"
             class="absolute inset-0 w-full h-full object-cover"
           />
           <div class="absolute inset-0 scrim-night" />
