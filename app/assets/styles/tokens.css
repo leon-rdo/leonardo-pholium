@@ -22,20 +22,34 @@
   --color-night-text: #f4efe5;
   --color-night-input: #1c1c22; /* form field bg inside the night CTA */
 
-  /* Text */
+  /* Text — ink-3/ink-4 are darkened vs. the original draft so body-sized
+     text clears WCAG AA (4.5:1) on every surface, not just on `card`. */
   --color-ink: #15161b;
   --color-ink-2: #3f3f46;
-  --color-ink-3: #71717a;
-  --color-ink-4: #a1a1aa;
+  --color-ink-3: #5d5d66; /* 5.67:1 on paper */
+  --color-ink-4: #7b7b85; /* 3.65:1 on paper — separators/icons only, never body text */
 
   /* Lines */
   --color-line: #ddd5c4;
   --color-line-2: #c7bfab;
 
-  /* Brand accent — single saturated blue, used sparingly */
-  --color-accent: #2c67e8;
-  --color-accent-2: #1e40af;
+  /* Brand accent — single saturated blue, used sparingly.
+     Deepened from #2c67e8 to #1d4ed8: the original read 4.34:1 on cream,
+     which failed AA for links, chips and the primary button label. */
+  --color-accent: #1d4ed8;   /* 5.84:1 on paper */
+  --color-accent-2: #1e40af; /* hover — darker still */
   --color-accent-soft: #dde5fb;
+
+  /* Foreground for text/icons sitting ON an accent fill (primary buttons).
+     Flips in dark mode because the dark accent is much lighter. */
+  --color-accent-fg: #ffffff; /* 6.70:1 on --color-accent */
+
+  /*
+   * Accent for use INSIDE the always-dark "night" tile. Deliberately not
+   * overridden by .dark: the night surface never flips, so the accent on it
+   * must not flip either. The light-mode accent would read 2.87:1 there.
+   */
+  --color-accent-night: #4d80ef; /* 5.18:1 on --color-night */
 
   /* Aurora blobs (radial gradients in hero / featured tiles) */
   --color-blob-1: #b8ccff; /* blue */
@@ -75,14 +89,17 @@
   --color-ink: #f4efe5;
   --color-ink-2: #c4c4cb;
   --color-ink-3: #8a8a93;
-  --color-ink-4: #5a5a63;
+  --color-ink-4: #6b6b75; /* raised from #5a5a63 → 3.66:1 on dark paper */
 
   --color-line: #2a2a30;
   --color-line-2: #3a3a42;
 
   --color-accent: #4d80ef;       /* slightly brighter for contrast on dark */
-  --color-accent-2: #2c67e8;
+  /* Hover brightens on dark instead of darkening, so --color-accent-fg
+     (near-black here) keeps 7.05:1 against it. */
+  --color-accent-2: #6f9bf5;
   --color-accent-soft: rgba(44, 103, 232, 0.18);
+  --color-accent-fg: #0e0e12; /* 5.18:1 on the dark accent */
 
   --color-blob-1: rgba(77, 128, 239, 0.45);
   --color-blob-2: rgba(255, 163, 130, 0.28);

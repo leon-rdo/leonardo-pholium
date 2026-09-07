@@ -201,7 +201,7 @@ useFadeUp();
             v-model="searchQuery"
             type="search"
             :placeholder="$t('blog.search')"
-            class="w-full pl-10 pr-3.5 py-2.5 bg-card text-ink placeholder:text-ink-4 ring-hair rounded-input text-[14.5px] focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-paper transition-shadow color-mode-fade"
+            class="w-full pl-10 pr-3.5 py-2.5 bg-card text-ink placeholder:text-ink-3 ring-hair rounded-input text-[14.5px] focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-paper transition-shadow color-mode-fade"
           />
         </div>
 

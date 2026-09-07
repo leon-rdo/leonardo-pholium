@@ -99,7 +99,7 @@ const inputClass =
     <!-- Form -->
     <form @submit.prevent="submitForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
       <label class="block">
-        <span class="font-mono-rail text-[11px] mb-1.5 block">{{ t('contact.name') }}</span>
+        <span class="font-mono-rail !text-night-text/70 text-[11px] mb-1.5 block">{{ t('contact.name') }}</span>
         <input
           v-model="form.name"
           type="text"
@@ -111,7 +111,7 @@ const inputClass =
       </label>
 
       <label class="block">
-        <span class="font-mono-rail text-[11px] mb-1.5 block">{{ t('contact.email') }}</span>
+        <span class="font-mono-rail !text-night-text/70 text-[11px] mb-1.5 block">{{ t('contact.email') }}</span>
         <input
           v-model="form.email"
           type="email"
@@ -123,7 +123,7 @@ const inputClass =
       </label>
 
       <label class="block md:col-span-2">
-        <span class="font-mono-rail text-[11px] mb-1.5 block">{{ t('contact.subject') }}</span>
+        <span class="font-mono-rail !text-night-text/70 text-[11px] mb-1.5 block">{{ t('contact.subject') }}</span>
         <input
           v-model="form.subject"
           type="text"
@@ -134,7 +134,7 @@ const inputClass =
       </label>
 
       <label class="block md:col-span-2">
-        <span class="font-mono-rail text-[11px] mb-1.5 block">{{ t('contact.message') }}</span>
+        <span class="font-mono-rail !text-night-text/70 text-[11px] mb-1.5 block">{{ t('contact.message') }}</span>
         <textarea
           v-model="form.message"
           rows="5"
@@ -148,7 +148,7 @@ const inputClass =
         <button
           type="submit"
           :disabled="isSubmitting"
-          class="w-full inline-flex items-center justify-center gap-2 bg-accent text-night-text font-semibold py-3.5 rounded-input hover:bg-accent-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors glow-blue"
+          class="w-full inline-flex items-center justify-center gap-2 bg-accent text-accent-fg font-semibold py-3.5 rounded-input hover:bg-accent-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors glow-blue"
         >
           {{ isSubmitting ? t('common.loading') : t('contact.send') }}
           <Send :size="16" :stroke-width="2" />

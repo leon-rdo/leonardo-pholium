@@ -43,7 +43,7 @@ const goHome = () => clearError({ redirect: localePath('/') });
       <div class="flex items-center justify-center gap-3 flex-wrap">
         <button
           type="button"
-          class="inline-flex items-center justify-center h-11 px-5 rounded-input bg-accent text-white text-[14px] font-medium transition-opacity hover:opacity-90"
+          class="inline-flex items-center justify-center h-11 px-5 rounded-input bg-accent text-accent-fg text-[14px] font-medium transition-opacity hover:opacity-90"
           @click="goHome"
         >
           {{ t('errors.backHome') }}

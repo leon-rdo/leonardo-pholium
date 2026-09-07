@@ -46,6 +46,8 @@
   --color-accent: var(--color-accent);
   --color-accent-2: var(--color-accent-2);
   --color-accent-soft: var(--color-accent-soft);
+  --color-accent-fg: var(--color-accent-fg);
+  --color-accent-night: var(--color-accent-night);
 
   --color-blob-1: var(--color-blob-1);
   --color-blob-2: var(--color-blob-2);

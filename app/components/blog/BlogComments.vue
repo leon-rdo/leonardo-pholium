@@ -106,7 +106,7 @@ const submitComment = async (parentId: number | null = null) => {
 };
 
 const inputClass =
-  'w-full bg-paper text-ink placeholder:text-ink-4 ring-hair rounded-input ' +
+  'w-full bg-paper text-ink placeholder:text-ink-3 ring-hair rounded-input ' +
   'px-4 py-2.5 text-[14.5px] focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ' +
   'focus:ring-offset-card transition-shadow color-mode-fade ' +
   'disabled:opacity-60 disabled:cursor-not-allowed';
@@ -161,7 +161,7 @@ const inputClass =
         <button
           type="submit"
           :disabled="isSubmitting"
-          class="inline-flex items-center justify-center gap-2 bg-accent text-night-text font-semibold px-5 py-2.5 rounded-input hover:bg-accent-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+          class="inline-flex items-center justify-center gap-2 bg-accent text-accent-fg font-semibold px-5 py-2.5 rounded-input hover:bg-accent-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
         >
           {{ isSubmitting ? $t('common.loading') : $t('blog.sendComment') }}
           <Send :size="14" :stroke-width="2" />
@@ -220,7 +220,7 @@ const inputClass =
                 <button
                   type="submit"
                   :disabled="isSubmitting"
-                  class="inline-flex items-center gap-1.5 bg-accent text-night-text text-[13px] font-semibold px-4 py-2 rounded-input hover:bg-accent-2 disabled:opacity-60 transition-colors"
+                  class="inline-flex items-center gap-1.5 bg-accent text-accent-fg text-[13px] font-semibold px-4 py-2 rounded-input hover:bg-accent-2 disabled:opacity-60 transition-colors"
                 >
                   <Send :size="13" :stroke-width="2" />
                   {{ $t('blog.submitReply', $t('blog.sendComment')) }}

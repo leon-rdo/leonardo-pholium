@@ -31,7 +31,7 @@ const tag = computed(() => (props.as === 'NuxtLink' ? NuxtLink : props.as));
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    'bg-accent text-paper hover:bg-accent-2',
+    'bg-accent text-accent-fg hover:bg-accent-2',
   secondary:
     'bg-card text-ink ring-hair hover:bg-card-soft',
   ghost:

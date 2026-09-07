@@ -280,7 +280,7 @@ useFadeUp({ y: 36, duration: 0.7 });
           class="relative px-8 sm:px-12 py-14 sm:py-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center"
         >
           <div class="md:col-span-8">
-            <SectionLabel :name="$t('home.contact.label')" />
+            <SectionLabel :name="$t('home.contact.label')" tone="night" />
             <h2 class="h-display text-[32px] sm:text-[44px] font-bold mt-2">
               {{ getContentBlock('cta_text')?.text || $t('about.cta') }}
             </h2>
@@ -288,7 +288,7 @@ useFadeUp({ y: 36, duration: 0.7 });
           <div class="md:col-span-4 md:justify-self-end">
             <NuxtLink
               :to="localePath('/#contact')"
-              class="inline-flex items-center justify-center gap-2 bg-accent text-night-text font-semibold px-6 py-3.5 rounded-input hover:bg-accent-2 glow-blue transition-colors"
+              class="inline-flex items-center justify-center gap-2 bg-accent text-accent-fg font-semibold px-6 py-3.5 rounded-input hover:bg-accent-2 glow-blue transition-colors"
             >
               {{ getContentBlock('cta_button')?.text || $t('about.ctaButton') }}
               <ArrowRight :size="16" :stroke-width="2" />

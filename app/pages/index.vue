@@ -179,12 +179,12 @@ const hasAnyContactLink = computed(
         />
         <div class="relative px-8 sm:px-12 py-16 sm:py-20 grid grid-cols-1 md:grid-cols-12 gap-8">
           <div class="md:col-span-7">
-            <SectionLabel index="08" :name="$t('home.contact.label')" />
+            <SectionLabel index="08" :name="$t('home.contact.label')" tone="night" />
             <h2
               class="h-display text-[40px] sm:text-[52px] lg:text-[60px] font-bold mt-2 leading-[1.02]"
             >
               {{ $t('home.contact.titleLead') }}
-              <span class="text-accent">{{ $t('home.contact.titleAccent') }}</span>
+              <span class="text-accent-night">{{ $t('home.contact.titleAccent') }}</span>
             </h2>
             <p class="mt-6 text-[16px] sm:text-[17px] text-night-text/70 leading-[1.65] max-w-[520px]">
               {{ getContentBlock('contact_subtitle')?.text || $t('home.contact.subtitle') }}
@@ -211,7 +211,7 @@ const hasAnyContactLink = computed(
                 </template>
                 <template v-if="contactOpenFor">
                   <span class="text-night-text/40">// {{ $t('home.contact.openForLabel') }}</span>
-                  <span class="text-accent">{{ contactOpenFor }}</span>
+                  <span class="text-accent-night">{{ contactOpenFor }}</span>
                 </template>
                 <template v-if="contactResponse">
                   <span class="text-night-text/40">// {{ $t('home.contact.responseLabel') }}</span>
@@ -239,7 +239,7 @@ const hasAnyContactLink = computed(
                     <ArrowUpRight
                       :size="14"
                       :stroke-width="2"
-                      class="text-night-text/50 group-hover/link:text-accent group-hover/link:translate-x-0.5 transition"
+                      class="text-night-text/50 group-hover/link:text-accent-night group-hover/link:translate-x-0.5 transition"
                     />
                   </a>
                 </li>
@@ -257,7 +257,7 @@ const hasAnyContactLink = computed(
                     <ArrowUpRight
                       :size="14"
                       :stroke-width="2"
-                      class="text-night-text/50 group-hover/link:text-accent group-hover/link:translate-x-0.5 transition"
+                      class="text-night-text/50 group-hover/link:text-accent-night group-hover/link:translate-x-0.5 transition"
                     />
                   </a>
                 </li>
@@ -273,7 +273,7 @@ const hasAnyContactLink = computed(
                     <ArrowRight
                       :size="14"
                       :stroke-width="2"
-                      class="text-night-text/50 group-hover/link:text-accent group-hover/link:translate-x-0.5 transition"
+                      class="text-night-text/50 group-hover/link:text-accent-night group-hover/link:translate-x-0.5 transition"
                     />
                   </a>
                 </li>
