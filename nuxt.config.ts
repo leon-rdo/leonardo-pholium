@@ -273,6 +273,9 @@ export default defineNuxtConfig({
         : [],
       link: [
         { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+        { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
+        // iOS ignores the manifest for home-screen icons and needs its own link.
+        { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
         { rel: "manifest", href: "/site.webmanifest" },
       ],
       meta: [
