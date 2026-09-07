@@ -32,3 +32,17 @@ pr*-*.jpg
 .env
 .env.*
 !.env.example
+
+# Local agent tooling — installed skills, agent definitions and MCP config.
+# .mcp.json points at a machine-local OAuth client-secrets file, so it must
+# never be committed.
+.agents/
+.claude/
+.mcp.json
+skills-lock.json
+
+# Local audit screenshots (Playwright captures taken during review)
+before-*.png
+before-*.jpg
+after-*.png
+after-*.jpg
