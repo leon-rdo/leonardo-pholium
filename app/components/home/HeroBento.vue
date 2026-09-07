@@ -234,7 +234,7 @@ const portraitAlt = computed(() => {
             <div
               v-if="portraitImage && (portraitLabel || locationLabel)"
               aria-hidden="true"
-              class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-night/55 via-night/15 to-transparent"
+              class="absolute inset-x-0 bottom-0 h-32 scrim-night"
             />
             <div
               v-if="portraitLabel || locationLabel"

@@ -183,6 +183,29 @@ body {
   opacity: 0.6;
 }
 
+/*
+ * Scrim for cream text laid over an arbitrary photograph (project cards, hero
+ * portrait caption). The previous `from-night/60 via-night/20` fade left the
+ * headline sitting at ~20% overlay, which measured 1.09:1 over a light
+ * screenshot — effectively invisible. Over a worst-case white image the
+ * overlay needs >= 0.65 alpha for cream to clear 4.5:1, so the stops below
+ * hold >= 0.66 through the bottom 55% (where all card text lives) and only
+ * then fade out, keeping the upper half of the image clear.
+ */
+.scrim-night {
+  /* Positioning stays with the caller (absolute inset-0, or a bottom strip) —
+     this utility only supplies the gradient. */
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(14, 14, 18, 0.94) 0%,
+    rgba(14, 14, 18, 0.82) 35%,
+    rgba(14, 14, 18, 0.66) 55%,
+    rgba(14, 14, 18, 0.25) 78%,
+    rgba(14, 14, 18, 0) 100%
+  );
+}
+
 /* Glass card on cream/dark — used by floating chips on hero portrait. */
 .glass-cream {
   background: linear-gradient(

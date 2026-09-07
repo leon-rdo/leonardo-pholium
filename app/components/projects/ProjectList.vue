@@ -95,7 +95,7 @@ const authorFirstName = (project: Project<{ skills: true }>): string => {
             format="webp"
             class="absolute inset-0 w-full h-full object-cover"
           />
-          <div class="absolute inset-0 bg-gradient-to-t from-night/60 via-night/20 to-transparent" />
+          <div class="absolute inset-0 scrim-night" />
 
           <Chip variant="blue" class="absolute top-4 left-4">
             ★ {{ $t('projects.featured') }}
@@ -221,7 +221,7 @@ const authorFirstName = (project: Project<{ skills: true }>): string => {
             format="webp"
             class="absolute inset-0 w-full h-full object-cover"
           />
-          <div class="absolute inset-0 bg-gradient-to-t from-night/55 via-night/15 to-transparent" />
+          <div class="absolute inset-0 scrim-night" />
 
           <div class="absolute bottom-5 left-5 right-5 text-night-text">
             <div class="font-mono-rail !text-night-text/80">
