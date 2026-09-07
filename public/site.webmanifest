@@ -1,11 +1,11 @@
 {
   "name": "Leonardo Costa",
   "short_name": "Leonardo Costa",
-  "description": "Full Stack Developer & Creative Problem Solver",
-  "start_url": "/",
+  "description": "Desenvolvedor backend com mais de 3 anos em Django REST, PostgreSQL e integrações com I.A.",
+  "start_url": "/pt-br",
   "display": "standalone",
-  "background_color": "#fafafa",
-  "theme_color": "#2563eb",
+  "background_color": "#f3efe5",
+  "theme_color": "#1d4ed8",
   "icons": [
     {
       "src": "/favicon.ico",
@@ -18,5 +18,7 @@
       "type": "image/jpeg",
       "purpose": "any"
     }
-  ]
+  ],
+  "scope": "/",
+  "lang": "pt-BR"
 }

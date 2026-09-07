@@ -253,8 +253,22 @@ export default defineNuxtConfig({
       ],
       meta: [
         { name: "format-detection", content: "telephone=no" },
-        { name: "theme-color", content: "#2563eb" },
-        { name: "color-scheme", content: "light" },
+        // theme-color tints the browser/OS chrome, so it should track the page
+        // surface, not the brand accent — a blue bar above a cream page reads
+        // as a rendering bug. Split per scheme so the dark theme matches too.
+        {
+          name: "theme-color",
+          content: "#f3efe5",
+          media: "(prefers-color-scheme: light)",
+        },
+        {
+          name: "theme-color",
+          content: "#0e0e12",
+          media: "(prefers-color-scheme: dark)",
+        },
+        // The site ships a full dark theme; advertising only "light" made UA
+        // form controls and scrollbars render light-on-dark.
+        { name: "color-scheme", content: "light dark" },
         {
           name: "robots",
           content:
