@@ -91,15 +91,25 @@ Tokens worth knowing:
 - `bg-paper`, `bg-card`, `bg-card-soft` — surfaces (warm cream in light, near-black in dark).
 - `text-ink`, `text-ink-2`, `text-ink-3`, `text-ink-4` — type hierarchy.
 - `border-line`, `border-line-2` — hairlines (no soft shadows by default).
-- `text-accent`, `bg-accent`, `bg-accent-soft` — single brand blue (`#2C67E8`).
+- `text-accent`, `bg-accent`, `bg-accent-soft` — single brand blue (`#1d4ed8` light / `#4d80ef` dark). The light value was deepened from `#2C67E8`, which read 4.34:1 on `paper` and failed AA for links and button labels.
+- `text-accent-fg` — the foreground to pair with an `bg-accent` fill (white in light, near-black in dark). Always use this on accent fills; `text-paper`/`text-night-text` fail contrast in one mode or the other.
+- `text-accent-night` — accent for use *inside* the always-dark night tile. Deliberately does not flip with the theme, because the surface under it doesn't either.
 - `bg-blob-1/2/3` — aurora gradient stops (used by [`AuroraBg.vue`](app/components/ui/AuroraBg.vue)).
 - `rounded-tile`, `rounded-card`, `rounded-input`, `rounded-chip` — radius scale.
 
-Reusable utilities defined in CSS (not @theme): `.h-display` (display tracking), `.ring-hair` (hairline ring), `.aurora-soft`, `.glass-cream`, `.glow-blue`, `.font-mono-rail`.
+Reusable utilities defined in CSS (not @theme): `.h-display` (display tracking), `.ring-hair` (hairline ring), `.aurora-soft`, `.glass-cream`, `.glow-blue`, `.font-mono-rail`, `.scrim-night`.
+
+`.scrim-night` is the gradient that makes cream text legible over an arbitrary photo (project cards, hero portrait caption). It supplies the gradient only — the caller positions it (`absolute inset-0`, or a bottom strip). Don't weaken its stops: over a light screenshot the text needs >= 0.65 overlay alpha to clear 4.5:1.
+
+**Contrast is a hard constraint on this palette.** `ink-3` and the accent were both retuned to pass WCAG AA on every surface they render on; `ink-4` passes only 3:1 and is for separators and decorative icons, never body text or placeholders. Re-check any token change against `paper`, `card` and `card-soft` in both themes.
 
 ### Content blocks (CMS-lite)
 
 A lot of homepage/about copy is editable from the backend as `ContentBlock` rows ([app/types/content.ts](app/types/content.ts)) — pages call `useApiPaginated('...content-blocks...')` and look up by `key` (e.g. `'hero_name'`, `'seo_image'`, `'contact_linkedin'`). When editing pages, prefer adding a content block lookup over hardcoding strings, falling back to an i18n key.
+
+### Scroll animations
+
+[`useFadeUp`](app/composables/useFadeUp.ts) owns the GSAP/ScrollTrigger entrance used by every list page — call it instead of writing a new `gsap.from` block. It no-ops under `prefers-reduced-motion` (the tween sets `opacity: 0` from JS, so the CSS media query in [main.css](app/assets/styles/main.css) cannot undo it) and kills its ScrollTriggers on unmount.
 
 ### View tracking
 
