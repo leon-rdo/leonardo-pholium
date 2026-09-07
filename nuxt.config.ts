@@ -2,6 +2,20 @@ import tailwindcss from "@tailwindcss/vite";
 
 const siteUrl =
   process.env.NUXT_PUBLIC_SITE_URL || "https://leonardocosta.dev";
+
+// Every project cover, post cover and article image is served from the Django
+// media host. @nuxt/image's IPX provider refuses to touch a remote URL unless
+// its host is on this allowlist — without it the `format`/`quality`/`width`
+// props were silently inert and originals were shipped as-is.
+const apiMediaHost = (() => {
+  const base = process.env.NUXT_PUBLIC_API_BASE;
+  if (!base) return "";
+  try {
+    return new URL(base).host;
+  } catch {
+    return "";
+  }
+})();
 const isProduction = process.env.NODE_ENV === "production";
 const gtmId = process.env.NUXT_PUBLIC_GTM_ID || "";
 const gtmEnabled = isProduction && !!gtmId;
@@ -198,8 +212,18 @@ export default defineNuxtConfig({
   // supply explicit og:image URLs from the backend (cover image) with
   // /og-default.jpg as a fallback — we don't need runtime image generation.
 
-  // @nuxt/image — format/quality defaults
+  // @nuxt/image — format/quality defaults.
+  // `domains` is what actually enables optimisation of the backend's media:
+  // IPX only processes remote images whose host is allowlisted here. The
+  // production host is pinned and the current API host is added so local dev
+  // (localhost:8000) optimises too.
   image: {
+    domains: [
+      "api.leonardocosta.dev",
+      ...(apiMediaHost && apiMediaHost !== "api.leonardocosta.dev"
+        ? [apiMediaHost]
+        : []),
+    ],
     format: ["avif", "webp"],
     quality: 80,
     densities: [1, 2],
