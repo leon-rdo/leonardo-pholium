@@ -150,6 +150,7 @@ setSeoMeta({
     type: coverImage.value?.mime_type || 'image/jpeg',
   },
   type: 'article',
+  markdown: true,
   canonicalUrl: post.value.canonical_url || undefined,
   keywords: post.value.tags
     ?.map((tag) => (typeof tag === 'object' ? tag.name : ''))

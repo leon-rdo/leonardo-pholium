@@ -44,6 +44,7 @@ setSeoMeta({
     getContentBlock('seo_image')?.text ||
     `${config.public.siteUrl}/og-default.jpg`,
   type: 'website',
+  markdown: true,
 });
 
 const projectsUrl = computed(

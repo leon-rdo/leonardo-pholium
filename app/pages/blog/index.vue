@@ -92,6 +92,7 @@ setSeoMeta({
   title: getContentBlock('page_title')?.text || t('blog.title'),
   description: getContentBlock('page_description')?.text || t('blog.subtitle'),
   type: 'website',
+  markdown: true,
 });
 
 const blogUrl = computed(

@@ -29,6 +29,12 @@ interface SeoMetaInput {
   noindex?: boolean;
   nofollow?: boolean;
   canonicalUrl?: string;
+  /**
+   * The page has a Markdown twin at `<route path>.md` (served by
+   * server/middleware/markdown-pages.ts). Advertised via
+   * `<link rel="alternate" type="text/markdown">` for AI agents.
+   */
+  markdown?: boolean;
   keywords?: string[];
   /**
    * Explicit hreflang alternates. When supplied, overrides the default
@@ -133,6 +139,7 @@ export const useSeo = () => {
       nofollow = false,
       canonicalUrl,
       keywords,
+      markdown = false,
     } = input;
 
     const baseUrl = config.public.siteUrl || "https://leonardocosta.dev";
@@ -250,6 +257,15 @@ export const useSeo = () => {
       link: [
         { rel: "canonical", href: canonical },
         ...getHreflangLinks(currentPath, input.alternateLanguages),
+        ...(markdown
+          ? [
+              {
+                rel: "alternate",
+                type: "text/markdown",
+                href: `${baseUrl}${currentPath.replace(/\/+$/, "")}.md`,
+              },
+            ]
+          : []),
       ],
       meta: [
         { name: "robots", content: robotsContent.join(", ") },

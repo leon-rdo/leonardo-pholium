@@ -37,6 +37,7 @@ setSeoMeta({
     getContentBlock('seo_image')?.text ||
     `${config.public.siteUrl}/og-default.jpg`,
   type: 'website',
+  markdown: true,
   keywords: [
     'Leonardo Costa',
     'Backend Engineer',

@@ -20,6 +20,12 @@ const isProduction = process.env.NODE_ENV === "production";
 const gtmId = process.env.NUXT_PUBLIC_GTM_ID || "";
 const gtmEnabled = isProduction && !!gtmId;
 
+const siteName = "Leonardo Costa";
+// Shared by `site`, the schema.org identity and (via runtimeConfig) the
+// llms.txt / Markdown endpoints, which fall back to it when the backend is down.
+const siteDescription =
+  "Desenvolvedor backend com mais de 3 anos em Django REST, PostgreSQL e integrações com I.A.";
+
 // Crawlers and agents behind AI assistants. All of them are already allowed by
 // the `*` group; they are listed explicitly so the intent is unambiguous and so
 // a future "block unknown bots" tweak can't silently cut the site off from
@@ -76,6 +82,9 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   runtimeConfig: {
+    // Server-only: used by the llms.txt / Markdown endpoints, not shipped to the client.
+    siteName,
+    siteDescription,
     public: {
       apiBase: "",
       siteUrl,
@@ -150,9 +159,8 @@ export default defineNuxtConfig({
   // Global site configuration — used by sitemap, robots, schema-org, og-image
   site: {
     url: siteUrl,
-    name: "Leonardo Costa",
-    description:
-      "Desenvolvedor backend com mais de 3 anos em Django REST, PostgreSQL e integrações com I.A.",
+    name: siteName,
+    description: siteDescription,
     defaultLocale: "pt-br",
     indexable: isProduction,
   },
@@ -229,12 +237,11 @@ export default defineNuxtConfig({
   schemaOrg: {
     identity: {
       type: "Person",
-      name: "Leonardo Costa",
+      name: siteName,
       url: siteUrl,
       image: `${siteUrl}/og-default.jpg`,
       jobTitle: "Backend Developer",
-      description:
-        "Desenvolvedor backend com mais de 3 anos em Django REST, PostgreSQL e integrações com I.A.",
+      description: siteDescription,
       sameAs: [
         "https://github.com/leon-rdo",
         "https://www.linkedin.com/in/leonrdo-costa/",
