@@ -4,7 +4,14 @@ import type { DjangoListResponse } from "@/types/api";
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
-  const locale = getRouterParam(event, "locale") || "pt-br";
+  // The `.xml` in the file name ends up inside the param: the router registers
+  // `/api/rss/:locale.xml` as a param literally called "locale.xml" whose value
+  // is "en-us.xml". Reading "locale" therefore always returned undefined, and
+  // every feed — including /api/rss/en-us.xml — came out as pt-br.
+  const locale = (getRouterParam(event, "locale.xml") ?? "").replace(
+    /\.xml$/,
+    "",
+  );
 
   if (!["pt-br", "en-us"].includes(locale)) {
     throw createError({
