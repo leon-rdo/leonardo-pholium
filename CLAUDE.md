@@ -69,6 +69,25 @@ The sitemap is **dynamic** — [`@nuxtjs/sitemap`](nuxt.config.ts) reads from [s
 
 [server/api/rss/[locale].xml.ts](server/api/rss/[locale].xml.ts) always returns 200 + valid XML even when the backend post fetch fails (returns an empty channel instead). This is deliberate — feed readers unsubscribe on repeated 5xx, so don't change this to throw.
 
+**Nitro suffix-param gotcha:** a file named `[locale].xml.ts` registers the route `/api/rss/:locale.xml`, whose param is literally called `locale.xml` and holds `en-us.xml`. `getRouterParam(event, "locale")` is therefore always `undefined`, which used to make every feed (including `en-us`) come out as pt-br. The handler reads `locale.xml` and strips `.xml`. Don't add new `[param].ext.ts` routes expecting a clean param — see the Markdown middleware below for the alternative.
+
+### LLM / AI-assistant discoverability
+
+Goal: ChatGPT, Gemini, Claude, Perplexity & co. can find, read and answer about the site owner, articles and projects. Four layers, all fed by the same Django data as the HTML (never hardcoded copy):
+
+1. **robots.txt** ([nuxt.config.ts](nuxt.config.ts), `robots.groups`) — an explicit group for AI crawlers/agents (`aiAssistantBots`) with `Content-Signal: search=yes, ai-input=yes, ai-train=yes`. They were already allowed by `*`; the group makes it deliberate. A bot matched by a specific group ignores `*`, so the `disallow` list is repeated there — keep it in sync with the `*` one. Gemini / AI Overviews answer from the Googlebot index and Copilot / ChatGPT search lean on Bing's, so both stay indexable.
+2. **`/llms.txt` and `/llms-full.txt`** ([server/routes/](server/routes/)) — llmstxt.org index (profile pages, every project, every article, both locales) and the whole site in one Markdown file.
+3. **Markdown twin of every content page** — append `.md` to the canonical path: `/pt-br.md`, `/pt-br/about.md`, `/pt-br/projects.md`, `/pt-br/blog.md`, `/pt-br/blog/<slug>.md`. Implemented in [server/middleware/markdown-pages.ts](server/middleware/markdown-pages.ts) as a **middleware, not file routes**, because of the suffix-param gotcha above. Pages advertise their twin with `setSeoMeta({ markdown: true })` (`<link rel="alternate" type="text/markdown">`); the `.md` response carries `Link: <html url>; rel="canonical"` so Googlebot treats it as a duplicate. It deliberately does **not** send `noindex` — AI crawlers that honour `X-Robots-Tag` would skip the files meant for them. The Markdown exposes fields that have no HTML page, notably the long project `description`.
+4. **JSON-LD** — unchanged; see the SEO pipeline section. Identity stays single-sourced.
+
+Code lives in `server/utils/llm-source.ts` (backend fetch + cache + HTML→Markdown via `node-html-markdown`) and `server/utils/llm-render.ts` (document renderers, pt-br/en-us labels, response headers). Behaviour worth knowing:
+
+- Data is cached in memory for 5 min with in-flight de-duplication. A partial (degraded) load is cached only 30 s and served with `Cache-Control: no-store`.
+- `llms.txt` / `llms-full.txt` always answer 200 (static skeleton if the backend is down). `.md` pages answer **503 + Retry-After** when the backend is unreachable and the document would be empty, **404** for unknown paths/slugs (category pages have no twin).
+- `GET /api/site-settings/` returns a one-item paginated list; `llm-source.ts` unwraps `results[0]`.
+- Visitor comments are never included — only content authored in the CMS.
+- Adding a new content page? Add a renderer + a `case` in the middleware, a section in `renderLlmsTxt`/`renderLlmsFullTxt`, and `markdown: true` in its `setSeoMeta`.
+
 ### Nitro / unhead inline workaround
 
 [nuxt.config.ts](nuxt.config.ts) sets:
