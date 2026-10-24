@@ -20,6 +20,41 @@ const isProduction = process.env.NODE_ENV === "production";
 const gtmId = process.env.NUXT_PUBLIC_GTM_ID || "";
 const gtmEnabled = isProduction && !!gtmId;
 
+// Crawlers and agents behind AI assistants. All of them are already allowed by
+// the `*` group; they are listed explicitly so the intent is unambiguous and so
+// a future "block unknown bots" tweak can't silently cut the site off from
+// ChatGPT / Gemini / Claude / Perplexity answers. Note that a bot matched by a
+// specific group ignores `*`, so the disallow list must be repeated there.
+//   - training crawlers:  GPTBot, ClaudeBot, anthropic-ai, Google-Extended,
+//                         Applebot-Extended, CCBot, meta-externalagent
+//   - search indexes:     OAI-SearchBot, Claude-SearchBot, PerplexityBot, Applebot
+//   - on-demand fetchers: ChatGPT-User, Claude-User, Claude-Web, Perplexity-User,
+//                         MistralAI-User, DuckAssistBot, meta-externalfetcher
+// Gemini / AI Overviews answer from the Googlebot index, and Copilot / ChatGPT
+// search lean on Bing's, both already covered by the group below.
+const aiAssistantBots = [
+  "GPTBot",
+  "OAI-SearchBot",
+  "ChatGPT-User",
+  "ClaudeBot",
+  "Claude-SearchBot",
+  "Claude-User",
+  "Claude-Web",
+  "anthropic-ai",
+  "Google-Extended",
+  "PerplexityBot",
+  "Perplexity-User",
+  "Applebot",
+  "Applebot-Extended",
+  "meta-externalagent",
+  "meta-externalfetcher",
+  "Amazonbot",
+  "DuckAssistBot",
+  "MistralAI-User",
+  "cohere-ai",
+  "CCBot",
+];
+
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
 
@@ -175,6 +210,16 @@ export default defineNuxtConfig({
         userAgent: ["Googlebot", "Googlebot-Image", "bingbot"],
         allow: ["/"],
         disallow: ["/admin/"],
+      },
+      {
+        userAgent: aiAssistantBots,
+        comment: [
+          "AI assistants (ChatGPT, Gemini, Claude, Perplexity, ...) are welcome.",
+          "LLM-friendly index: /llms.txt - every page also exists as Markdown (append .md).",
+        ],
+        allow: ["/"],
+        disallow: ["/admin/", "/api/auth/", "/api/contact-messages/"],
+        contentSignal: { search: "yes", "ai-input": "yes", "ai-train": "yes" },
       },
     ],
     blockNonSeoBots: true,
