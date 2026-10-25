@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Nuxt 4 (Vue 3, SSR) + Tailwind v4 + TypeScript, run on Bun (Nitro `bun` preset). Source lives under [app/](app/) using the Nuxt 4 layout (`app/pages`, `app/components`, `app/composables`, `app/plugins`, `app/layouts`, `app/types`, `app/utils`). Server routes are in [server/api/](server/api/). i18n locale JSON lives in [i18n/locales/](i18n/locales/).
 
-**Styling**: Tailwind v4 with CSS tokens in [app/assets/styles/tokens.css](app/assets/styles/tokens.css) (light + `.dark` overrides), exposed as utility classes via the `@theme` block in [app/assets/styles/main.css](app/assets/styles/main.css). UI primitives live in [app/components/ui/](app/components/ui/) (`Tile`, `Chip`, `UiButton`, `UiDropdown`, `SectionLabel`, `AuroraBg`, `TerminalPanel`, `TerminalLine`, `ThemeToggle`). Domain components are colocated with their list page (e.g. [app/components/projects/](app/components/projects/), [app/components/home/](app/components/home/)).
+**Styling**: Tailwind v4 with CSS tokens in [app/assets/styles/tokens.css](app/assets/styles/tokens.css) (light + `.dark` overrides), exposed as utility classes via the `@theme` block in [app/assets/styles/main.css](app/assets/styles/main.css). UI primitives live in [app/components/ui/](app/components/ui/) (`Tile`, `Chip`, `UiButton`, `UiDropdown`, `SectionLabel`, `ThemeToggle`). `Tile` slots its content directly — layout classes passed to it (`flex`, `grid`, `justify-between`) apply to the children, so don't reintroduce an inner wrapper. Domain components are colocated with their list page (e.g. [app/components/projects/](app/components/projects/), [app/components/home/](app/components/home/)).
 
 Dark mode is class-based via [`@nuxtjs/color-mode`](https://color-mode.nuxtjs.org) with `classSuffix: ""` and `storageKey: "lc-color-mode"`. The toggle UI is [`ThemeToggle.vue`](app/components/ui/ThemeToggle.vue).
 
@@ -44,6 +44,8 @@ Every API call goes through the Django backend and follows two conventions:
 1. **List responses are paginated** with shape [`DjangoListResponse<T>`](app/types/api.ts) — `{ count, next, previous, results }`. Use [`useApiPaginated`](app/composables/useApiPaginated.ts) when you need to walk all pages, [`useApi`/`useApiData`](app/composables/useApi.ts) for single-page reads.
 2. **Locale is sent as `Accept-Language: pt-br | en-us`** — the backend returns translated content based on this header. All composables in [app/composables/](app/composables/) inject this header from `useI18n().locale` automatically. If you call `$fetch` directly (e.g. inside `server/api/`), set the header yourself.
 
+**Backend outages answer 503, not an empty page.** Pages pass the `error` of the fetch they can't render without to [`throwIfBackendDown()`](app/utils/backend-error.ts), which raises a fatal 503 ([error.vue](app/error.vue) adds `Retry-After`). Rendering the empty state with 200 is how `/en-us/projects` became a soft 404 in Search Console, and a post that couldn't be fetched used to answer 404. New content pages should do the same.
+
 The `expand` query param is a Django REST convention used heavily here (e.g. `expand: "category,images,tags"`) and is reflected in the generic `Post<TExpand>` / `Project<TExpand>` / `Category<TExpand>` types in [app/types/](app/types/) — the `TExpand` parameter narrows fields from `number | null` (FK id) to the full nested object.
 
 ### i18n
@@ -77,7 +79,7 @@ Goal: ChatGPT, Gemini, Claude, Perplexity & co. can find, read and answer about 
 
 1. **robots.txt** ([nuxt.config.ts](nuxt.config.ts), `robots.groups`) — an explicit group for AI crawlers/agents (`aiAssistantBots`) with `Content-Signal: search=yes, ai-input=yes, ai-train=yes`. They were already allowed by `*`; the group makes it deliberate. A bot matched by a specific group ignores `*`, so the `disallow` list is repeated there — keep it in sync with the `*` one. Gemini / AI Overviews answer from the Googlebot index and Copilot / ChatGPT search lean on Bing's, so both stay indexable.
 2. **`/llms.txt` and `/llms-full.txt`** ([server/routes/](server/routes/)) — llmstxt.org index (profile pages, every project, every article, both locales) and the whole site in one Markdown file.
-3. **Markdown twin of every content page** — append `.md` to the canonical path: `/pt-br.md`, `/pt-br/about.md`, `/pt-br/projects.md`, `/pt-br/blog.md`, `/pt-br/blog/<slug>.md`. Implemented in [server/middleware/markdown-pages.ts](server/middleware/markdown-pages.ts) as a **middleware, not file routes**, because of the suffix-param gotcha above. Pages advertise their twin with `setSeoMeta({ markdown: true })` (`<link rel="alternate" type="text/markdown">`); the `.md` response carries `Link: <html url>; rel="canonical"` so Googlebot treats it as a duplicate. It deliberately does **not** send `noindex` — AI crawlers that honour `X-Robots-Tag` would skip the files meant for them. The Markdown exposes fields that have no HTML page, notably the long project `description`.
+3. **Markdown twin of every content page** — append `.md` to the canonical path: `/pt-br.md`, `/pt-br/about.md`, `/pt-br/projects.md`, `/pt-br/projects/<slug>.md`, `/pt-br/blog.md`, `/pt-br/blog/<slug>.md`. Implemented in [server/middleware/markdown-pages.ts](server/middleware/markdown-pages.ts) as a **middleware, not file routes**, because of the suffix-param gotcha above. Pages advertise their twin with `setSeoMeta({ markdown: true })` (`<link rel="alternate" type="text/markdown">`); the `.md` response carries `Link: <html url>; rel="canonical"` so Googlebot treats it as a duplicate. It deliberately does **not** send `noindex` — AI crawlers that honour `X-Robots-Tag` would skip the files meant for them. The long project `description` is rendered on both `/projects/<slug>` (HTML) and its twin.
 4. **JSON-LD** — unchanged; see the SEO pipeline section. Identity stays single-sourced.
 
 Code lives in `server/utils/llm-source.ts` (backend fetch + cache + HTML→Markdown via `node-html-markdown`) and `server/utils/llm-render.ts` (document renderers, pt-br/en-us labels, response headers). Behaviour worth knowing:
@@ -113,14 +115,20 @@ Tokens worth knowing:
 - `text-accent`, `bg-accent`, `bg-accent-soft` — single brand blue (`#1d4ed8` light / `#4d80ef` dark). The light value was deepened from `#2C67E8`, which read 4.34:1 on `paper` and failed AA for links and button labels.
 - `text-accent-fg` — the foreground to pair with an `bg-accent` fill (white in light, near-black in dark). Always use this on accent fills; `text-paper`/`text-night-text` fail contrast in one mode or the other.
 - `text-accent-night` — accent for use *inside* the always-dark night tile. Deliberately does not flip with the theme, because the surface under it doesn't either.
-- `bg-blob-1/2/3` — aurora gradient stops (used by [`AuroraBg.vue`](app/components/ui/AuroraBg.vue)).
+- `bg-blob-1/2/3` — soft gradient stops, now only the hero portrait's fallback when no image is attached.
 - `rounded-tile`, `rounded-card`, `rounded-input`, `rounded-chip` — radius scale.
 
-Reusable utilities defined in CSS (not @theme): `.h-display` (display tracking), `.ring-hair` (hairline ring), `.aurora-soft`, `.glass-cream`, `.glow-blue`, `.font-mono-rail`, `.scrim-night`.
+Reusable utilities defined in CSS (not @theme): `.h-display` (display tracking), `.ring-hair` (hairline ring), `.font-mono-rail`, `.scrim-night`. `.dark .bg-night` adds a hairline because `night` equals the dark-mode `paper`.
+
+**Deliberately removed as template ornament** (Oct 2026 review): aurora blobs (`AuroraBg`, `.aurora-soft`), glass chips (`.glass-cream`), blue glow halos (`.glow-blue`, `UiButton glow`), the fake `whoami.sh` terminal (`TerminalPanel`/`TerminalLine`), pulsing `animate-ping` dots, `// 0N ·` section numbering and eyebrow labels above h1/h2. `SectionLabel` is for labelling content (now-tiles, facts panel, About rail), never above a heading. Don't bring these back by default.
 
 `.scrim-night` is the gradient that makes cream text legible over an arbitrary photo (project cards, hero portrait caption). It supplies the gradient only — the caller positions it (`absolute inset-0`, or a bottom strip). Don't weaken its stops: over a light screenshot the text needs >= 0.65 overlay alpha to clear 4.5:1.
 
 **Contrast is a hard constraint on this palette.** `ink-3` and the accent were both retuned to pass WCAG AA on every surface they render on; `ink-4` passes only 3:1 and is for separators and decorative icons, never body text or placeholders. Re-check any token change against `paper`, `card` and `card-soft` in both themes.
+
+### Projects
+
+`/projects/<slug>` ([app/pages/projects/[slug].vue](app/pages/projects/[slug].vue)) renders a project's long `description` — plain text with blank-line paragraphs and `•` lists, turned into `<p>`/`<ul>` by [`textToBlocks`](app/utils/text.ts) (no `v-html`). Slugs are translated per locale (`resolve-cliente` / `customer-resolve`): look up with `translations__slug`, fetch the other locale by id for hreflang. Projects with an empty description still render (cards always link there) but are `noindex` and left out of the sitemap. The list page is `app/pages/projects/index.vue` (a sibling `projects.vue` would turn into a parent route).
 
 ### Content blocks (CMS-lite)
 
@@ -128,7 +136,15 @@ A lot of homepage/about copy is editable from the backend as `ContentBlock` rows
 
 ### Scroll animations
 
-[`useFadeUp`](app/composables/useFadeUp.ts) owns the GSAP/ScrollTrigger entrance used by every list page — call it instead of writing a new `gsap.from` block. It no-ops under `prefers-reduced-motion` (the tween sets `opacity: 0` from JS, so the CSS media query in [main.css](app/assets/styles/main.css) cannot undo it) and kills its ScrollTriggers on unmount.
+[`useFadeUp`](app/composables/useFadeUp.ts) owns the GSAP/ScrollTrigger entrance used by every list page — call it instead of writing a new `gsap.from` block. It no-ops under `prefers-reduced-motion` (the tween sets `opacity: 0` from JS, so the CSS media query in [main.css](app/assets/styles/main.css) cannot undo it), skips blocks already on screen at mount (hiding SSR-painted content made the hero blink and pushed Speed Index to 5 s), and kills its ScrollTriggers on unmount. A print rule forces `.fade-up` visible.
+
+### Images
+
+`@nuxt/image`'s `sizes` prop uses **its own syntax** — `sizes="sm:100vw md:50vw lg:400px"` (value applies from that breakpoint up). A standard media-query string like `"(max-width: 768px) 100vw, 560px"` is silently misparsed and phones got 1120–1600px images. IPX's remote (backend media) cache lifetime is set in `image.ipx.http.maxAge`, not `image.ipx.maxAge`.
+
+### Caching
+
+`routeRules` give every `/pt-br/**` and `/en-us/**` page `swr: 60` — served from Nitro's cache, re-rendered in the background, so CMS edits show within ~a minute. Nitro never caches responses ≥ 400. Anything that makes the HTML depend on the visitor (cookies, auth, request headers) must not be added to these pages without revisiting this; the one cookie they set today, `i18n_redirected`, always equals the URL's locale.
 
 ### View tracking
 
