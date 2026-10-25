@@ -27,6 +27,8 @@ export interface Project<TExpand = Record<string, never>> {
   slug: string;
   summary: string;
   description: string;
+  seo_title?: string;
+  meta_description?: string;
   tags: TExpand extends { tags: true } ? Tag[] : number[];
   skills: TExpand extends { skills: true } ? Skill[] : number[];
   author: TExpand extends { author: true } ? User : number | null;

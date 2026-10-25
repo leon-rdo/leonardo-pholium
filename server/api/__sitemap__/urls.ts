@@ -2,6 +2,7 @@ import type { SitemapUrl } from "#sitemap/types";
 import type { Post, Category } from "@/types/blog";
 import type { DjangoListResponse } from "@/types/api";
 import type { Image } from "@/types/core";
+import type { Project } from "@/types/portfolio";
 
 type Locale = "pt-br" | "en-us";
 const LOCALES: readonly Locale[] = ["pt-br", "en-us"] as const;
@@ -65,7 +66,20 @@ export default defineSitemapEventHandler(async (_e) => {
       expand: "images",
     });
 
-    const categoryRecords = pairByLocale(categoriesByLocale);
+    // A category with no published post renders an empty list page, which
+    // Search Console files as "crawled - currently not indexed" (or a soft
+    // 404) and counts against the site's quality. Only advertise categories
+    // that actually hold a post; the page itself is noindexed when empty.
+    const categoryIdsWithPosts = new Set<number>();
+    postRecords.forEach(({ sample }) => {
+      const category = sample.category as Category | number | null;
+      const id = typeof category === "object" ? category?.id : category;
+      if (id) categoryIdsWithPosts.add(id);
+    });
+
+    const categoryRecords = pairByLocale(categoriesByLocale).filter(({ id }) =>
+      categoryIdsWithPosts.has(id)
+    );
     categoryRecords.forEach(({ perLocale, sample }) => {
       const images = extractImages(sample.images);
       const alternatives = alternativesFromPerLocale(
@@ -86,7 +100,31 @@ export default defineSitemapEventHandler(async (_e) => {
       });
     });
 
-    // Projects don't have detail pages yet — list page is covered by getStaticPages().
+    // ---------- Projects ----------
+    // Only projects with a description: the others render a thin page that
+    // is noindexed (app/pages/projects/[slug].vue), so they stay out of here.
+    const projectsByLocale = await fetchByLocale<Project>(
+      apiBase,
+      "/api/projects/",
+      { status: "published", limit: 1000, ordering: "sort_order" }
+    );
+    pairByLocale(projectsByLocale).forEach(({ perLocale, sample }) => {
+      if (!sample.description?.trim()) return;
+      const alternatives = alternativesFromPerLocale(perLocale, "/projects");
+      const images = sample.cover ? [{ loc: sample.cover }] : [];
+      LOCALES.forEach((locale) => {
+        const slug = perLocale[locale];
+        if (!slug) return;
+        urls.push({
+          loc: `/${locale}/projects/${slug}`,
+          lastmod: sample.updated_at,
+          changefreq: "monthly",
+          priority: 0.8,
+          images,
+          alternatives,
+        });
+      });
+    });
 
     urls.push(...getStaticPages());
 

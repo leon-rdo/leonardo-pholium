@@ -124,6 +124,7 @@ export const pageUrl = (d: LlmSiteData, path = "") =>
 export const markdownUrl = (d: LlmSiteData, path = "") =>
   `${pageUrl(d, path)}.md`;
 const postPath = (post: { slug: string }) => `/blog/${post.slug}`;
+const projectPath = (project: { slug: string }) => `/projects/${project.slug}`;
 
 // ---------------------------------------------------------------------------
 // Small helpers
@@ -209,19 +210,11 @@ function contactSection(d: LlmSiteData, l: Labels): string {
   return body ? `## ${l.contact}\n\n${body}` : "";
 }
 
-/** GitHub-style heading anchor; keeps accents ("João Farias" -> "joão-farias"). */
-const headingAnchor = (title: string) =>
-  title
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s-]/gu, "")
-    .trim()
-    .replace(/\s/g, "-");
-
 function projectSummaryList(d: LlmSiteData, projects: LlmProject[]): string {
   return projects
     .map(
       (p) =>
-        `- [${p.title}](${markdownUrl(d, "/projects")}#${headingAnchor(p.title)}): ${oneLine(p.summary || "")}`,
+        `- [${p.title}](${markdownUrl(d, projectPath(p))}): ${oneLine(p.summary || "")}`,
     )
     .join("\n");
 }
@@ -308,6 +301,8 @@ export function renderAbout(d: LlmSiteData): string {
       const heading = blockText(d, "about", titleKey);
       return body && heading ? `## ${heading}\n\n${body}` : body;
     }),
+    // Mirrors the HTML page, which now carries experience as well.
+    experienceSection(d, l),
     educationSection(d, l),
     contactSection(d, l),
   ]);
@@ -321,32 +316,9 @@ export function renderProjects(d: LlmSiteData): string {
     blockText(d, "projects", "hero_title") ||
     l.projects;
 
-  const entries = d.projects.map((p) => {
-    const description = fieldToMarkdown(p.description, d.siteUrl);
-    const summary = oneLine(p.summary || "");
-    // Descriptions often open with the summary verbatim; don't say it twice.
-    const showSummary = summary && !description.startsWith(summary);
-
-    const technologies = (Array.isArray(p.skills) ? p.skills : [])
-      .map((s) => (typeof s === "object" ? s.name : ""))
-      .filter(Boolean)
-      .join(", ");
-
-    return [
-      `## ${p.title}`,
-      meta([
-        [l.period, period(l, p.start_date, p.end_date, !p.end_date)],
-        [l.website, p.website_url],
-        [l.repository, p.repo_url],
-        [l.technologies, technologies],
-        [l.featured, p.featured ? "✓" : ""],
-      ]),
-      showSummary && `> ${summary}`,
-      description,
-    ]
-      .filter(Boolean)
-      .join("\n\n");
-  });
+  const entries = d.projects.map((p) =>
+    projectBody(d, l, p, `## ${p.title}`, [l.url, pageUrl(d, projectPath(p))]),
+  );
 
   return joinSections([
     `# ${title}`,
@@ -357,6 +329,68 @@ export function renderProjects(d: LlmSiteData): string {
       [`${l.otherVersion} (${LABELS[alt].tag})`, `${d.siteUrl}/${alt}/projects`],
     ]),
     ...entries,
+  ]);
+}
+
+/** Shared by the /projects list and the /projects/<slug> page. */
+function projectBody(
+  d: LlmSiteData,
+  l: Labels,
+  p: LlmProject,
+  heading: string,
+  urlRow: [string, string],
+): string {
+  const description = fieldToMarkdown(p.description, d.siteUrl);
+  const summary = oneLine(p.summary || "");
+  // Descriptions often open with the summary verbatim; don't say it twice.
+  const showSummary = summary && !description.startsWith(summary);
+
+  const technologies = (Array.isArray(p.skills) ? p.skills : [])
+    .map((s) => (typeof s === "object" ? s.name : ""))
+    .filter(Boolean)
+    .join(", ");
+
+  return [
+    heading,
+    showSummary && `> ${summary}`,
+    meta([
+      urlRow,
+      [l.period, period(l, p.start_date, p.end_date, !p.end_date)],
+      [l.website, p.website_url],
+      [l.repository, p.repo_url],
+      [l.technologies, technologies],
+      [l.featured, p.featured ? "✓" : ""],
+    ]),
+    description,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+/**
+ * `altLocaleProject` is the same project (matched by id) in the other
+ * language — slugs are translated, so it makes the "other version" link right.
+ */
+export function renderProject(
+  d: LlmSiteData,
+  project: LlmProject,
+  altLocaleProject?: LlmProject,
+): string {
+  const l = LABELS[d.locale];
+  const alt = otherLocale(d.locale);
+  return joinSections([
+    projectBody(d, l, project, `# ${project.title}`, [
+      l.url,
+      pageUrl(d, projectPath(project)),
+    ]),
+    altLocaleProject &&
+      meta([
+        [
+          `${l.otherVersion} (${LABELS[alt].tag})`,
+          `${d.siteUrl}/${alt}${projectPath(altLocaleProject)}`,
+        ],
+        [l.allProjects, pageUrl(d, "/projects")],
+      ]),
   ]);
 }
 

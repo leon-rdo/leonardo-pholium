@@ -22,11 +22,12 @@ const getContentBlock = (key: string) =>
   contentBlocks.value?.results?.find((b) => b.key === key);
 
 // All published projects
-const { data: projects } = await useApi<
+const { data: projects, error: projectsError } = await useApi<
   DjangoListResponse<Project<{ tags: true; skills: true; author: true }>>
 >('/api/projects/', {
   params: { expand: 'skills', limit: 100, status: 'published' },
 });
+throwIfBackendDown(projectsError.value);
 
 // Breadcrumbs
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
@@ -75,26 +76,24 @@ watchEffect(() => {
       '@type': 'ItemList',
       itemListOrder: 'https://schema.org/ItemListOrderDescending',
       numberOfItems: list.length,
-      // No /projects/{slug} detail pages exist — @id/url must not advertise
-      // URLs that 404. Anchor each item to the list page instead; url only
-      // when the project has a real external site.
+      // Each item points at its /projects/<slug> page, whose CreativeWork
+      // node carries the same @id; the external site goes in sameAs.
       itemListElement: list.map((project, index) => ({
         '@type': 'ListItem',
         position: index + 1,
         item: {
           '@type': 'CreativeWork',
-          '@id': `${projectsUrl.value}#project-${project.id}`,
+          '@id': `${projectsUrl.value}/${project.slug}#project`,
+          url: `${projectsUrl.value}/${project.slug}`,
           name: project.title,
           description: project.summary,
-          ...(project.website_url && { url: project.website_url }),
+          ...(project.website_url && { sameAs: project.website_url }),
           image: project.cover || undefined,
           dateCreated: project.start_date || undefined,
           dateModified: project.updated_at,
-          author: {
-            '@type': 'Person',
-            name: 'Leonardo Costa',
-            url: config.public.siteUrl,
-          },
+          // The site-wide Person node (nuxt-schema-org identity); an inline
+          // Person here would be a second, disconnected entity.
+          author: { '@id': `${config.public.siteUrl}/#identity` },
           keywords: project.skills
             ?.map((skill: Skill) =>
               typeof skill === 'object' ? skill.name : '',
@@ -139,10 +138,8 @@ useFadeUp();
   <div>
     <!-- Hero -->
     <section class="relative">
-      <AuroraBg :intensity="0.4" />
       <div class="relative max-w-[1280px] mx-auto px-6 pt-12 pb-10">
         <Breadcrumbs :items="breadcrumbItems" class="mb-6" />
-        <SectionLabel index="01" :name="$t('projects.label')" />
         <h1 class="h-display text-[48px] sm:text-[64px] lg:text-[80px] font-bold mt-3 leading-[1.02]">
           {{ getContentBlock('hero_title')?.text || $t('projects.title') }}
         </h1>
@@ -155,15 +152,21 @@ useFadeUp();
     <!-- Filters -->
     <section>
       <div class="max-w-[1280px] mx-auto px-6 pb-6 flex items-center gap-3 overflow-x-auto">
-        <span class="font-mono-rail shrink-0">{{ $t('projects.filterLabel') }}</span>
-        <div class="flex flex-wrap gap-1.5 fade-up">
+        <span id="project-filter-label" class="font-mono-rail shrink-0">{{ $t('projects.filterLabel') }}</span>
+        <div
+          class="flex flex-wrap gap-1.5 fade-up"
+          role="group"
+          aria-labelledby="project-filter-label"
+        >
+          <!-- No `capitalize`: it rewrote skill names ("Nuxt.js" → "Nuxt.Js"). -->
           <button
             v-for="filter in filters"
             :key="filter"
             type="button"
+            :aria-pressed="selectedFilter === filter"
             :class="[
               'inline-flex items-center font-mono text-[11.5px] tracking-[0.04em] px-2.5 py-[5px]',
-              'rounded-chip border transition-colors capitalize',
+              'rounded-chip border transition-colors',
               selectedFilter === filter
                 ? 'bg-accent-soft text-accent-2 dark:text-accent border-accent/20'
                 : 'bg-card text-ink-2 hover:text-ink hover:bg-card-soft border-line',
@@ -187,7 +190,7 @@ useFadeUp();
             v-for="(project, idx) in filteredProjects"
             :key="project.id"
             :project="project"
-            :index="idx"
+           
           />
         </div>
 
@@ -207,15 +210,9 @@ useFadeUp();
         class="max-w-[1280px] mx-auto rounded-tile bg-night text-night-text relative overflow-hidden fade-up"
       >
         <div
-          aria-hidden="true"
-          class="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full"
-          style="background: radial-gradient(closest-side, rgba(44, 103, 232, 0.4), transparent 70%)"
-        />
-        <div
           class="relative px-8 sm:px-12 py-14 sm:py-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center"
         >
           <div class="md:col-span-8">
-            <SectionLabel index="" :name="$t('home.contact.label')" tone="night" />
             <h2 class="h-display text-[32px] sm:text-[44px] font-bold mt-2">
               {{ getContentBlock('cta_title')?.text || $t('projects.ctaTitle') }}
             </h2>
@@ -226,7 +223,7 @@ useFadeUp();
           <div class="md:col-span-4 md:justify-self-end">
             <NuxtLink
               :to="localePath('/#contact')"
-              class="inline-flex items-center justify-center gap-2 bg-accent text-accent-fg font-semibold px-6 py-3.5 rounded-input hover:bg-accent-2 glow-blue transition-colors"
+              class="inline-flex items-center justify-center gap-2 bg-accent text-accent-fg font-semibold px-6 py-3.5 rounded-input hover:bg-accent-2 transition-colors"
             >
               {{ getContentBlock('cta_button')?.text || $t('projects.ctaButton') }}
               <ArrowRight :size="16" :stroke-width="2" />

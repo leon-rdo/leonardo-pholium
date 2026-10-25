@@ -25,6 +25,9 @@ const gradients = [
 
 const gradient = computed(() => gradients[(props.index ?? 0) % gradients.length]);
 
+const localePath = useLocalePath();
+const detailPath = computed(() => localePath(`/projects/${props.project.slug}`));
+
 const yearOf = (project: Project<{ skills: true }>): number =>
   new Date(project.start_date || project.created_at).getFullYear();
 
@@ -54,6 +57,7 @@ const skills = computed(() => {
         :alt="project.title"
         :width="600"
         :height="375"
+        sizes="sm:100vw md:50vw lg:400px"
         format="webp"
         loading="lazy"
         decoding="async"
@@ -73,12 +77,17 @@ const skills = computed(() => {
       <div class="font-mono-rail">
         {{ yearOf(project) }}
         <template v-if="project.repo_url || project.website_url">
-          · {{ project.website_url ? 'live' : 'repo' }}
+          · {{ project.website_url ? $t('projects.live') : $t('projects.repo') }}
         </template>
       </div>
-      <h3 class="text-[19px] font-bold mt-1.5 group-hover:text-accent transition-colors">
-        {{ project.title }}
-      </h3>
+      <!-- h2: on /projects nothing sits between the page h1 and these cards.
+           The title links to the project page; its ::after stretches over
+           the whole card, and the Site/Código links sit above it (z-10). -->
+      <h2 class="text-[19px] font-bold mt-1.5 group-hover:text-accent transition-colors">
+        <NuxtLink :to="detailPath" class="after:absolute after:inset-0">
+          {{ project.title }}
+        </NuxtLink>
+      </h2>
       <p class="mt-2 text-[14.5px] text-ink-2 leading-[1.65] flex-1 line-clamp-3">
         {{ project.summary }}
       </p>
@@ -106,8 +115,7 @@ const skills = computed(() => {
           :href="project.website_url"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex items-center gap-1.5 text-ink-2 hover:text-accent transition-colors"
-          @click.stop
+          class="relative z-10 inline-flex items-center gap-1.5 py-2 -my-2 text-ink-2 hover:text-accent transition-colors"
         >
           <Globe :size="14" :stroke-width="1.8" />
           {{ $t('projects.website') }}
@@ -117,8 +125,7 @@ const skills = computed(() => {
           :href="project.repo_url"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex items-center gap-1.5 text-ink-2 hover:text-accent transition-colors"
-          @click.stop
+          class="relative z-10 inline-flex items-center gap-1.5 py-2 -my-2 text-ink-2 hover:text-accent transition-colors"
         >
           <Github :size="14" :stroke-width="1.8" />
           {{ $t('projects.code') }}
