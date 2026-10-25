@@ -35,9 +35,11 @@ const apiHeaders = computed(() => ({
   'Accept-Language': unref(locale) === 'pt-br' ? 'pt-br' : 'en-us',
 }));
 
+// One request for the whole list: useApi strips `next` from responses (see
+// useApi.ts), so "see more" could never fetch a second page anyway.
 const { data: initialData } = await useApi<DjangoListResponse<Experience>>(
   '/api/experiences/',
-  { params: { limit: 10, ordering: '-start_date' } },
+  { params: { limit: 50, ordering: '-start_date' } },
 );
 
 if (initialData.value) {
@@ -92,8 +94,14 @@ const toggleExpanded = (id: number) => {
 const isExpanded = (id: number) => expandedItems.value.has(id);
 const shouldShowReadMore = (description: string) =>
   !!description && description.length > 200;
-const getTruncatedText = (text: string, maxLength = 200) =>
-  !text || text.length <= maxLength ? text : text.substring(0, maxLength).trim() + '…';
+// Cut on a word boundary — a hard slice left fragments like "fronte…".
+const getTruncatedText = (text: string, maxLength = 200) => {
+  if (!text || text.length <= maxLength) return text;
+  const cut = text.slice(0, maxLength);
+  const lastSpace = cut.lastIndexOf(' ');
+  return (lastSpace > maxLength * 0.6 ? cut.slice(0, lastSpace) : cut)
+    .replace(/[\s,.;:–—-]+$/, '') + '…';
+};
 
 const calculateDuration = (
   startDate: string,
@@ -247,11 +255,6 @@ useHead({
             />
             <!-- the dot itself -->
             <div class="relative w-3 h-3 z-10">
-              <span
-                v-if="group.isCurrent"
-                aria-hidden="true"
-                class="absolute inset-0 rounded-full bg-accent/40 animate-ping"
-              />
               <span
                 class="relative block w-3 h-3 rounded-full ring-4 ring-paper transition-colors"
                 :class="group.isCurrent ? 'bg-accent' : 'bg-line-2'"

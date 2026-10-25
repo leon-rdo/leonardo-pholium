@@ -3,6 +3,8 @@ import { ArrowRight, Github, Linkedin, Mail, MapPin } from 'lucide-vue-next';
 import type { ContentBlock } from '~/types/content';
 import Breadcrumbs from '~/components/common/Breadcrumbs.vue';
 import EducationList from '~/components/educations/EducationList.vue';
+import ExperienceList from '~/components/experiences/ExperienceList.vue';
+import TestimonialsList from '~/components/testimonials/TestimonialsList.vue';
 import type { BreadcrumbItem } from '~/composables/useBreadcrumbs';
 
 
@@ -10,22 +12,27 @@ const localePath = useLocalePath();
 const { locale, t } = useI18n();
 const config = useRuntimeConfig();
 
-const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
-  'about-content-blocks',
-  '/api/content-blocks/',
-  { page_name: 'about' },
-);
+// The quick-facts panel reads its contact handles from the home
+// ContentBlocks. That fetch uses the layout footer's key and params, so it
+// is the same request rather than a second one, and both run in parallel
+// instead of back to back.
+const [
+  { data: contentBlocks, error: contentBlocksError },
+  { data: homeBlocks },
+] = await Promise.all([
+  useApiPaginated<ContentBlock>('about-content-blocks', '/api/content-blocks/', {
+    page_name: 'about',
+  }),
+  useApiPaginated<ContentBlock>('home-content-blocks', '/api/content-blocks/', {
+    page_name: 'home',
+    expand: 'images',
+  }),
+]);
+throwIfBackendDown(contentBlocksError.value);
 
 const blocks = computed(() => contentBlocks.value?.results ?? []);
 const getContentBlock = (key: string) => blocks.value.find((b) => b.key === key);
 
-// Pull contact handles from the home ContentBlocks (same backend) so the
-// quick-facts panel doesn't need its own keys.
-const { data: homeBlocks } = await useApiPaginated<ContentBlock>(
-  'about-home-blocks',
-  '/api/content-blocks/',
-  { page_name: 'home' },
-);
 const homeBlockText = (key: string) =>
   homeBlocks.value?.results?.find((b) => b.key === key)?.text;
 
@@ -117,11 +124,9 @@ useFadeUp({ y: 36, duration: 0.7 });
   <div>
     <!-- Hero -->
     <section class="relative">
-      <AuroraBg :intensity="0.4" />
       <div class="relative max-w-[1280px] mx-auto px-6 pt-12 pb-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div class="lg:col-span-8">
           <Breadcrumbs :items="breadcrumbItems" class="mb-6" />
-          <SectionLabel index="00" :name="$t('about.label')" />
           <h1 class="h-display text-[48px] sm:text-[72px] lg:text-[88px] font-bold mt-3 leading-[1.0]">
             {{ getContentBlock('hero_title')?.text || $t('about.title') }}
           </h1>
@@ -233,7 +238,7 @@ useFadeUp({ y: 36, duration: 0.7 });
     <section v-for="section in visibleSections" :key="section.key" class="relative">
       <div class="max-w-[1280px] mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-12 gap-6 fade-up">
         <div class="md:col-span-3">
-          <SectionLabel :index="section.index" :name="$t(section.labelKey)" />
+          <SectionLabel :name="$t(section.labelKey)" />
         </div>
         <div class="md:col-span-9 max-w-[760px]">
           <h2
@@ -254,16 +259,32 @@ useFadeUp({ y: 36, duration: 0.7 });
       </div>
     </section>
 
-    <!-- Education -->
-    <section>
+    <!-- Experience, education and the full set of testimonials live here;
+         the home page keeps only the short version and links in. -->
+    <section id="experience">
       <div class="max-w-[1280px] mx-auto px-6 py-10">
-        <header class="mb-4">
-          <SectionLabel index="05" :name="$t('home.education.label')" />
-          <h2 class="h-display text-[36px] sm:text-[40px] font-bold mt-2">
-            {{ $t('home.education.title') }}
-          </h2>
-        </header>
+        <h2 class="h-display text-[36px] sm:text-[40px] font-bold mb-4">
+          {{ $t('home.experience.title') }}
+        </h2>
+        <ExperienceList />
+      </div>
+    </section>
+
+    <section id="education">
+      <div class="max-w-[1280px] mx-auto px-6 py-10">
+        <h2 class="h-display text-[36px] sm:text-[40px] font-bold mb-4">
+          {{ $t('home.education.title') }}
+        </h2>
         <EducationList />
+      </div>
+    </section>
+
+    <section id="testimonials" class="scroll-mt-20">
+      <div class="max-w-[1280px] mx-auto px-6 py-10">
+        <h2 class="h-display text-[36px] sm:text-[40px] font-bold mb-4">
+          {{ $t('home.testimonials.title') }}
+        </h2>
+        <TestimonialsList :limit="20" />
       </div>
     </section>
 
@@ -273,15 +294,9 @@ useFadeUp({ y: 36, duration: 0.7 });
         class="max-w-[1280px] mx-auto rounded-tile bg-night text-night-text relative overflow-hidden fade-up"
       >
         <div
-          aria-hidden="true"
-          class="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full"
-          style="background: radial-gradient(closest-side, rgba(44, 103, 232, 0.4), transparent 70%)"
-        />
-        <div
           class="relative px-8 sm:px-12 py-14 sm:py-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center"
         >
           <div class="md:col-span-8">
-            <SectionLabel :name="$t('home.contact.label')" tone="night" />
             <h2 class="h-display text-[32px] sm:text-[44px] font-bold mt-2">
               {{ getContentBlock('cta_text')?.text || $t('about.cta') }}
             </h2>
@@ -289,7 +304,7 @@ useFadeUp({ y: 36, duration: 0.7 });
           <div class="md:col-span-4 md:justify-self-end">
             <NuxtLink
               :to="localePath('/#contact')"
-              class="inline-flex items-center justify-center gap-2 bg-accent text-accent-fg font-semibold px-6 py-3.5 rounded-input hover:bg-accent-2 glow-blue transition-colors"
+              class="inline-flex items-center justify-center gap-2 bg-accent text-accent-fg font-semibold px-6 py-3.5 rounded-input hover:bg-accent-2 transition-colors"
             >
               {{ getContentBlock('cta_button')?.text || $t('about.ctaButton') }}
               <ArrowRight :size="16" :stroke-width="2" />

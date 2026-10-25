@@ -30,11 +30,16 @@ const hasAnyIntro = computed(() => !!intro1.value || !!intro2.value);
   <section v-if="hasAnyIntro">
     <div class="max-w-[1280px] mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-12 gap-6">
       <div class="md:col-span-3 fade-up">
-        <SectionLabel index="02" :name="$t('home.about.label')" />
+        <!-- Every other home section has an h2; without one this block was
+             unreachable by heading navigation. -->
+        <h2 class="sr-only">{{ $t('home.about.label') }}</h2>
+        <SectionLabel :name="$t('home.about.label')" aria-hidden="true" />
       </div>
       <div
         :class="[
           'md:col-span-9 grid grid-cols-1 gap-8 md:gap-12 text-[16px] sm:text-[16.5px] leading-[1.7] text-ink-2 fade-up',
+          // CMS html: preflight strips link colour and underline entirely.
+          '[&_a]:text-accent [&_a]:underline [&_a]:underline-offset-4 [&_strong]:text-ink [&_strong]:font-semibold',
           intro1 && intro2 ? 'md:grid-cols-2' : 'md:grid-cols-1',
         ]"
       >

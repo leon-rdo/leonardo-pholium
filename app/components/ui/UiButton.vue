@@ -8,8 +8,6 @@ const props = withDefaults(
     size?: ButtonSize;
     /** Render as `a`/`NuxtLink`/`button`. Default `button`. */
     as?: string;
-    /** Adds the blue glow shadow (used on the main hero CTA). */
-    glow?: boolean;
     href?: string;
     to?: string;
     type?: 'button' | 'submit' | 'reset';
@@ -18,7 +16,6 @@ const props = withDefaults(
     variant: 'primary',
     size: 'md',
     as: 'button',
-    glow: false,
     type: 'button',
   },
 );
@@ -59,7 +56,6 @@ const sizes: Record<ButtonSize, string> = {
       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper',
       variants[variant],
       sizes[size],
-      glow ? 'glow-blue' : '',
     ]"
   >
     <slot />

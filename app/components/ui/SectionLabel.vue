@@ -1,13 +1,11 @@
 <script setup lang="ts">
 /**
- * Mono comment-style label that anchors each section.
- * Example: <SectionLabel index="01" name="about" />  →  // 01 · about
+ * Small mono label that names a piece of content — a "now" tile, the facts
+ * panel, the About rail. Not an eyebrow: section headings carry their own
+ * weight, so it never sits on top of an h1/h2.
  */
 withDefaults(
   defineProps<{
-    /** Optional numeric prefix (string so we can pass "01" without losing the zero). */
-    index?: string;
-    /** Section name (lowercase preferred). */
     name: string;
     /**
      * Tone of the label. `accent` uses the brand blue; `night` is for labels
@@ -29,9 +27,6 @@ withDefaults(
       tone === 'muted' ? 'text-ink-3' : '',
     ]"
   >
-    <span aria-hidden="true">//</span>
-    <span v-if="index" class="ml-1">{{ index }}</span>
-    <span v-if="index" class="mx-1 opacity-50">·</span>
-    <span>{{ name }}</span>
+    {{ name }}
   </div>
 </template>

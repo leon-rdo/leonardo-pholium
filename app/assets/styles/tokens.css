@@ -67,12 +67,8 @@
   --radius-input: 8px;
   --radius-chip: 9999px;
 
-  /* Shadows — hairline-first; reserve blur shadows for floating glass chips */
+  /* Shadows — hairline-first. */
   --shadow-hairline: inset 0 0 0 1px var(--color-line);
-  --shadow-glass: 0 1px 0 rgba(255, 255, 255, 0.6) inset,
-    0 8px 24px rgba(20, 15, 5, 0.04);
-  --shadow-glow-blue: 0 0 0 1px rgba(44, 103, 232, 0.25),
-    0 8px 30px rgba(44, 103, 232, 0.12);
 
   /* Spacing scale used by section padding */
   --space-section-sm: 4rem;   /* 64px  — list sections */
@@ -106,8 +102,4 @@
   --color-blob-3: rgba(125, 220, 188, 0.28);
 
   --shadow-hairline: inset 0 0 0 1px var(--color-line);
-  --shadow-glass: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-glow-blue: 0 0 0 1px rgba(77, 128, 239, 0.35),
-    0 8px 30px rgba(77, 128, 239, 0.2);
 }

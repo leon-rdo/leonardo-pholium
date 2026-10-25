@@ -6,8 +6,6 @@ import NowPanel from '~/components/home/NowPanel.vue';
 import AboutSection from '~/components/home/AboutSection.vue';
 import StackSection from '~/components/home/StackSection.vue';
 import ProjectList from '~/components/projects/ProjectList.vue';
-import ExperienceList from '~/components/experiences/ExperienceList.vue';
-import EducationList from '~/components/educations/EducationList.vue';
 import TestimonialsList from '~/components/testimonials/TestimonialsList.vue';
 import ContactForm from '~/components/contact-messages/ContactForm.vue';
 
@@ -16,11 +14,15 @@ const { t, locale } = useI18n();
 const config = useRuntimeConfig();
 
 
-const { data: contentBlocks } = await useApiPaginated<ContentBlock>(
-  'home-content-blocks',
-  '/api/content-blocks/',
-  { page_name: 'home', expand: 'images' },
-);
+const { data: contentBlocks, error: contentBlocksError } =
+  await useApiPaginated<ContentBlock>(
+    'home-content-blocks',
+    '/api/content-blocks/',
+    { page_name: 'home', expand: 'images' },
+  );
+// Without its ContentBlocks the hero renders empty — the one page Google has
+// indexed must not be re-crawled in that state.
+throwIfBackendDown(contentBlocksError.value);
 
 const blocks = computed(() => contentBlocks.value?.results ?? []);
 const getContentBlock = (key: string) => blocks.value.find((b) => b.key === key);
@@ -97,92 +99,71 @@ const hasAnyContactLink = computed(
 <template>
   <div>
     <HeroBento :content-blocks="blocks" />
-    <NowPanel :content-blocks="blocks" />
-    <AboutSection :content-blocks="blocks" />
-    <StackSection :content-blocks="blocks" />
 
-    <!-- Selected work -->
+    <!-- Selected work — straight after the hero: the work leads. Experience
+         and education live on /about; the home is the short version. -->
     <section id="projects">
       <div class="max-w-[1280px] mx-auto px-6 py-10">
         <header class="flex items-end justify-between mb-4">
-          <div>
-            <SectionLabel index="04" :name="$t('home.work.label')" />
-            <h2 class="h-display text-[36px] sm:text-[40px] font-bold mt-2">
-              {{ $t('home.work.title') }}
-            </h2>
-          </div>
+          <h2 class="h-display text-[36px] sm:text-[40px] font-bold">
+            {{ $t('home.work.title') }}
+          </h2>
           <NuxtLink
             :to="localePath('/projects')"
             class="font-mono-rail underline-offset-4 hover:text-accent transition-colors hidden sm:inline-flex items-center gap-1"
           >
-            {{ $t('home.work.allLink') }} <ArrowUpRight :size="14" :stroke-width="2" />
+            {{ $t('home.work.allLink') }} <ArrowRight :size="14" :stroke-width="2" />
           </NuxtLink>
         </header>
         <ProjectList :featured-only="true" />
+        <NuxtLink
+          :to="localePath('/projects')"
+          class="sm:hidden mt-4 inline-flex items-center gap-1 min-h-11 font-mono-rail hover:text-accent transition-colors"
+        >
+          {{ $t('home.work.allLink') }} <ArrowRight :size="14" :stroke-width="2" />
+        </NuxtLink>
       </div>
     </section>
 
-    <!-- Experience -->
-    <section id="experience">
-      <div class="max-w-[1280px] mx-auto px-6 py-10">
-        <header class="mb-4">
-          <SectionLabel index="05" :name="$t('home.experience.label')" />
-          <h2 class="h-display text-[36px] sm:text-[40px] font-bold mt-2">
-            {{ $t('home.experience.title') }}
-          </h2>
-        </header>
-        <ExperienceList />
-      </div>
-    </section>
+    <NowPanel :content-blocks="blocks" />
+    <AboutSection :content-blocks="blocks" />
+    <StackSection :content-blocks="blocks" />
 
-    <!-- Education -->
-    <section id="education">
-      <div class="max-w-[1280px] mx-auto px-6 py-10">
-        <header class="mb-4">
-          <SectionLabel index="06" :name="$t('home.education.label')" />
-          <h2 class="h-display text-[36px] sm:text-[40px] font-bold mt-2">
-            {{ $t('home.education.title') }}
-          </h2>
-        </header>
-        <EducationList />
-      </div>
-    </section>
-
-    <!-- Testimonials -->
+    <!-- Testimonials — three, clamped; the full set is on /about. -->
     <section id="testimonials">
       <div class="max-w-[1280px] mx-auto px-6 py-10">
-        <header class="mb-4">
-          <SectionLabel index="07" :name="$t('home.testimonials.label')" />
-          <h2 class="h-display text-[36px] sm:text-[40px] font-bold mt-2">
+        <header class="flex items-end justify-between mb-4">
+          <h2 class="h-display text-[36px] sm:text-[40px] font-bold">
             {{ $t('home.testimonials.title') }}
           </h2>
+          <NuxtLink
+            :to="localePath('/about') + '#testimonials'"
+            class="font-mono-rail underline-offset-4 hover:text-accent transition-colors hidden sm:inline-flex items-center gap-1"
+          >
+            {{ $t('home.testimonials.allLink') }} <ArrowRight :size="14" :stroke-width="2" />
+          </NuxtLink>
         </header>
-        <TestimonialsList />
+        <TestimonialsList :limit="3" compact />
+        <NuxtLink
+          :to="localePath('/about') + '#testimonials'"
+          class="sm:hidden mt-4 inline-flex items-center gap-1 min-h-11 font-mono-rail hover:text-accent transition-colors"
+        >
+          {{ $t('home.testimonials.allLink') }} <ArrowRight :size="14" :stroke-width="2" />
+        </NuxtLink>
       </div>
     </section>
 
-    <!-- Contact CTA — always-dark tile with aurora glow.
+    <!-- Contact CTA — always-dark tile.
          Uses `bg-night` / `text-night-text` so it stays deep ink in both
          themes (`bg-ink` would flip with the color-mode tokens). -->
     <section id="contact" class="px-6 pb-12 pt-6">
       <div
         class="max-w-[1280px] mx-auto rounded-tile bg-night text-night-text relative overflow-hidden fade-up"
       >
-        <div
-          aria-hidden="true"
-          class="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full"
-          style="background: radial-gradient(closest-side, rgba(44, 103, 232, 0.45), transparent 70%)"
-        />
-        <div
-          aria-hidden="true"
-          class="absolute -bottom-32 right-0 w-[400px] h-[400px] rounded-full"
-          style="background: radial-gradient(closest-side, rgba(255, 209, 195, 0.18), transparent 70%)"
-        />
         <div class="relative px-8 sm:px-12 py-16 sm:py-20 grid grid-cols-1 md:grid-cols-12 gap-8">
           <div class="md:col-span-7">
-            <SectionLabel index="08" :name="$t('home.contact.label')" tone="night" />
             <h2
-              class="h-display text-[40px] sm:text-[52px] lg:text-[60px] font-bold mt-2 leading-[1.02]"
+              class="h-display text-[40px] sm:text-[52px] lg:text-[60px] font-bold leading-[1.02]"
             >
               {{ $t('home.contact.titleLead') }}
               <span class="text-accent-night">{{ $t('home.contact.titleAccent') }}</span>
@@ -207,15 +188,15 @@ const hasAnyContactLink = computed(
               </div>
               <div class="grid grid-cols-2 gap-y-3 gap-x-6">
                 <template v-if="contactTimezone">
-                  <span class="text-night-text/40">// {{ $t('home.contact.timezoneLabel') }}</span>
+                  <span class="text-night-text/60">{{ $t('home.contact.timezoneLabel') }}</span>
                   <span>{{ contactTimezone }}</span>
                 </template>
                 <template v-if="contactOpenFor">
-                  <span class="text-night-text/40">// {{ $t('home.contact.openForLabel') }}</span>
+                  <span class="text-night-text/60">{{ $t('home.contact.openForLabel') }}</span>
                   <span class="text-accent-night">{{ contactOpenFor }}</span>
                 </template>
                 <template v-if="contactResponse">
-                  <span class="text-night-text/40">// {{ $t('home.contact.responseLabel') }}</span>
+                  <span class="text-night-text/60">{{ $t('home.contact.responseLabel') }}</span>
                   <span>{{ contactResponse }}</span>
                 </template>
               </div>

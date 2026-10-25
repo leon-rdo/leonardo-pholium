@@ -31,14 +31,13 @@ const skills = computed<Skill[]>(() => skillsData.value?.results ?? []);
     <div class="max-w-[1280px] mx-auto px-6 pb-6 pt-2">
       <header class="flex items-end justify-between mb-4">
         <div>
-          <SectionLabel index="03" :name="$t('home.stack.label')" />
           <h2 class="h-display text-[36px] sm:text-[40px] font-bold mt-2">
             {{ $t('home.stack.title') }}
           </h2>
         </div>
       </header>
 
-      <Tile :aurora="true" class="px-7 py-7 fade-up">
+      <Tile class="px-7 py-7 fade-up">
         <ul class="flex flex-wrap gap-1.5">
           <li v-for="skill in skills" :key="skill.id">
             <Chip variant="default">{{ skill.name }}</Chip>

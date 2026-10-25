@@ -5,18 +5,15 @@ const props = withDefaults(
   defineProps<{
     /** Visual variant. `card` is the default cream tile; `dark` flips to ink. */
     variant?: TileVariant;
-    /** Show the soft aurora gradient inside the tile. */
-    aurora?: boolean;
     /** Render with the hairline ring border. */
     ring?: boolean;
-    /** Render the tile clipping content (default). Disable for floating glass chips. */
+    /** Clip content to the rounded tile (default). Disable for content that must overflow it. */
     clip?: boolean;
     /** Wrapping element. Default `div`; pass `article`, `section`, `a` etc. */
     as?: string;
   }>(),
   {
     variant: 'card',
-    aurora: false,
     ring: true,
     clip: true,
     as: 'div',
@@ -39,21 +36,24 @@ const surfaceClass = computed(() => {
 </script>
 
 <template>
+  <!--
+    Content is slotted straight in, with no wrapper: layout classes passed to
+    <Tile> (flex, grid, justify-between…) must reach the children. A wrapper
+    div here swallowed them, which is what glued the hero headline to its
+    subtitle and broke the featured PostCard grid. `isolate` keeps
+    positioned children (stretched links, image overlays) stacked inside the
+    tile.
+  -->
   <component
     :is="as"
     :class="[
-      'relative rounded-tile transition-[transform,box-shadow] duration-200',
+      'relative isolate rounded-tile transition-[transform,box-shadow] duration-200',
       'color-mode-fade',
       surfaceClass,
       ring ? 'ring-hair' : '',
       clip ? 'overflow-hidden' : '',
     ]"
   >
-    <!-- Aurora layer behind content. Pointer-events disabled in CSS. -->
-    <div v-if="aurora" class="aurora-soft" aria-hidden="true" />
-    <!-- Content sits above aurora. -->
-    <div class="relative z-10 h-full">
-      <slot />
-    </div>
+    <slot />
   </component>
 </template>

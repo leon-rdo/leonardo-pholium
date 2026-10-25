@@ -98,15 +98,12 @@ const hasAny = computed(
     <div class="max-w-[1280px] mx-auto px-6 py-6">
       <header class="flex items-center justify-between mb-3">
         <div class="flex items-baseline gap-3">
-          <SectionLabel index="01" :name="$t('home.now.label')" />
+          <SectionLabel :name="$t('home.now.label')" />
           <span
             v-if="updatedAt"
             class="font-mono text-[11px] text-ink-3 inline-flex items-center gap-1.5"
           >
             <span class="relative flex w-1.5 h-1.5">
-              <span
-                class="absolute inset-0 rounded-full bg-status-ok opacity-40 animate-ping"
-              />
               <span class="relative w-1.5 h-1.5 rounded-full bg-status-ok" />
             </span>
             {{ updatedAt }}
@@ -116,7 +113,7 @@ const hasAny = computed(
 
       <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
         <!-- Building -->
-        <Tile v-if="buildingTitle" :aurora="true" class="md:col-span-5 px-5 py-5 fade-up">
+        <Tile v-if="buildingTitle" class="md:col-span-5 px-5 py-5 fade-up">
           <SectionLabel :name="$t('home.now.building.label')" tone="accent" />
           <h3 class="text-[18px] font-semibold mt-2">{{ buildingTitle }}</h3>
           <p
@@ -130,14 +127,14 @@ const hasAny = computed(
             class="mt-3 grid grid-cols-[max-content_1fr] gap-y-1.5 gap-x-3 font-mono text-[12px] text-ink-2"
           >
             <template v-if="buildingMeta">
-              <dt class="text-ink-3">last commit</dt>
+              <dt class="text-ink-3">{{ $t('home.now.building.lastCommit') }}</dt>
               <dd>
                 <span class="text-status-ok">●</span>
                 <span class="ml-1">{{ buildingMeta }}</span>
               </dd>
             </template>
             <template v-if="buildingStage">
-              <dt class="text-ink-3">stage</dt>
+              <dt class="text-ink-3">{{ $t('home.now.building.stage') }}</dt>
               <dd>{{ buildingStage }}</dd>
             </template>
           </dl>
@@ -224,7 +221,7 @@ const hasAny = computed(
         </Tile>
 
         <!-- Where -->
-        <Tile v-if="whereTitle" :aurora="true" class="md:col-span-5 px-5 py-5 fade-up">
+        <Tile v-if="whereTitle" class="md:col-span-5 px-5 py-5 fade-up">
           <div class="flex items-center justify-between gap-4">
             <div>
               <SectionLabel :name="$t('home.now.where.label')" tone="accent" />

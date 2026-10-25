@@ -119,11 +119,12 @@ body {
   background: var(--color-line-2);
 }
 
-/* Focus ring */
+/* Focus ring. No border-radius here: forcing 4px squared off every pill
+   button the moment it took keyboard focus; the outline already follows the
+   element's own radius. */
 *:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 
 /*
@@ -169,20 +170,6 @@ body {
   box-shadow: var(--shadow-hairline);
 }
 
-/* Aurora blob — soft radial gradients on cream. Toggle via `data-aurora`. */
-.aurora-soft {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(40% 60% at 12% 18%, var(--color-blob-1) 0%, transparent 60%),
-    radial-gradient(45% 60% at 88% 12%, var(--color-blob-2) 0%, transparent 60%),
-    radial-gradient(50% 60% at 50% 100%, var(--color-blob-1) 0%, transparent 60%);
-  filter: blur(8px) saturate(110%);
-  opacity: 0.6;
-}
-
 /*
  * Scrim for cream text laid over an arbitrary photograph (project cards, hero
  * portrait caption). The previous `from-night/60 via-night/20` fade left the
@@ -206,21 +193,20 @@ body {
   );
 }
 
-/* Glass card on cream/dark — used by floating chips on hero portrait. */
-.glass-cream {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-card) 72%, transparent),
-    color-mix(in srgb, var(--color-card) 25%, transparent)
-  );
-  border: 1px solid color-mix(in srgb, var(--color-card) 80%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: var(--shadow-glass);
+/* `night` deliberately doesn't flip, but it equals the dark-mode `paper`, so
+   in dark mode the always-dark CTA tiles lost their edges and melted into
+   the page. A hairline gives them back. */
+.dark .bg-night {
+  box-shadow: inset 0 0 0 1px var(--color-line-2);
 }
 
-.glow-blue {
-  box-shadow: var(--shadow-glow-blue);
+/* useFadeUp leaves below-the-fold blocks at opacity 0 until they scroll into
+   view, so printing or "Save as PDF" shipped blank sections. */
+@media print {
+  .fade-up {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 /* Smooth no-flash on color-mode change. */

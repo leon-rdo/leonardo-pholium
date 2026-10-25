@@ -165,11 +165,6 @@ const calculateDuration = (startDate: string | null, endDate: string | null) => 
             />
             <div class="relative w-3 h-3 z-10">
               <span
-                v-if="isCurrent(edu)"
-                aria-hidden="true"
-                class="absolute inset-0 rounded-full bg-accent/40 animate-ping"
-              />
-              <span
                 class="relative block w-3 h-3 rounded-full ring-4 ring-paper transition-colors"
                 :class="isCurrent(edu) ? 'bg-accent' : 'bg-line-2'"
               />
