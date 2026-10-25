@@ -24,7 +24,7 @@ const siteName = "Leonardo Costa";
 // Shared by `site`, the schema.org identity and (via runtimeConfig) the
 // llms.txt / Markdown endpoints, which fall back to it when the backend is down.
 const siteDescription =
-  "Desenvolvedor backend com mais de 3 anos em Django REST, PostgreSQL e integrações com I.A.";
+  "AI Engineer com 4 anos de experiência em backend: agentes de LLM, RAG e MCP em Python, sobre Django REST e PostgreSQL.";
 
 // Crawlers and agents behind AI assistants. All of them are already allowed by
 // the `*` group; they are listed explicitly so the intent is unambiguous and so
@@ -261,7 +261,7 @@ export default defineNuxtConfig({
       name: siteName,
       url: siteUrl,
       image: `${siteUrl}/og-default.jpg`,
-      jobTitle: "Backend Developer",
+      jobTitle: "AI Engineer",
       description: siteDescription,
       sameAs: [
         "https://github.com/leon-rdo",
@@ -275,6 +275,9 @@ export default defineNuxtConfig({
         "Vue.js",
         "Nuxt",
         "TypeScript",
+        "LLM Agents",
+        "Retrieval-Augmented Generation",
+        "Model Context Protocol",
         "Backend Engineering",
         "API Design",
       ],

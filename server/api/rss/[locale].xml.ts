@@ -59,7 +59,7 @@ export default defineEventHandler(async (event) => {
   }
 
   let siteName = "Leonardo Costa";
-  let siteDescription = "Full Stack Developer & Creative Problem Solver";
+  let siteDescription = "AI Engineer · Python, LLM agents, RAG and MCP";
 
   try {
     const settings: SiteSetting = await $fetch("/api/site-settings/", {
