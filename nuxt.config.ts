@@ -77,6 +77,13 @@ export default defineNuxtConfig({
     externals: {
       inline: ["unhead", "@unhead/vue", "@unhead/schema-org"],
     },
+    // The SWR page cache (routeRules below) keys on the full URL, query
+    // string included, and Nitro's default storage is an unbounded in-memory
+    // map: every `?fbclid=…` share or random query would add another
+    // ~100 KB page for good. An LRU caps it; evicted pages just re-render.
+    storage: {
+      cache: { driver: "lru-cache", max: 300 },
+    },
   },
 
   devtools: { enabled: true },

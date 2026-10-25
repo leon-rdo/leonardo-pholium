@@ -44,7 +44,7 @@ Every API call goes through the Django backend and follows two conventions:
 1. **List responses are paginated** with shape [`DjangoListResponse<T>`](app/types/api.ts) — `{ count, next, previous, results }`. Use [`useApiPaginated`](app/composables/useApiPaginated.ts) when you need to walk all pages, [`useApi`/`useApiData`](app/composables/useApi.ts) for single-page reads.
 2. **Locale is sent as `Accept-Language: pt-br | en-us`** — the backend returns translated content based on this header. All composables in [app/composables/](app/composables/) inject this header from `useI18n().locale` automatically. If you call `$fetch` directly (e.g. inside `server/api/`), set the header yourself.
 
-**Backend outages answer 503, not an empty page.** Pages pass the `error` of the fetch they can't render without to [`throwIfBackendDown()`](app/utils/backend-error.ts), which raises a fatal 503 ([error.vue](app/error.vue) adds `Retry-After`). Rendering the empty state with 200 is how `/en-us/projects` became a soft 404 in Search Console, and a post that couldn't be fetched used to answer 404. New content pages should do the same.
+**Backend outages answer 503, not an empty page.** Pages pass the `error` of the fetch they can't render without to [`throwIfBackendDown()`](app/utils/backend-error.ts): a network error or 5xx raises a fatal 503 ([error.vue](app/error.vue) adds `Retry-After`), while a 4xx from the API (DRF answers 404 "Invalid page." for `?page=` past the end) becomes the page's own 404. Rendering the empty state with 200 is how `/en-us/projects` became a soft 404 in Search Console, and a post that couldn't be fetched used to answer 404. New content pages should do the same.
 
 The `expand` query param is a Django REST convention used heavily here (e.g. `expand: "category,images,tags"`) and is reflected in the generic `Post<TExpand>` / `Project<TExpand>` / `Category<TExpand>` types in [app/types/](app/types/) — the `TExpand` parameter narrows fields from `number | null` (FK id) to the full nested object.
 
@@ -144,7 +144,7 @@ A lot of homepage/about copy is editable from the backend as `ContentBlock` rows
 
 ### Caching
 
-`routeRules` give every `/pt-br/**` and `/en-us/**` page `swr: 60` — served from Nitro's cache, re-rendered in the background, so CMS edits show within ~a minute. Nitro never caches responses ≥ 400. Anything that makes the HTML depend on the visitor (cookies, auth, request headers) must not be added to these pages without revisiting this; the one cookie they set today, `i18n_redirected`, always equals the URL's locale.
+`routeRules` give every `/pt-br/**` and `/en-us/**` page `swr: 60` — served from Nitro's cache, re-rendered in the background, so CMS edits show within ~a minute. Nitro never caches responses ≥ 400. The cache key is the full URL **including the query string**, so `nitro.storage.cache` is an LRU (300 pages) — the default in-memory storage is unbounded and every `?fbclid=…` would add a page for good. Canonical/og:url strip tracking params (`fbclid`, `gclid`, `utm_*`, `gtm_*`…) in `useSeo`. Anything that makes the HTML depend on the visitor (cookies, auth, request headers) must not be added to these pages without revisiting this; the one cookie they set today, `i18n_redirected`, always equals the URL's locale.
 
 ### View tracking
 

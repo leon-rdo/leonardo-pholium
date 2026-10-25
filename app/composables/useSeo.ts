@@ -415,11 +415,38 @@ export const useSeo = () => {
   };
 };
 
+// Click/campaign identifiers appended by ad and social platforms. A shared
+// `/en-us?fbclid=…` link used to declare itself, fbclid included, as the
+// canonical (and og:url) — GA4 showed eight such landing URLs.
+const TRACKING_PARAMS = [
+  "fbclid",
+  "gclid",
+  "gbraid",
+  "wbraid",
+  "dclid",
+  "msclkid",
+  "yclid",
+  "igshid",
+  "mc_cid",
+  "mc_eid",
+  "_ga",
+  "_gl",
+  "ref",
+  "ref_src",
+];
+const isTrackingParam = (key: string) =>
+  TRACKING_PARAMS.includes(key) ||
+  key.startsWith("utm_") ||
+  key.startsWith("gtm_");
+
 function stripVolatileQuery(url: string): string {
   try {
     const parsed = new URL(url);
     const volatile = ["limit", "search", "q", "sort", "ordering"];
     volatile.forEach((key) => parsed.searchParams.delete(key));
+    [...parsed.searchParams.keys()]
+      .filter(isTrackingParam)
+      .forEach((key) => parsed.searchParams.delete(key));
     if (parsed.searchParams.get("page") === "1") {
       parsed.searchParams.delete("page");
     }
