@@ -130,12 +130,12 @@ onBeforeUnmount(() => {
       </NuxtLink>
 
       <!-- Desktop nav -->
-      <nav class="hidden lg:flex items-center gap-1 text-sm">
+      <nav class="hidden lg:flex items-center gap-1 text-sm" :aria-label="$t('a11y.mainNav')">
         <template v-for="item in navItems" :key="item.id">
           <UiDropdown v-if="item.children?.length" align="left">
             <template #trigger="{ open }">
               <span
-                class="inline-flex items-center gap-1 px-3 py-1.5 rounded text-ink-2 hover:text-ink hover:bg-card transition-colors cursor-pointer"
+                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-ink-2 hover:text-ink hover:bg-card transition-colors cursor-pointer"
                 :class="{ 'text-ink bg-card': open }"
               >
                 {{ item.label }}
@@ -169,7 +169,7 @@ onBeforeUnmount(() => {
           <NuxtLink
             v-else-if="!isExternal(item.url)"
             :to="localePath(item.url)"
-            class="px-3 py-1.5 rounded text-ink-2 hover:text-ink hover:bg-card transition-colors"
+            class="px-3 py-1.5 rounded-full text-ink-2 hover:text-ink hover:bg-card transition-colors"
             active-class="text-ink bg-card"
             :title="item.title || item.label"
           >
@@ -181,7 +181,7 @@ onBeforeUnmount(() => {
             :href="item.url"
             target="_blank"
             rel="noopener noreferrer"
-            class="px-3 py-1.5 rounded text-ink-2 hover:text-ink hover:bg-card transition-colors inline-flex items-center gap-1"
+            class="px-3 py-1.5 rounded-full text-ink-2 hover:text-ink hover:bg-card transition-colors inline-flex items-center gap-1"
             :title="item.title || item.label"
           >
             {{ item.label }}
@@ -197,7 +197,7 @@ onBeforeUnmount(() => {
         <UiDropdown align="right" :label="$t('a11y.languageLabel')">
           <template #trigger>
             <span
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded font-mono text-[11.5px] tracking-[0.16em] text-ink-2 hover:text-ink hover:bg-card transition-colors uppercase"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono text-[11.5px] tracking-[0.16em] text-ink-2 hover:text-ink hover:bg-card transition-colors uppercase"
             >
               {{ currentLocaleLabel }}
               <ChevronDown :size="12" :stroke-width="1.8" />
@@ -229,7 +229,7 @@ onBeforeUnmount(() => {
       <button
         ref="menuButton"
         type="button"
-        class="lg:hidden inline-flex items-center justify-center w-11 h-11 rounded text-ink hover:bg-card transition-colors"
+        class="lg:hidden inline-flex items-center justify-center w-11 h-11 rounded-full text-ink hover:bg-card transition-colors"
         :aria-label="$t('navbar.openMenu')"
         :aria-expanded="drawer"
         aria-haspopup="dialog"
@@ -281,7 +281,7 @@ onBeforeUnmount(() => {
             </span>
             <button
               type="button"
-              class="inline-flex items-center justify-center w-11 h-11 -mr-2 rounded text-ink hover:bg-card transition-colors"
+              class="inline-flex items-center justify-center w-11 h-11 -mr-2 rounded-full text-ink hover:bg-card transition-colors"
               :aria-label="$t('navbar.closeMenu')"
               @click="closeDrawer"
             >
@@ -359,7 +359,7 @@ onBeforeUnmount(() => {
                   :key="lang.code"
                   type="button"
                   :aria-current="lang.code === locale ? 'true' : undefined"
-                  class="px-3 py-2.5 rounded-card text-[13px] font-medium ring-hair transition-colors"
+                  class="px-3 py-2.5 rounded-full text-[13px] font-medium ring-hair transition-colors"
                   :class="
                     lang.code === locale
                       ? 'bg-ink text-paper'

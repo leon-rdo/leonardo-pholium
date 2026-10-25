@@ -65,7 +65,7 @@ const onKeydown = (event: KeyboardEvent) => {
       :aria-controls="open ? menuId : undefined"
       :aria-label="label"
       aria-haspopup="true"
-      class="inline-flex items-center"
+      class="inline-flex items-center rounded-full"
       @click="open = !open"
     >
       <slot name="trigger" :open="open" />
