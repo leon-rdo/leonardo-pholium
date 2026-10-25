@@ -28,7 +28,8 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
 const { setSeoMeta, setStructuredData } = useSeo();
 setSeoMeta({
   title: t('blog.categories'),
-  description: t('blog.allCategories'),
+  // "Todas as Categorias" (19 chars) gave Google nothing to show in results.
+  description: t('blog.allCategoriesDescription'),
   image: `${config.public.siteUrl}/og-default.jpg`,
   type: 'website',
 });
@@ -88,10 +89,8 @@ useFadeUp();
   <div>
     <!-- Hero -->
     <section class="relative">
-      <AuroraBg :intensity="0.4" />
       <div class="relative max-w-[1280px] mx-auto px-6 pt-12 pb-10">
         <Breadcrumbs :items="breadcrumbItems" class="mb-6" />
-        <SectionLabel index="01" :name="$t('blog.categoriesLabel')" />
         <h1 class="h-display text-[40px] sm:text-[56px] lg:text-[64px] font-bold mt-3 leading-[1.04]">
           {{ $t('blog.categories') }}
         </h1>

@@ -192,6 +192,14 @@ export const useSeo = () => {
       robotsContent.push("max-video-preview:-1");
     }
 
+    // @nuxtjs/robots sends its own X-Robots-Tag, so a noindex page still
+    // went out with "X-Robots-Tag: index, follow" next to its noindex meta.
+    // Forward only the restrictive case: forwarding "index" would loosen the
+    // blanket noindex the module applies outside production.
+    if (robotsContent[0] === "noindex") {
+      useRobotsRule(robotsContent.join(", "));
+    }
+
     const meta: Record<string, unknown> = {
       title: fullTitle,
       description: description || defaultDescription.value,

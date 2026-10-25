@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FileSearch } from 'lucide-vue-next';
+import { ArrowLeft, FileSearch } from 'lucide-vue-next';
 import type { DjangoListResponse } from '~/types/api';
 import type { Post, Category } from '~/types/blog';
 import Pagination from '~/components/common/Pagination.vue';
@@ -14,16 +14,21 @@ const localePath = useLocalePath();
 const { locale, t } = useI18n();
 const config = useRuntimeConfig();
 
-const { data: categoriesData } = await useApi<
+const { data: categoriesData, error: categoryError } = await useApi<
   DjangoListResponse<Category<{ parent: true }>>
 >('/api/post-categories/', {
   params: { translations__slug: slug, expand: 'parent,children,images' },
 });
+throwIfBackendDown(categoryError.value);
 
 const category = computed(() => categoriesData.value?.results?.[0]);
 
 if (!category.value) {
-  throw createError({ statusCode: 404, message: t('errors.categoryNotFound') });
+  throw createError({
+    statusCode: 404,
+    message: t('errors.categoryNotFound'),
+    fatal: true,
+  });
 }
 
 // Fetch translated slug for hreflang (slugs differ per language). Querying
@@ -68,12 +73,15 @@ const postsParams = computed(() => ({
   limit: pagination.limit.value,
 }));
 
-const { data: posts, pending: isLoading } = await useApi<
-  DjangoListResponse<Post>
->('/api/posts/published/', {
+const {
+  data: posts,
+  pending: isLoading,
+  error: postsError,
+} = await useApi<DjangoListResponse<Post>>('/api/posts/published/', {
   params: postsParams,
   watch: [postsParams],
 });
+throwIfBackendDown(postsError.value);
 
 watch(
   () => posts.value?.count,
@@ -112,6 +120,10 @@ setSeoMeta({
     t('blog.subtitle'),
   image: categoryImage.value,
   type: 'website',
+  // An empty category is a page with nothing on it; Search Console files it
+  // as "crawled - not indexed" and it drags on site quality. The sitemap
+  // skips these too (server/api/__sitemap__/urls.ts).
+  noindex: (posts.value?.count ?? 0) === 0,
   alternateLanguages: [
     { locale: locale.value, path: `/blog/category/${category.value!.slug}` },
     { locale: otherLocale, path: `/blog/category/${altCategorySlug.value}` },
@@ -163,10 +175,8 @@ useFadeUp();
   <div>
     <!-- Hero -->
     <section class="relative">
-      <AuroraBg :intensity="0.4" />
       <div class="relative max-w-[1280px] mx-auto px-6 pt-12 pb-10">
         <Breadcrumbs :items="breadcrumbItems" class="mb-6" />
-        <SectionLabel index="" :name="$t('blog.category')" tone="accent" />
         <h1
           class="h-display text-[44px] sm:text-[60px] lg:text-[72px] font-bold mt-3 leading-[1.04]"
         >
@@ -202,9 +212,10 @@ useFadeUp();
           <p class="text-[16px] mt-4">{{ $t('blog.noPostsFound') }}</p>
           <NuxtLink
             :to="localePath('/blog')"
-            class="mt-4 font-mono-rail underline-offset-4 hover:text-accent transition-colors"
+            class="mt-4 inline-flex items-center gap-1 font-mono-rail underline-offset-4 hover:text-accent transition-colors"
           >
-            {{ $t('common.backToBlog') }} ↗
+            <ArrowLeft :size="13" :stroke-width="2" aria-hidden="true" />
+            {{ $t('common.backToBlog') }}
           </NuxtLink>
         </div>
 
