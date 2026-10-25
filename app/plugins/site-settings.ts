@@ -1,6 +1,11 @@
 export default defineNuxtPlugin(async () => {
   const config = useRuntimeConfig();
 
+  // The server-side fetch below reaches the client through the payload.
+  // Fetching again on hydration cost every page load an extra round trip,
+  // and an async plugin holds up app mount until it resolves.
+  if (import.meta.client && useNuxtData("site-settings").data.value) return;
+
   // Derive the locale from the URL prefix (/pt-br/…, /en-us/…) — cookie-less
   // visitors (crawlers, first-time social fetchers) on /en-us pages must get
   // en-us defaults, and the i18n_redirected cookie can't tell us that.

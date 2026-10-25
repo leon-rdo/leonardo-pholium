@@ -81,6 +81,20 @@ export default defineNuxtConfig({
 
   devtools: { enabled: true },
 
+  // SSR pages took ~1.6s to first byte: every render walks several Django
+  // endpoints in series. Serve them from Nitro's cache and re-render in the
+  // background (stale-while-revalidate), so a CMS edit shows up within about
+  // a minute. Nitro never stores responses >= 400, so the 503 raised by
+  // throwIfBackendDown() is not cached. The only cookie these pages set is
+  // `i18n_redirected`, and its value is the URL's own locale, so replaying it
+  // from the cache gives every visitor what an uncached render would.
+  routeRules: {
+    "/pt-br": { swr: 60 },
+    "/pt-br/**": { swr: 60 },
+    "/en-us": { swr: 60 },
+    "/en-us/**": { swr: 60 },
+  },
+
   runtimeConfig: {
     // Server-only: used by the llms.txt / Markdown endpoints, not shipped to the client.
     siteName,
@@ -279,6 +293,14 @@ export default defineNuxtConfig({
     format: ["avif", "webp"],
     quality: 80,
     densities: [1, 2],
+    // IPX's http storage answered remote (backend media) images with
+    // `max-age=300`, so browsers re-downloaded every optimised image after
+    // five minutes (Lighthouse "efficient cache policy"). The URL embeds the
+    // size/format/quality, and Django gives a replaced upload a new filename,
+    // so a long lifetime is safe.
+    ipx: {
+      http: { maxAge: 60 * 60 * 24 * 30 },
+    },
     screens: {
       xs: 320,
       sm: 640,

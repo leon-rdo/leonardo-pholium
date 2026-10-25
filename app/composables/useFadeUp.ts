@@ -45,6 +45,11 @@ export const useFadeUp = (options: FadeUpOptions = {}) => {
 
     const triggers: ScrollTrigger[] = [];
     gsap.utils.toArray<HTMLElement>(selector).forEach((element) => {
+      // Blocks already on screen were painted by SSR; hiding them on
+      // hydration made the hero blink out and back in, and pushed Speed
+      // Index to 5 s. Only animate what the reader hasn't seen yet.
+      if (element.getBoundingClientRect().top < window.innerHeight) return;
+
       const tween = gsap.from(element, {
         y,
         opacity: 0,
