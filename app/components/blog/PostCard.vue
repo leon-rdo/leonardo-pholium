@@ -6,7 +6,7 @@
  *   - default renders a single-column card with cover + summary
  */
 import type { Post, Category } from '~/types/blog';
-import { ArrowUpRight, Clock, Eye, Pin } from 'lucide-vue-next';
+import { ArrowRight, Clock, Eye, Pin } from 'lucide-vue-next';
 import { formatYearMonthDay } from '~/utils/date';
 
 const props = defineProps<{
@@ -41,9 +41,12 @@ const postHref = computed(() => localePath(`/blog/${props.post.slug}`));
       v-if="featured"
       class="px-3 py-3 grid grid-cols-1 md:grid-cols-12 gap-3"
     >
-      <!-- Cover -->
+      <!-- Cover. Same destination as the title link, so it is kept out of
+           the tab order and the accessibility tree (one stop per card). -->
       <NuxtLink
         :to="postHref"
+        tabindex="-1"
+        aria-hidden="true"
         class="md:col-span-5 block rounded-card overflow-hidden bg-card-soft relative aspect-[16/10]"
       >
         <NuxtImg
@@ -52,6 +55,7 @@ const postHref = computed(() => localePath(`/blog/${props.post.slug}`));
           :alt="post.title"
           :width="640"
           :height="400"
+          sizes="sm:100vw md:500px"
           format="webp"
           loading="lazy"
           decoding="async"
@@ -101,7 +105,7 @@ const postHref = computed(() => localePath(`/blog/${props.post.slug}`));
             class="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-2 group-hover:text-accent transition-colors"
           >
             {{ $t('common.readMore') }}
-            <ArrowUpRight
+            <ArrowRight
               :size="14"
               :stroke-width="2"
               class="group-hover:translate-x-0.5 transition-transform"
@@ -115,6 +119,8 @@ const postHref = computed(() => localePath(`/blog/${props.post.slug}`));
     <Tile v-else class="px-3 py-3 h-full flex flex-col">
       <NuxtLink
         :to="postHref"
+        tabindex="-1"
+        aria-hidden="true"
         class="block rounded-card overflow-hidden bg-card-soft relative aspect-[16/10]"
       >
         <NuxtImg
@@ -123,6 +129,7 @@ const postHref = computed(() => localePath(`/blog/${props.post.slug}`));
           :alt="post.title"
           :width="600"
           :height="375"
+          sizes="sm:100vw md:50vw lg:400px"
           format="webp"
           loading="lazy"
           decoding="async"
@@ -136,11 +143,13 @@ const postHref = computed(() => localePath(`/blog/${props.post.slug}`));
           <time :datetime="post.published_at">{{ formatYearMonthDay(post.published_at, locale) }}</time>
         </div>
         <NuxtLink :to="postHref" class="block">
-          <h3
+          <!-- h2, like the featured variant: list pages have no heading
+               between their h1 and these cards. -->
+          <h2
             class="text-[18px] sm:text-[20px] font-bold mt-2 group-hover:text-accent transition-colors leading-[1.3]"
           >
             {{ post.title }}
-          </h3>
+          </h2>
         </NuxtLink>
         <p
           v-if="post.excerpt"
@@ -166,7 +175,7 @@ const postHref = computed(() => localePath(`/blog/${props.post.slug}`));
             class="inline-flex items-center gap-1 text-ink-2 group-hover:text-accent transition-colors"
           >
             {{ $t('common.readMore') }}
-            <ArrowUpRight
+            <ArrowRight
               :size="13"
               :stroke-width="2"
               class="group-hover:translate-x-0.5 transition-transform"

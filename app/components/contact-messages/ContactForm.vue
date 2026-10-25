@@ -41,10 +41,12 @@ const submitForm = async () => {
       },
       body: form.value,
     });
+    // The confirmation stays until the visitor starts another message — it
+    // used to vanish after 5s, before a slow reader (or a screen reader)
+    // had taken it in.
     submitted.value = true;
     trackEvent('contact_form_submit');
     resetForm();
-    setTimeout(() => (submitted.value = false), 5000);
   } catch (err: any) {
     console.error('Contact form error:', err);
     error.value = err?.data?.message || t('contact.errorMessage');
@@ -65,23 +67,27 @@ const inputClass =
 </script>
 
 <template>
-  <div class="space-y-4">
-    <!-- Success / Error banners (rendered inside the always-dark CTA) -->
-    <div
-      v-if="submitted"
-      class="flex items-start gap-3 px-4 py-3 rounded-card border border-emerald-500/30 bg-emerald-500/15 text-emerald-100"
-      role="status"
-    >
-      <CheckCircle2 :size="18" :stroke-width="1.8" class="mt-0.5 shrink-0" />
-      <div class="text-[14px] leading-[1.5]">
-        <strong class="font-semibold">{{ t('contact.successTitle') }}</strong>
-        <div class="opacity-90">{{ t('contact.successMessage') }}</div>
+  <div>
+    <!-- Success / Error banners (rendered inside the always-dark CTA).
+         The live region is always mounted: a role="status" node inserted
+         with v-if is often not announced at all. It only takes space once
+         it has something to say. -->
+    <div aria-live="polite" class="[&:not(:empty)]:mb-4">
+      <div
+        v-if="submitted"
+        class="flex items-start gap-3 px-4 py-3 rounded-card border border-emerald-500/30 bg-emerald-500/15 text-emerald-100"
+      >
+        <CheckCircle2 :size="18" :stroke-width="1.8" class="mt-0.5 shrink-0" />
+        <div class="text-[14px] leading-[1.5]">
+          <strong class="font-semibold">{{ t('contact.successTitle') }}</strong>
+          <div class="opacity-90">{{ t('contact.successMessage') }}</div>
+        </div>
       </div>
     </div>
 
     <div
       v-if="error"
-      class="flex items-start gap-3 px-4 py-3 rounded-card border border-rose-500/30 bg-rose-500/15 text-rose-100"
+      class="mb-4 flex items-start gap-3 px-4 py-3 rounded-card border border-rose-500/30 bg-rose-500/15 text-rose-100"
       role="alert"
     >
       <AlertCircle :size="18" :stroke-width="1.8" class="mt-0.5 shrink-0" />
@@ -97,7 +103,11 @@ const inputClass =
     </div>
 
     <!-- Form -->
-    <form @submit.prevent="submitForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <form
+      class="grid grid-cols-1 md:grid-cols-2 gap-3"
+      @submit.prevent="submitForm"
+      @input="submitted = false"
+    >
       <label class="block">
         <span class="font-mono-rail !text-night-text/70 text-[11px] mb-1.5 block">{{ t('contact.name') }}</span>
         <input
@@ -148,7 +158,7 @@ const inputClass =
         <button
           type="submit"
           :disabled="isSubmitting"
-          class="w-full inline-flex items-center justify-center gap-2 bg-accent text-accent-fg font-semibold py-3.5 rounded-input hover:bg-accent-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors glow-blue"
+          class="w-full inline-flex items-center justify-center gap-2 bg-accent text-accent-fg font-semibold py-3.5 rounded-input hover:bg-accent-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
         >
           {{ isSubmitting ? t('common.loading') : t('contact.send') }}
           <Send :size="16" :stroke-width="2" />

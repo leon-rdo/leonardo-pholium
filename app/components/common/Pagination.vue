@@ -95,7 +95,7 @@ const onNavigate = (page: number) => {
       </NuxtLink>
       <span
         v-else-if="typeof page === 'number'"
-        class="inline-flex items-center justify-center min-w-[40px] h-10 px-3 rounded-input text-[14px] font-medium bg-accent text-night-text cursor-default"
+        class="inline-flex items-center justify-center min-w-[40px] h-10 px-3 rounded-input text-[14px] font-medium bg-accent text-accent-fg cursor-default"
         :aria-label="`${$t('common.page')} ${page}`"
         aria-current="page"
       >

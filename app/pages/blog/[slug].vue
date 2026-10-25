@@ -27,33 +27,54 @@ const slug = route.params.slug as string;
 // Post by slug — images come expanded on the post itself; a separate
 // /api/images/?content_type= query needed a ContentType id the frontend
 // doesn't know (config.public.postContentType was never defined).
-const { data: posts } = await useApi<
+const { data: posts, error: postsError } = await useApi<
   DjangoListResponse<
     Post<{ category: true; author: true; tags: true; images: true }>
   >
 >('/api/posts/', {
   params: { translations__slug: slug, expand: 'category,series,tags,images' },
 });
+throwIfBackendDown(postsError.value);
 
 const post = computed(() => posts.value?.results?.[0]);
 if (!post.value) {
-  throw createError({ statusCode: 404, message: t('errors.post_not_found') });
+  // fatal: on client-side navigation a non-fatal error is swallowed and the
+  // page renders blank instead of showing error.vue.
+  throw createError({
+    statusCode: 404,
+    message: t('errors.post_not_found'),
+    fatal: true,
+  });
 }
 
 // Fetch the same post by id in the alternate locale to get the translated slug,
 // so hreflang points to a real URL (slugs differ per language). Querying by
 // `translations__slug` won't work cross-locale, because Django filters that
 // against the active language's translation only.
+//
+// Related posts are fetched alongside it — images expanded inline so the
+// thumbnails render during SSR. Both only need the post, not each other;
+// awaiting them one after the other added a full API round trip to the TTFB.
 const otherLocale = locale.value === 'pt-br' ? 'en-us' : 'pt-br';
 const postId = post.value.id;
-const { data: altPost } = await useAsyncData(
-  `post-alt-slug-${otherLocale}-${postId}`,
-  () =>
+const [{ data: altPost }, { data: relatedPostsData }] = await Promise.all([
+  useAsyncData(`post-alt-slug-${otherLocale}-${postId}`, () =>
     $fetch<Pick<Post, 'id' | 'slug'>>(`/api/posts/${postId}/`, {
       baseURL: config.public.apiBase,
       headers: { 'Accept-Language': otherLocale },
     }).catch(() => null),
-);
+  ),
+  useApi<DjangoListResponse<Post<{ category: true; images: true }>>>(
+    '/api/posts/published/',
+    {
+      params: {
+        category: post.value.category?.id,
+        limit: 4,
+        expand: 'category,images',
+      },
+    },
+  ),
+]);
 
 const altSlug = computed(() => altPost.value?.slug || post.value?.slug);
 
@@ -92,17 +113,6 @@ const galleryImages = computed(() =>
     .sort((a, b) => a.order - b.order),
 );
 
-// Related posts — images expanded inline so thumbnails render during SSR
-// (they were previously fetched in onMounted and invisible to crawlers).
-const { data: relatedPostsData } = await useApi<
-  DjangoListResponse<Post<{ category: true; images: true }>>
->('/api/posts/published/', {
-  params: {
-    category: post.value.category?.id,
-    limit: 4,
-    expand: 'category,images',
-  },
-});
 const filteredRelatedPosts = computed(
   () =>
     relatedPostsData.value?.results
@@ -272,7 +282,6 @@ const copyLink = async () => {
   <div v-if="post">
     <!-- Header with breadcrumbs + meta + title -->
     <section class="relative">
-      <AuroraBg :intensity="0.35" />
       <div
         class="relative max-w-[860px] mx-auto px-6 pt-10 pb-8 fade-up"
       >
@@ -321,27 +330,30 @@ const copyLink = async () => {
               {{ localViewCount }} {{ $t('blog.views') }}
             </span>
           </div>
-          <div class="flex items-center gap-1">
+          <div class="flex items-center gap-0.5">
             <button
               type="button"
-              class="p-2 rounded text-ink-3 hover:text-ink hover:bg-card transition-colors"
+              class="inline-flex items-center justify-center w-11 h-11 rounded text-ink-3 hover:text-ink hover:bg-card transition-colors"
               :title="$t('blog.shareOn') + ' Twitter / X'"
+              :aria-label="$t('blog.shareOn') + ' Twitter / X'"
               @click="sharePost('twitter')"
             >
               <Twitter :size="16" :stroke-width="1.8" />
             </button>
             <button
               type="button"
-              class="p-2 rounded text-ink-3 hover:text-ink hover:bg-card transition-colors"
+              class="inline-flex items-center justify-center w-11 h-11 rounded text-ink-3 hover:text-ink hover:bg-card transition-colors"
               :title="$t('blog.shareOn') + ' Facebook'"
+              :aria-label="$t('blog.shareOn') + ' Facebook'"
               @click="sharePost('facebook')"
             >
               <Facebook :size="16" :stroke-width="1.8" />
             </button>
             <button
               type="button"
-              class="p-2 rounded text-ink-3 hover:text-ink hover:bg-card transition-colors"
+              class="inline-flex items-center justify-center w-11 h-11 rounded text-ink-3 hover:text-ink hover:bg-card transition-colors"
               :title="$t('blog.shareOn') + ' LinkedIn'"
+              :aria-label="$t('blog.shareOn') + ' LinkedIn'"
               @click="sharePost('linkedin')"
             >
               <Linkedin :size="16" :stroke-width="1.8" />
@@ -349,15 +361,21 @@ const copyLink = async () => {
             <button
               type="button"
               :class="[
-                'inline-flex items-center gap-1.5 ml-1 p-2 rounded text-[12px] font-mono transition-colors',
+                'inline-flex items-center justify-center gap-1.5 min-w-11 h-11 px-3 rounded text-[12px] font-mono transition-colors',
                 linkCopied ? 'text-accent' : 'text-ink-3 hover:text-ink hover:bg-card',
               ]"
               :title="$t('common.copyLink')"
+              :aria-label="$t('common.copyLink')"
               @click="copyLink"
             >
               <Link2 :size="16" :stroke-width="1.8" />
-              <span v-if="linkCopied">{{ $t('common.copied', 'copiado') }}</span>
+              <span v-if="linkCopied" aria-hidden="true">{{ $t('common.copied') }}</span>
             </button>
+            <!-- Announces the copy; the visible "copiado" sits inside a
+                 button whose name stays "Copiar link". -->
+            <span class="sr-only" aria-live="polite">
+              {{ linkCopied ? $t('common.copied') : '' }}
+            </span>
           </div>
         </div>
       </div>
@@ -372,7 +390,7 @@ const copyLink = async () => {
             :alt="coverImage.alt_text || post.title"
             :width="coverImage.width || 1200"
             :height="coverImage.height || 675"
-            sizes="(max-width: 800px) 100vw, 1100px"
+            sizes="sm:100vw md:100vw lg:1100px"
             format="webp"
             loading="eager"
             fetchpriority="high"
@@ -397,7 +415,8 @@ const copyLink = async () => {
          carries the prose styling. Splitting them avoids the conflict
          where `max-w-none` (needed inside prose to override Tailwind
          Typography's default ~65ch width) would also defeat the
-         article's own max-w. -->
+         article's own max-w. Links keep their underline: by colour alone
+         the accent reads 1.56:1 against ink-2, short of WCAG 1.4.1's 3:1. -->
     <article class="px-6 fade-up">
       <div class="max-w-[760px] mx-auto">
         <div
@@ -409,7 +428,7 @@ const copyLink = async () => {
                  prose-h3:text-[22px] prose-h3:mt-10 prose-h3:mb-3
                  prose-p:text-ink-2 prose-p:my-5
                  prose-strong:text-ink prose-strong:font-semibold
-                 prose-a:text-accent prose-a:no-underline hover:prose-a:text-accent-2 prose-a:underline-offset-4 hover:prose-a:underline
+                 prose-a:text-accent prose-a:underline prose-a:decoration-accent/40 prose-a:underline-offset-4 hover:prose-a:text-accent-2 hover:prose-a:decoration-accent
                  prose-blockquote:border-l-2 prose-blockquote:border-accent prose-blockquote:bg-card-soft/40 prose-blockquote:rounded-r-card prose-blockquote:py-3 prose-blockquote:px-5
                  prose-blockquote:text-ink-2
                  prose-code:font-mono prose-code:text-[14px] prose-code:bg-card-soft prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden
@@ -454,7 +473,6 @@ const copyLink = async () => {
     <section v-if="filteredRelatedPosts.length" class="px-6 py-10">
       <div class="max-w-[1280px] mx-auto">
         <header class="mb-4 fade-up">
-          <SectionLabel :name="$t('blog.relatedLabel')" tone="accent" />
           <h2 class="h-display text-[28px] sm:text-[32px] font-bold mt-2">
             {{ $t('blog.relatedPosts') }}
           </h2>
@@ -476,6 +494,7 @@ const copyLink = async () => {
                   :alt="rp.title"
                   :width="600"
                   :height="375"
+                  sizes="sm:100vw md:50vw lg:400px"
                   format="webp"
                   loading="lazy"
                   decoding="async"

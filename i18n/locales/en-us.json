@@ -45,13 +45,14 @@
     "seo_description": "Personal Portfolio and Blog",
     "hero": {
       "viewWork": "View work",
-      "aboutMe": "About me",
-      "terminalTitle": "~/leonardo · whoami.sh"
+      "aboutMe": "About me"
     },
     "now": {
       "label": "currently",
       "building": {
-        "label": "building"
+        "label": "building",
+        "lastCommit": "last commit",
+        "stage": "stage"
       },
       "reading": {
         "label": "reading"
@@ -73,28 +74,23 @@
       "label": "about"
     },
     "stack": {
-      "label": "stack",
       "title": "Stack."
     },
     "work": {
-      "label": "selected work",
       "title": "In production right now.",
       "allLink": "all projects"
     },
     "experience": {
-      "label": "experience",
       "title": "Where I've been shipping."
     },
     "education": {
-      "label": "education",
       "title": "Academic background."
     },
     "testimonials": {
-      "label": "testimonials",
-      "title": "What people say."
+      "title": "What people say.",
+      "allLink": "All testimonials"
     },
     "contact": {
-      "label": "contact",
       "titleLead": "Got a backend that needs",
       "titleAccent": "building?",
       "subtitle": "APIs, AI integrations, an architecture that grew too fast — send the details.",
@@ -163,13 +159,15 @@
     "minutesAgo": "{count} min ago",
     "hoursAgo": "{count}h ago",
     "daysAgo": "{count} days ago",
-    "showingResults": "Showing {from} to {to} of {total} articles",
+    "showingResults": "Showing {from} to {to} of {total} article | Showing {from} to {to} of {total} articles",
     "noPosts": "No posts available",
-    "label": "writing",
-    "categoriesLabel": "categories",
     "allCategoriesDescription": "Browse by topic. Every article on the blog lives in one of these categories.",
     "category": "category",
-    "relatedLabel": "related reading"
+    "searchLabel": "Search articles",
+    "seoTitle": "Backend, Django and PostgreSQL blog",
+    "commentPending": "Comment sent. It shows up here once approved.",
+    "commentError": "Couldn't send your comment. Try again in a moment.",
+    "commentFieldsRequired": "Fill in name, email and comment to send it."
   },
   "projects": {
     "title": "My Projects",
@@ -183,11 +181,15 @@
     "ctaTitle": "Like what you see?",
     "ctaSubtitle": "Let's work together on your next project",
     "ctaButton": "Get in Touch",
-    "actionsLabel": "links",
-    "techLabel": "main stack",
-    "toolsCount": "tools",
-    "label": "work",
-    "filterLabel": "filter"
+    "filterLabel": "filter",
+    "live": "live",
+    "repo": "open source",
+    "aboutProject": "About the project",
+    "period": "Period",
+    "stack": "Stack",
+    "links": "Links",
+    "backToProjects": "Back to projects",
+    "coverAlt": "{title} screenshot"
   },
   "skills": {
     "title": "Skills",
@@ -270,7 +272,8 @@
     "notFoundDescription": "The page you are looking for does not exist or was moved.",
     "genericDescription": "An unexpected error occurred. Please try again shortly.",
     "backHome": "Back to home",
-    "goToBlog": "Browse the blog"
+    "goToBlog": "Browse the blog",
+    "projectNotFound": "Project not found"
   },
   "a11y": {
     "skipToContent": "Skip to content",
@@ -279,6 +282,14 @@
     "themeSystem": "System theme",
     "themeDark": "Dark theme",
     "languageLabel": "Language",
-    "authorPhoto": "Photo of {name}"
+    "authorPhoto": "Photo of {name}",
+    "breadcrumb": "Breadcrumb",
+    "mainNav": "Main navigation",
+    "openImage": "Enlarge image {n} of {total}",
+    "imageViewer": "Image viewer",
+    "previousImage": "Previous image",
+    "nextImage": "Next image",
+    "filterBy": "Filter by",
+    "opensInNewTab": "opens in a new tab"
   }
 }

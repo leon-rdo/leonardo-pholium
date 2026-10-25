@@ -16,7 +16,17 @@ const index = ref(0);
 
 const currentImage = computed(() => props.images[index.value]);
 
-const openAt = (i: number) => {
+/*
+ * The lightbox is a modal dialog (WCAG 2.4.3 / 2.1.2): focus moves into it on
+ * open, Tab stays inside, the page behind doesn't scroll, and focus goes back
+ * to the thumbnail that opened it. Same contract as the mobile nav drawer.
+ */
+const dialogEl = ref<HTMLElement | null>(null);
+const closeButton = ref<HTMLElement | null>(null);
+let opener: HTMLElement | null = null;
+
+const openAt = (i: number, event: Event) => {
+  opener = event.currentTarget as HTMLElement;
   index.value = i;
   open.value = true;
 };
@@ -26,15 +36,40 @@ const next = () =>
 const prev = () =>
   (index.value = (index.value - 1 + props.images.length) % props.images.length);
 
+watch(open, async (isOpen) => {
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+  if (isOpen) {
+    await nextTick();
+    closeButton.value?.focus();
+  } else {
+    opener?.focus();
+  }
+});
+
 const onKeydown = (event: KeyboardEvent) => {
   if (!open.value) return;
   if (event.key === 'ArrowRight') next();
   else if (event.key === 'ArrowLeft') prev();
   else if (event.key === 'Escape') close();
+  else if (event.key === 'Tab' && dialogEl.value) {
+    const buttons = Array.from(dialogEl.value.querySelectorAll('button'));
+    const first = buttons[0];
+    const last = buttons[buttons.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last?.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first?.focus();
+    }
+  }
 };
 
 onMounted(() => window.addEventListener('keydown', onKeydown));
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown);
+  document.body.style.overflow = '';
+});
 </script>
 
 <template>
@@ -46,24 +81,29 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
         :key="image.id"
         type="button"
         class="group relative aspect-[4/3] rounded-card overflow-hidden ring-hair bg-card-soft cursor-zoom-in"
-        :aria-label="image.alt_text || image.title || 'Open image'"
-        @click="openAt(i)"
+        :aria-label="
+          $t('a11y.openImage', { n: i + 1, total: images.length }) +
+          (image.alt_text || image.title ? `: ${image.alt_text || image.title}` : '')
+        "
+        @click="openAt(i, $event)"
       >
+        <!-- The button carries the name; the thumbnail itself is decorative. -->
         <NuxtImg
           :src="image.thumbnail || image.file"
-          :alt="image.alt_text || image.title || ''"
+          alt=""
           :width="image.width || 600"
           :height="image.height || 450"
           format="webp"
           loading="lazy"
           decoding="async"
-          sizes="(max-width: 600px) 100vw, 400px"
+          sizes="sm:100vw md:50vw lg:400px"
           class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
         <span
-          class="absolute top-2 right-2 inline-flex items-center justify-center w-7 h-7 rounded-full glass-cream opacity-0 group-hover:opacity-100 transition-opacity"
+          aria-hidden="true"
+          class="absolute top-2 right-2 inline-flex items-center justify-center w-7 h-7 rounded-full bg-night/70 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity"
         >
-          <Maximize2 :size="13" :stroke-width="1.8" class="text-ink" />
+          <Maximize2 :size="13" :stroke-width="1.8" class="text-night-text" />
         </span>
       </button>
     </div>
@@ -78,13 +118,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
       >
         <div
           v-if="open"
+          ref="dialogEl"
           class="fixed inset-0 z-[60] bg-night/90 backdrop-blur-sm flex items-center justify-center"
           role="dialog"
           aria-modal="true"
+          :aria-label="$t('a11y.imageViewer')"
           @click.self="close"
         >
           <!-- Close -->
           <button
+            ref="closeButton"
             type="button"
             class="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 grid place-items-center text-night-text transition-colors"
             :aria-label="$t('common.close')"
@@ -98,7 +141,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
             v-if="images.length > 1"
             type="button"
             class="absolute left-4 sm:left-8 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 grid place-items-center text-night-text transition-colors"
-            :aria-label="$t('common.previousPage')"
+            :aria-label="$t('a11y.previousImage')"
             @click="prev"
           >
             <ChevronLeft :size="22" :stroke-width="1.8" />
@@ -107,7 +150,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
             v-if="images.length > 1"
             type="button"
             class="absolute right-4 sm:right-8 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 grid place-items-center text-night-text transition-colors"
-            :aria-label="$t('common.nextPage')"
+            :aria-label="$t('a11y.nextImage')"
             @click="next"
           >
             <ChevronRight :size="22" :stroke-width="1.8" />

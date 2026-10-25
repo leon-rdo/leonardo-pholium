@@ -12,6 +12,22 @@ const isAuthenticated = ref(false);
 const isSubmitting = ref(false);
 const replyingTo = ref<number | null>(null);
 
+// Outcome of the last submit, shown under the form that sent it. Failures
+// used to go to the console only, and a reply from a guest who hadn't filled
+// in the name/e-mail above returned silently.
+type SubmitOutcome = 'pending' | 'error' | 'missing' | null;
+const outcome = ref<SubmitOutcome>(null);
+const outcomeFor = ref<number | null>(null);
+const outcomeMessage = computed(() => {
+  if (outcome.value === 'pending') return t('blog.commentPending');
+  if (outcome.value === 'error') return t('blog.commentError');
+  if (outcome.value === 'missing') return t('blog.commentFieldsRequired');
+  return '';
+});
+
+// Placeholders double as accessible names; drop their required-marker "*".
+const fieldLabel = (key: string) => t(key).replace(/\s*\*$/, '');
+
 const newComment = ref({
   content: '',
   guest_name: '',
@@ -66,17 +82,20 @@ const formatDate = (date: string) => {
 };
 
 const submitComment = async (parentId: number | null = null) => {
-  if (!newComment.value.content.trim()) return;
+  outcomeFor.value = parentId;
+  outcome.value = null;
   if (
-    !isAuthenticated.value &&
-    (!newComment.value.guest_name.trim() ||
-      !newComment.value.guest_email.trim())
+    !newComment.value.content.trim() ||
+    (!isAuthenticated.value &&
+      (!newComment.value.guest_name.trim() ||
+        !newComment.value.guest_email.trim()))
   ) {
+    outcome.value = 'missing';
     return;
   }
   isSubmitting.value = true;
   try {
-    await $fetch('/api/comments/', {
+    const created = await $fetch<Comment>('/api/comments/', {
       baseURL: config.public.apiBase,
       method: 'POST',
       body: {
@@ -97,9 +116,16 @@ const submitComment = async (parentId: number | null = null) => {
       guest_website: '',
     };
     replyingTo.value = null;
+    // Moderated comments don't come back in the list yet — say so, or the
+    // visitor sees nothing happen and posts again.
+    if (created?.is_approved === false) {
+      outcome.value = 'pending';
+      outcomeFor.value = null;
+    }
     await refreshComments();
   } catch (error) {
     console.error('Error submitting comment:', error);
+    outcome.value = 'error';
   } finally {
     isSubmitting.value = false;
   }
@@ -114,21 +140,24 @@ const inputClass =
 
 <template>
   <section>
-    <h3 class="h-display text-[24px] sm:text-[28px] font-bold mb-6">
+    <!-- h2: this sits at the article's top level, after the body's own h2s. -->
+    <h2 class="h-display text-[24px] sm:text-[28px] font-bold mb-6">
       {{ $t('blog.comments') }}
       <span class="font-mono text-[14px] text-ink-3 align-middle ml-1">
         ({{ commentsData?.count || 0 }})
       </span>
-    </h3>
+    </h2>
 
     <!-- New comment form -->
     <Tile class="px-5 py-5 mb-10">
-      <h4 class="font-mono-rail mb-4">{{ $t('blog.leaveComment') }}</h4>
+      <h3 class="font-mono-rail mb-4">{{ $t('blog.leaveComment') }}</h3>
       <form @submit.prevent="submitComment(null)" class="space-y-3">
         <div v-if="!isAuthenticated" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <input
             v-model="newComment.guest_name"
             type="text"
+            autocomplete="name"
+            :aria-label="fieldLabel('blog.guestName')"
             :placeholder="$t('blog.guestName')"
             required
             :disabled="isSubmitting"
@@ -137,6 +166,8 @@ const inputClass =
           <input
             v-model="newComment.guest_email"
             type="email"
+            autocomplete="email"
+            :aria-label="fieldLabel('blog.guestEmail')"
             :placeholder="$t('blog.guestEmail')"
             required
             :disabled="isSubmitting"
@@ -145,6 +176,8 @@ const inputClass =
           <input
             v-model="newComment.guest_website"
             type="url"
+            autocomplete="url"
+            :aria-label="fieldLabel('blog.guestWebsite')"
             :placeholder="$t('blog.guestWebsite')"
             :disabled="isSubmitting"
             :class="inputClass"
@@ -155,6 +188,7 @@ const inputClass =
           rows="4"
           required
           :disabled="isSubmitting"
+          :aria-label="fieldLabel('blog.yourComment')"
           :placeholder="$t('blog.yourComment')"
           :class="inputClass + ' resize-y min-h-[110px]'"
         />
@@ -166,6 +200,17 @@ const inputClass =
           {{ isSubmitting ? $t('common.loading') : $t('blog.sendComment') }}
           <Send :size="14" :stroke-width="2" />
         </button>
+        <p
+          class="text-[13.5px] min-h-[1.25rem]"
+          :class="
+            outcome === 'pending'
+              ? 'text-ink-2'
+              : 'text-red-700 dark:text-red-400'
+          "
+          aria-live="polite"
+        >
+          <template v-if="outcomeFor === null">{{ outcomeMessage }}</template>
+        </p>
       </form>
     </Tile>
 
@@ -213,6 +258,7 @@ const inputClass =
                 v-model="newComment.content"
                 rows="3"
                 required
+                :aria-label="$t('blog.yourReply')"
                 :placeholder="$t('blog.yourReply')"
                 :class="inputClass + ' resize-y min-h-[80px]'"
               />
@@ -233,6 +279,13 @@ const inputClass =
                   {{ $t('blog.cancel') }}
                 </button>
               </div>
+              <p
+                v-if="outcomeFor === comment.id && outcomeMessage"
+                class="text-[13.5px] text-red-700 dark:text-red-400"
+                role="alert"
+              >
+                {{ outcomeMessage }}
+              </p>
             </form>
           </div>
         </article>

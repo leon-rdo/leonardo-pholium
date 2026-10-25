@@ -15,7 +15,7 @@ setBreadcrumbsSchema(props.items);
 </script>
 
 <template>
-  <nav aria-label="breadcrumb" class="font-mono text-[12px] text-ink-3">
+  <nav :aria-label="$t('a11y.breadcrumb')" class="font-mono text-[12px] text-ink-3">
     <ol class="flex flex-wrap items-center gap-1.5">
       <li
         v-for="(item, index) in items"
@@ -29,7 +29,12 @@ setBreadcrumbsSchema(props.items);
         >
           {{ item.title }}
         </NuxtLink>
-        <span v-else class="text-ink font-medium">{{ item.title }}</span>
+        <span
+          v-else
+          class="text-ink font-medium"
+          :aria-current="index === items.length - 1 ? 'page' : undefined"
+          >{{ item.title }}</span
+        >
         <ChevronRight
           v-if="index < items.length - 1"
           :size="13"
